@@ -134,6 +134,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = os.environ.get(STATIC_ROOT, '/mnt/resource/michelin-bpm/static')
-MEDIA_ROOT = os.environ.get(MEDIA_ROOT, '/mnt/resource/michelin-bpm/')
+STATIC_ROOT = os.environ.get('STATIC_ROOT', '/mnt/resource/michelin-bpm/static')
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/mnt/resource/michelin-bpm/')
 
