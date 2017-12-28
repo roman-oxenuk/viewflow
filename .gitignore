@@ -1,0 +1,19 @@
+# Platform and IDE-generated files
+.DS_Store
+.idea
+.project
+.pydevproject
+
+# Python-related ignores
+*.pyc
+*.pyo
+
+# Virtual environment folders
+venv/
+
+# Obsolete ignores
+.env
+*.log
+*.ipynb
+*.*~
+/static/
