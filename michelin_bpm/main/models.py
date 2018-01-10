@@ -24,8 +24,10 @@ class ProposalProcess(Process):
         settings.AUTH_USER_MODEL, blank=True, null=True, db_index=True,
         on_delete=models.CASCADE, verbose_name=l_('Регистрируемый клиент'))
 
-    def get_corrected_fields(self):
+    def get_corrected_fields(self, from_step=None):
         tasks_qs = self.task_set.filter(correction__is_active=True)
+        if from_step:
+            tasks_qs = tasks_qs.filter(flow_task=from_step)
         corrections = {}
         for task in tasks_qs:
             for corr_obj in task.correction_set.filter(is_active=True):

@@ -19,12 +19,13 @@ class FixMistakesForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.process_pk = kwargs.pop('process_pk')
+        self.mistakes_from_step = kwargs.pop('mistakes_from_step', None)
         super().__init__(*args, **kwargs)
 
     def clean(self):
         self.cleaned_data = super().clean()
         proposal = ProposalProcess.objects.get(pk=self.process_pk)
-        corrections = proposal.get_corrected_fields()
+        corrections = proposal.get_corrected_fields(from_step=self.mistakes_from_step)
 
         for field_name, field in self.fields.items():
             correction_name = '{0}_correction'.format(field_name)
