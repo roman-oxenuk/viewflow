@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.http import HttpResponseRedirect
+from django import forms
+from django.utils.translation import ugettext_lazy as l_
+
 from viewflow.flow.views.task import UpdateProcessView, FlowMixin
 from viewflow.flow.views import CreateProcessView
 from viewflow.flow.views.start import StartFlowMixin
@@ -74,6 +77,13 @@ class FixMistakesView(UpdateProcessView):
                             form.add_error(field_name, corr)
                         except AttributeError:
                             pass
+
+            if '__all__correction' in corrections:
+                # Через form.add_error() non_field ошибку добавить не удалось, т.к. поднимается исключение
+                # AttributeError: 'FixMistakesForm' object has no attribute 'cleaned_data'
+                # на строчке django/forms/forms.py:358
+                form.errors['__all__'] = form.error_class(corrections['__all__correction'])
+
         return form
 
     def form_valid(self, form, **kwargs):

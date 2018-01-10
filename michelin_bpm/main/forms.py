@@ -34,6 +34,12 @@ class FixMistakesForm(ModelForm):
                 if getattr(proposal, field_name) == self.cleaned_data[field_name]:
                     self.add_error(field_name, l_('Нужно изменить требуемое поле'))
                     self.add_error(field_name, corrections[correction_name])
+
+        if '__all__correction' in corrections:
+            if not self.has_changed():
+                self.add_error(None, l_('Нужно изменить хотя бы одно поле'))
+                self.add_error(None, corrections['__all__correction'])
+
         return self.cleaned_data
 
 
@@ -56,6 +62,12 @@ class ApproveByAccountManagerForm(ModelForm):
             fields_with_corrections['{}_correction'.format(field_name)] = forms.CharField(
                 max_length=255,
                 required=False
+            )
+
+        fields_with_corrections['__all__correction'] = forms.CharField(
+                max_length=255,
+                required=False,
+                label=l_('Блокировка всей заявки без привязки к конкретному полю')
             )
 
         self.fields = fields_with_corrections
