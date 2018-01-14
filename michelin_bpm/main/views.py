@@ -1,19 +1,27 @@
 # -*- coding: utf-8 -*-
 from django.http import HttpResponseRedirect
-from django import forms
-from django.utils.translation import ugettext_lazy as l_
+from django.conf import settings
 
+import reversion
+from reversion.views import RevisionMixin
+from reversion.models import Version
 from viewflow.flow.views.task import UpdateProcessView, FlowMixin
 from viewflow.flow.views import CreateProcessView
-from viewflow.flow.views.start import StartFlowMixin
+from viewflow.fields import get_task_ref
 
-from .models import Correction
+from michelin_bmp.main.models import Correction
 
 
-class CreateProposalProcessView(CreateProcessView):
+CORR_SUFFIX = settings.CORRECTION_FIELD_SUFFIX
+
+
+class CreateProposalProcessView(RevisionMixin, CreateProcessView):
+
+    linked_node = None
 
     def form_valid(self, *args, **kwargs):
-        super(StartFlowMixin, self).form_valid(*args, **kwargs)
+        reversion.set_comment(get_task_ref(self.linked_node))
+        super().form_valid(*args, **kwargs)
         self.activation.process.client = self.request.user
         self.activation_done(*args, **kwargs)
         return HttpResponseRedirect(self.get_success_url())
@@ -21,17 +29,36 @@ class CreateProposalProcessView(CreateProcessView):
 
 class ApproveByAccountManagerView(UpdateProcessView):
 
-    def form_valid(self, *args, **kwargs):
+    linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+
+        current_version = Version.objects.get_for_object(
+            kwargs['instance']
+        ).order_by(
+            '-revision__date_created'
+        ).first()
+
+        kwargs.update({
+            'current_version': current_version,
+            'linked_node': self.linked_node
+        })
+
+        return kwargs
+
+    def form_valid(self, form, *args, **kwargs):
         """ Создаёт объект Корректировки, если есть поля с заполненными корректировками """
-        super(FlowMixin, self).form_valid(*args, **kwargs)
-        form = self.get_form()
+        super().form_valid(form, *args, **kwargs)
         correction_data = dict([
-            (name, value) for name, value in form.data.items()
-            if name.endswith('_correction') and value
+            (name.replace(CORR_SUFFIX, ''), value) for name, value in form.cleaned_data.items()
+            if name.endswith(CORR_SUFFIX) and value
         ])
         if correction_data:
             Correction.objects.create(
                 task=self.activation.task,
+                proposal=self.activation.process,
+                reviewed_version=form.cleaned_data['current_version'],
                 data=correction_data,
                 is_active=True,
                 owner=self.request.user
@@ -40,59 +67,47 @@ class ApproveByAccountManagerView(UpdateProcessView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class FixMistakesView(UpdateProcessView):
+class FixMistakesView(RevisionMixin, UpdateProcessView):
 
     mistakes_from_step = None
 
-    def __init__(self, *args, **kwargs):  # noqa D102
-        self._mistakes_from_step = kwargs.pop('mistakes_from_step', None)
-        super().__init__(*args, **kwargs)
-
     def get_queryset(self):
-        qs = super().get_queryset()
-        return qs.filter(client=self.request.user)
+        proposal_qs = super().get_queryset()
+        return proposal_qs.filter(client=self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs.update({
             'process_pk': self.kwargs['process_pk']
         })
-        if self._mistakes_from_step:
+        if self.mistakes_from_step:
             kwargs.update({
-                'mistakes_from_step': self._mistakes_from_step
+                'mistakes_from_step': self.mistakes_from_step
             })
         return kwargs
 
     def get_form(self, form_class=None):
-        form = super().get_form(form_class=None)
+        form = super().get_form(form_class)
+
         # Добавляем информацию о корректировках для полей
         if self.request.method == 'GET' and form.instance:
-            corrections = form.instance.get_corrected_fields(from_step=self._mistakes_from_step)
-
-            for field_name, field in form.fields.items():
-                correction_name = '{0}_correction'.format(field_name)
-                if correction_name in corrections:
-                    for corr in corrections[correction_name]:
-                        try:
-                            form.add_error(field_name, corr)
-                        except AttributeError:
-                            pass
-
-            if '__all__correction' in corrections:
-                # Через form.add_error() non_field ошибку добавить не удалось, т.к. поднимается исключение
-                # AttributeError: 'FixMistakesForm' object has no attribute 'cleaned_data'
-                # на строчке django/forms/forms.py:358
-                form.errors['__all__'] = form.error_class(corrections['__all__correction'])
+            correction_obj = form.instance.get_correction_active(for_step=self.mistakes_from_step)
+            for field_name, corr in correction_obj.data.items():
+                if field_name in form.errors:
+                    form.errors[field_name].append(corr)
+                else:
+                    form.errors[field_name] = form.error_class([corr])
 
         return form
 
     def form_valid(self, form, **kwargs):
         """ Деактивируем объект Корректировки, если произошло изменение блокирующих полей """
-        super(FlowMixin, self).form_valid(form, **kwargs)
-        # TODO MBPM-3
-        # Сделать изменение одним запросом, если это возможно
-        for task in form.instance.task_set.filter(correction__is_active=True, flow_task=self._mistakes_from_step):
-            task.correction_set.all().filter(is_active=True).update(is_active=False)
+        reversion.set_comment(self.mistakes_from_step)
+        super().form_valid(form, **kwargs)
+
+        correction_obj = form.instance.get_correction_active(for_step=self.mistakes_from_step)
+        correction_obj.is_active = False
+        correction_obj.save()
 
         self.activation_done(**kwargs)
         return HttpResponseRedirect(self.get_success_url())

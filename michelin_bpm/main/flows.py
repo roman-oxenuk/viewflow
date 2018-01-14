@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 from viewflow import flow, frontend
 from viewflow.base import this, Flow
-from viewflow.flow.views import CreateProcessView, UpdateProcessView
-from viewflow.flow.nodes import View
 
 from .models import ProposalProcess
 from .views import ApproveByAccountManagerView, FixMistakesView, CreateProposalProcessView
 from .forms import FixMistakesForm, ApproveByAccountManagerForm
-from .nodes import FixMistakesNodeView
+from .nodes import StartNodeView, FixMistakesNodeView, ApproveViewNode
 
 
 def is_approved(activation):
+    """
+    Возвращает True, если у Заявки нет ни одной активной Корректировки.
+    А это значит, что заявка на данном шаге подтверждена и можно переводить её на следующий шаг.
+
+    :param activation: viewflow.activation.Activation
+    :return: boolean
+    """
     if activation.task.previous.filter(correction__is_active=True).exists():
         return False
     return True
@@ -22,7 +27,7 @@ class ProposalConfirmationFlow(Flow):
     process_class = ProposalProcess
 
     start = (
-        flow.Start(
+        StartNodeView(
             CreateProposalProcessView,
             fields=[
                 'country', 'city', 'company_name', 'inn',
@@ -34,7 +39,7 @@ class ProposalConfirmationFlow(Flow):
     )
 
     approve_by_account_manager = (
-        flow.View(
+        ApproveViewNode(
             ApproveByAccountManagerView,
             form_class=ApproveByAccountManagerForm
         ).Permission(
@@ -67,7 +72,7 @@ class ProposalConfirmationFlow(Flow):
     )
 
     approve_by_credit_manager = (
-        flow.View(
+        ApproveViewNode(
             ApproveByAccountManagerView,
             form_class=ApproveByAccountManagerForm
         ).Permission(
@@ -94,7 +99,7 @@ class ProposalConfirmationFlow(Flow):
     )
 
     approve_by_logist = (
-        flow.View(
+        ApproveViewNode(
             ApproveByAccountManagerView,
             form_class=ApproveByAccountManagerForm
         ).Permission(

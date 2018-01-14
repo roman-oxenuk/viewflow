@@ -17,3 +17,20 @@ class FixMistakesNodeView(nodes.View):
             if isinstance(value, ThisObject):
                 value.flow_class = self.flow_class
                 self._view_args['mistakes_from_step'] = get_task_ref(value)
+
+
+class LinkedNodeMixin:
+    """
+    Передаёт во view ссылку на свой flow node (инстанс viewflow.Node).
+    """
+    def ready(self):
+        super().ready()
+        self._view_args['linked_node'] = self
+
+
+class StartNodeView(LinkedNodeMixin, nodes.Start):
+    pass
+
+
+class ApproveViewNode(LinkedNodeMixin, nodes.View):
+    pass

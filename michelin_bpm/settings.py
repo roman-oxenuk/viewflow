@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Django settings for demo project.
 
@@ -42,6 +43,10 @@ INSTALLED_APPS = [
     'material.frontend',
     'viewflow',
     'viewflow.frontend',
+
+    'reversion',
+    'reversion_compare',
+
     'michelin_bpm.main',
 ]
 
@@ -137,3 +142,5 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/mnt/resource/michelin-bpm/static')
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/mnt/resource/michelin-bpm/')
 
+# Префикс для названия поле, в которые вводят корректировки.
+CORRECTION_FIELD_SUFFIX = '_correction'
