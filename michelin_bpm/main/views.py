@@ -9,7 +9,7 @@ from viewflow.flow.views.task import UpdateProcessView, FlowMixin
 from viewflow.flow.views import CreateProcessView
 from viewflow.fields import get_task_ref
 
-from michelin_bmp.main.models import Correction
+from michelin_bpm.main.models import Correction
 
 
 CORR_SUFFIX = settings.CORRECTION_FIELD_SUFFIX
