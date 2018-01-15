@@ -62,7 +62,6 @@ class ApproveByAccountManagerView(UpdateProcessView):
                 is_active=True,
                 owner=self.request.user
             )
-        self.activation_done(*args, **kwargs)
         return HttpResponseRedirect(self.get_success_url())
 
 
