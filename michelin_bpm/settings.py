@@ -26,7 +26,7 @@ SECRET_KEY = '5$7x$_pz3g-==zzc@n!d63o392)^(jqc^@1^sgu3v6&nzwfkko'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', [])
 
 
 # Application definition
@@ -123,7 +123,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+from django.utils.translation import ugettext_lazy as l_
+LANGUAGE_CODE = 'ru'
+LANGUAGES = [
+    ('en', l_('English')),
+    ('ru', l_('Russian')),
+]
 
 TIME_ZONE = 'UTC'
 
