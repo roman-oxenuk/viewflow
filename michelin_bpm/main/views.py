@@ -48,7 +48,6 @@ class ApproveByAccountManagerView(UpdateProcessView):
 
     def form_valid(self, form, *args, **kwargs):
         """ Создаёт объект Корректировки, если есть поля с заполненными корректировками """
-        super().form_valid(form, *args, **kwargs)
         correction_data = dict([
             (name.replace(CORR_SUFFIX, ''), value) for name, value in form.cleaned_data.items()
             if name.endswith(CORR_SUFFIX) and value
@@ -62,6 +61,7 @@ class ApproveByAccountManagerView(UpdateProcessView):
                 is_active=True,
                 owner=self.request.user
             )
+        super().form_valid(form, *args, **kwargs)
         return HttpResponseRedirect(self.get_success_url())
 
 
@@ -95,17 +95,15 @@ class FixMistakesView(RevisionMixin, UpdateProcessView):
                     form.errors[field_name].append(corr)
                 else:
                     form.errors[field_name] = form.error_class([corr])
-
         return form
 
     def form_valid(self, form, **kwargs):
         """ Деактивируем объект Корректировки, если произошло изменение блокирующих полей """
         reversion.set_comment(self.mistakes_from_step)
-        super().form_valid(form, **kwargs)
 
         correction_obj = form.instance.get_correction_active(for_step=self.mistakes_from_step)
         correction_obj.is_active = False
         correction_obj.save()
 
-        self.activation_done(**kwargs)
+        super().form_valid(form, **kwargs)
         return HttpResponseRedirect(self.get_success_url())
