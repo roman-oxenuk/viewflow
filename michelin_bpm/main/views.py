@@ -21,9 +21,8 @@ class CreateProposalProcessView(RevisionMixin, CreateProcessView):
 
     def form_valid(self, *args, **kwargs):
         reversion.set_comment(get_task_ref(self.linked_node))
-        super().form_valid(*args, **kwargs)
         self.activation.process.client = self.request.user
-        self.activation_done(*args, **kwargs)
+        super().form_valid(*args, **kwargs)
         return HttpResponseRedirect(self.get_success_url())
 
 
