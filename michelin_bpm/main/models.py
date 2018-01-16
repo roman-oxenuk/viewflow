@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 from django.conf import settings
-from django.utils.translation import ugettext_lazy as l_
 from django.contrib.postgres.fields import JSONField
+from django.utils.translation import ugettext_lazy as l_
 
+from viewflow.activation import STATUS_CHOICES
 from viewflow.models import Process
 from reversion.models import Version
 
@@ -26,6 +27,9 @@ class ProposalProcess(Process):
         settings.AUTH_USER_MODEL, blank=True, null=True, db_index=True,
         on_delete=models.CASCADE, verbose_name=l_('Регистрируемый клиент')
     )
+
+    def get_status_display(self):
+        return dict(STATUS_CHOICES).get(self.status, self.status)
 
     def get_correction_active(self, for_step):
         """
@@ -73,7 +77,8 @@ class ProposalProcess(Process):
             if correction_obj:
                 return correction_obj.reviewed_version
 
-    def get_diff_fields(self, current_state, version, fields):
+    @staticmethod
+    def get_diff_fields(current_state, version, fields):
         """
         Возвращает поля, которые различаются с переданной версией.
 

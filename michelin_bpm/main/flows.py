@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as l_, ugettext as _
 from .models import ProposalProcess
 from .views import ApproveByAccountManagerView, FixMistakesView, CreateProposalProcessView
 from .forms import FixMistakesForm, ApproveByAccountManagerForm
-from .nodes import StartNodeView, FixMistakesNodeView, ApproveViewNode
+from .nodes import StartNodeView, FixMistakesNodeView, ApproveViewNode, IfNode, SplitNode
 
 
 def is_approved(activation):
@@ -27,6 +27,7 @@ class ProposalConfirmationFlow(Flow):
 
     process_class = ProposalProcess
     process_title = l_('Обработка заявки')
+    summary_template = "{{ flow_class.process_title }} - {{ process.get_status_display }}"
 
     start = (
         StartNodeView(
@@ -35,7 +36,7 @@ class ProposalConfirmationFlow(Flow):
                 'country', 'city', 'company_name', 'inn',
                 'bank_name', 'account_number',
             ],
-            task_description=_('start')
+            task_description=_('Start')
         ).Permission(
             auto_create=True
         ).Next(this.approve_by_account_manager)
@@ -45,16 +46,16 @@ class ProposalConfirmationFlow(Flow):
         ApproveViewNode(
             ApproveByAccountManagerView,
             form_class=ApproveByAccountManagerForm,
-            task_description=_('approve_by_account_manager')
+            task_description=_('Approve by account manager')
         ).Permission(
             auto_create=True
         ).Next(this.check_approve_by_account_manager)
     )
 
     check_approve_by_account_manager = (
-        flow.If(
+        IfNode(
             is_approved,
-            task_description=_('check_approve_by_account_manager')
+            task_description=_('Check approve by account manager')
         )
         .Then(this.split_flow)
         .Else(this.fix_mistakes_after_account_manager)
@@ -65,7 +66,7 @@ class ProposalConfirmationFlow(Flow):
             FixMistakesView,
             form_class=FixMistakesForm,
             mistakes_from_step=this.approve_by_account_manager,
-            task_description=_('fix_mistakes_after_account_manager')
+            task_description=_('Fix mistakes after account manager')
         ).Permission(
             auto_create=True
         ).Assign(
@@ -74,7 +75,9 @@ class ProposalConfirmationFlow(Flow):
     )
 
     split_flow = (
-        flow.Split()
+        SplitNode(
+            task_description=_('Split flow')
+        )
         .Next(this.approve_by_credit_manager)
         .Next(this.approve_by_logist)
     )
@@ -83,16 +86,16 @@ class ProposalConfirmationFlow(Flow):
         ApproveViewNode(
             ApproveByAccountManagerView,
             form_class=ApproveByAccountManagerForm,
-            task_description=_('approve_by_credit_manager')
+            task_description=_('Approve by credit manager')
         ).Permission(
             auto_create=True
         ).Next(this.check_approve_by_credit_manager)
     )
 
     check_approve_by_credit_manager = (
-        flow.If(
+        IfNode(
             is_approved,
-            task_description=_('check_approve_by_credit_manager')
+            task_description=_('Check approve by credit manager')
         )
         .Then(this.item_prepared)
         .Else(this.fix_mistakes_after_credit_manager)
@@ -103,7 +106,7 @@ class ProposalConfirmationFlow(Flow):
             FixMistakesView,
             form_class=FixMistakesForm,
             mistakes_from_step=this.approve_by_credit_manager,
-            task_description=_('fix_mistakes_after_credit_manager')
+            task_description=_('Fix mistakes after credit manager')
         ).Permission(
             auto_create=True
         ).Assign(
@@ -115,16 +118,16 @@ class ProposalConfirmationFlow(Flow):
         ApproveViewNode(
             ApproveByAccountManagerView,
             form_class=ApproveByAccountManagerForm,
-            task_description=_('approve_by_logist')
+            task_description=_('Approve by logist')
         ).Permission(
             auto_create=True
         ).Next(this.check_approve_by_logist)
     )
 
     check_approve_by_logist = (
-        flow.If(
+        IfNode(
             is_approved,
-            task_description=_('check_approve_by_logist')
+            task_description=_('Check approve by logist')
         )
         .Then(this.item_prepared)
         .Else(this.fix_mistakes_after_logist)
@@ -135,7 +138,7 @@ class ProposalConfirmationFlow(Flow):
             FixMistakesView,
             form_class=FixMistakesForm,
             mistakes_from_step=this.approve_by_logist,
-            task_description=_('fix_mistakes_after_logist')
+            task_description=_('Fix mistakes after logist')
         ).Permission(
             auto_create=True
         ).Assign(
@@ -144,7 +147,7 @@ class ProposalConfirmationFlow(Flow):
     )
 
     item_prepared = flow.Join(
-        task_description=_('item_prepared')
+        task_description=_('Item prepared')
     ).Next(this.end)
 
     end = flow.End()

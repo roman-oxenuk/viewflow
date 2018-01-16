@@ -5,7 +5,25 @@ from viewflow.fields import get_task_ref
 from django.utils.translation import gettext_lazy as l_
 
 
-class FixMistakesNodeView(nodes.View):
+class LinkedNodeMixin:
+    """
+    Передаёт во view ссылку на свой flow node (инстанс viewflow.Node).
+    """
+    def ready(self):
+        super().ready()
+        self._view_args['linked_node'] = self
+
+
+class TranslatedNodeMixin:
+    """
+    При приведении к строке возвращает переведённое имя
+    """
+    def __str__(self):
+        name = super().__str__()
+        return str(l_(name.lower().capitalize()))
+
+
+class FixMistakesNodeView(TranslatedNodeMixin, nodes.View):
     """
     Если в переменных для view (self._view_args) есть переменная с именем mistakes_from_step,
     то приводит эту переменную из типа ThisObject в формат строки, в котором она храниться в базе.
@@ -20,22 +38,17 @@ class FixMistakesNodeView(nodes.View):
                 self._view_args['mistakes_from_step'] = get_task_ref(value)
 
 
-class LinkedNodeMixin:
-    """
-    Передаёт во view ссылку на свой flow node (инстанс viewflow.Node).
-    """
-    def ready(self):
-        super().ready()
-        self._view_args['linked_node'] = self
-
-    def __str__(self):
-        name = super().__str__()
-        return str(l_(name.lower().replace(' ', '_')))
-
-
-class StartNodeView(LinkedNodeMixin, nodes.Start):
+class StartNodeView(LinkedNodeMixin, TranslatedNodeMixin, nodes.Start):
     pass
 
 
-class ApproveViewNode(LinkedNodeMixin, nodes.View):
+class ApproveViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):
+    pass
+
+
+class IfNode(TranslatedNodeMixin, nodes.If):
+    pass
+
+
+class SplitNode(TranslatedNodeMixin, nodes.Split):
     pass

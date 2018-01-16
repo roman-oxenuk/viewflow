@@ -1,0 +1,69 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-01-16 13:05+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
+"%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: main/flows.py:38
+msgid "Start"
+msgstr "Начало"
+
+#: main/flows.py:48
+msgid "Approve by account manager"
+msgstr "Проверка аккаунт-менеджером"
+
+#: main/flows.py:57
+msgid "Check approve by account manager"
+msgstr "Завершение проверки аккаунт-менеджером"
+
+#: main/flows.py:68
+msgid "Fix mistakes after account manager"
+msgstr "Правка корректировок после проверки аккаунт-менеджером"
+
+#: main/flows.py:78
+msgid "Split flow"
+msgstr "Разделение процесса"
+
+#: main/flows.py:88
+msgid "Approve by credit manager"
+msgstr "Проверка кредитным-инспектором"
+
+#: main/flows.py:97
+msgid "Check approve by credit manager"
+msgstr "Завершение проверки кредитным-инспектором"
+
+#: main/flows.py:108
+msgid "Fix mistakes after credit manager"
+msgstr "Правка корректировок после проверки кредитным-инспектором"
+
+#: main/flows.py:120
+msgid "Approve by logist"
+msgstr "Проверка логистом"
+
+#: main/flows.py:129
+msgid "Check approve by logist"
+msgstr "Завершение проверки логистом"
+
+#: main/flows.py:140
+msgid "Fix mistakes after logist"
+msgstr "Правка корректировок после проверки логистом"
+
+#: main/flows.py:149
+msgid "Item prepared"
+msgstr "Заявка проверена"
