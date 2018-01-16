@@ -2,6 +2,7 @@
 from viewflow import ThisObject
 from viewflow.flow import nodes
 from viewflow.fields import get_task_ref
+from django.utils.translation import gettext_lazy as l_
 
 
 class FixMistakesNodeView(nodes.View):
@@ -26,6 +27,10 @@ class LinkedNodeMixin:
     def ready(self):
         super().ready()
         self._view_args['linked_node'] = self
+
+    def __str__(self):
+        name = super().__str__()
+        return str(l_(name.lower().replace(' ', '_')))
 
 
 class StartNodeView(LinkedNodeMixin, nodes.Start):

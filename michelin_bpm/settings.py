@@ -25,6 +25,7 @@ SECRET_KEY = '5$7x$_pz3g-==zzc@n!d63o392)^(jqc^@1^sgu3v6&nzwfkko'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+INTERNAL_IPS = ['127.0.0.1']
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 
@@ -38,17 +39,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'material',
     'material.frontend',
     'viewflow',
     'viewflow.frontend',
-
     'reversion',
     'reversion_compare',
+]
 
+# Project apps
+INSTALLED_APPS += [
     'michelin_bpm.main',
 ]
+
+if DEBUG:
+    INSTALLED_APPS += [
+        'debug_toolbar',
+    ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -59,6 +67,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if DEBUG:
+    MIDDLEWARE += [
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    ]
+
 
 ROOT_URLCONF = 'michelin_bpm.urls'
 
@@ -73,8 +87,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-            ],
-        },
+            ]
+        }
     },
 ]
 
@@ -129,6 +143,8 @@ LANGUAGES = [
     ('en', l_('English')),
     ('ru', l_('Russian')),
 ]
+LOCALE_PATHS = (os.path.join(os.path.dirname(__file__), '..', 'locale'),)
+
 
 TIME_ZONE = 'UTC'
 

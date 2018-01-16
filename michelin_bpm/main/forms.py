@@ -102,7 +102,8 @@ class ApproveByAccountManagerForm(ModelForm):
             correction_field_name = field_name + CORR_SUFFIX
             fields_with_corrections[correction_field_name] = forms.CharField(
                 max_length=255,
-                required=False
+                required=False,
+                label=str(l_('Корректировка для поля ')) + str(field.label).lower()
             )
             # если есть прошлые корректировки, добавляем инфу о них в корректирующее поле
             if last_correction and field_name in last_correction.data:

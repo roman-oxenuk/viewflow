@@ -14,6 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url, include
+from django.conf import settings
 from django.views import generic
 from django.contrib import admin
 
@@ -25,3 +26,10 @@ urlpatterns = [
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),
     url(r'', include(frontend_urls)),
 ]
+
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns
