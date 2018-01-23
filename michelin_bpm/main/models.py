@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
+import json
 from django.db import models
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.utils.translation import ugettext_lazy as l_
+from django.dispatch import receiver
 
+import reversion
+from reversion.models import Version
+from reversion.signals import post_revision_commit
 from viewflow.activation import STATUS_CHOICES
 from viewflow.models import Process
-from reversion.models import Version
 
 
+@reversion.register()
 class ProposalProcess(Process):
 
     class Meta:
@@ -31,7 +36,20 @@ class ProposalProcess(Process):
     def get_status_display(self):
         return dict(STATUS_CHOICES).get(self.status, self.status)
 
-    def get_correction_active(self, for_step):
+    def get_corrections_all(self, for_steps):
+        """
+        Возвращает кверисет всех Корректировок (main.Correction) которые есть для указанной Задачи у текущей Заявки.
+
+        :param for_step: list of string, название шага viewflow.models.Task.flow_task.
+                            Строковое имя шага можно получить, использую функцию viewflow.fields.get_task_ref
+        :return: queryset of michelin.main.models.Correction
+        """
+        return Correction.objects.filter(
+            proposal=self,
+            for_step__in=for_steps
+        ).order_by('-created')
+
+    def get_correction_active(self, for_step=None):
         """
         Возвращает Корректировку (main.Correction), которая сейчас активна для указанной Задачи у текущей Заявки.
 
@@ -39,11 +57,10 @@ class ProposalProcess(Process):
                             Строковое имя шага можно получить, использую функцию viewflow.fields.get_task_ref
         :return: michelin.main.models.Correction
         """
-        return Correction.objects.filter(
-            proposal=self,
-            task__flow_task=for_step,
-            is_active=True
-        ).first()
+        correction_qs = Correction.objects.filter(proposal=self, is_active=True)
+        if for_step:
+            correction_qs = correction_qs.filter(for_step=for_step)
+        return correction_qs.first()
 
     def get_correction_last(self, for_step):
         """
@@ -56,6 +73,8 @@ class ProposalProcess(Process):
         return Correction.objects.filter(
             proposal=self,
             task__flow_task=for_step,
+            # ???
+            # for_step__in=for_steps
         ).order_by('-created').first()
 
     def get_last_version(self, for_step=None):
@@ -86,11 +105,12 @@ class ProposalProcess(Process):
         :param version: viewflow.models.Version, версия, с которой сравнивается current_state
         :fields: iterable, поля, по которым идёт сравнение
         """
+        version_data = json.loads(version.serialized_data)[0]['fields']
         diff_fields = {}
         for field in fields:
-            if current_state[field] != version.field_dict[field]:
+            if field in current_state and current_state[field] != version_data[field]:
                 diff_fields[field] = {
-                    'old_value': version.field_dict[field],
+                    'old_value': version_data[field],
                     'new_value': current_state[field]
                 }
         return diff_fields
@@ -102,9 +122,8 @@ class Correction(models.Model):
     По логике приложения, в один момент времени у одной Заявки
     может быть только одна активная Корректировка для одного этапа согласования.
     Чтобы закрепить это утверждение на уровне БД, создан триггер only_one_active_correction_for_proposal_and_task.
-    См. main.migrations.0004_auto_20180114_1605
+    См. main.migrations.0002_add_constraint
     """
-
     class Meta:
         verbose_name = l_('Корректировка')
         verbose_name_plural = l_('Корректировка')
@@ -116,11 +135,25 @@ class Correction(models.Model):
     )
     task = models.ForeignKey(
         'viewflow.Task',
-        verbose_name=l_('Этап согласования')
+        verbose_name=l_('На каком шаге создана Корректировка'),
+    )
+    for_step = models.CharField(
+        verbose_name=l_('Для какого шага создана Корректировка'),
+        max_length=255,
+        null=True,
+        blank=True,
     )
     reviewed_version = models.ForeignKey(
         'reversion.Version',
-        verbose_name=l_('К какой версии заявки относятся корректировки')
+        verbose_name=l_('К какой версии заявки относятся корректировки'),
+        related_name='corrections_reviewed'
+    )
+    fixed_in_version = models.ForeignKey(
+        'reversion.Version',
+        verbose_name=l_('В какой версии корректировки исправленны'),
+        related_name='corrections_fixed',
+        null=True,
+        blank=True,
     )
     data = JSONField(
         l_('Данные о коррекции')
@@ -142,3 +175,20 @@ class Correction(models.Model):
         on_delete=models.CASCADE,
         verbose_name=l_('Создатель')
     )
+
+
+@receiver(post_revision_commit)
+def revision_saved(sender, revision, versions, **kwargs):
+    """
+    Деактивируем объект Корректировки и добавляем к ней информацию о том,
+    в какой версии Заявки исправлена Корректировка.
+    """
+    proposal_versions = [version for version in versions if version._model == ProposalProcess]
+    if proposal_versions:
+        saved_proposal_version = proposal_versions[0]
+
+        correction_obj = saved_proposal_version.object.get_correction_active()
+        if correction_obj:
+            correction_obj.is_active = False
+            correction_obj.fixed_in_version = saved_proposal_version
+            correction_obj.save()

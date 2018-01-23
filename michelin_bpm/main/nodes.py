@@ -23,26 +23,7 @@ class TranslatedNodeMixin:
         return str(l_(name.lower().capitalize()))
 
 
-class FixMistakesNodeView(TranslatedNodeMixin, nodes.View):
-    """
-    Если в переменных для view (self._view_args) есть переменная с именем mistakes_from_step,
-    то приводит эту переменную из типа ThisObject в формат строки, в котором она храниться в базе.
-    Нужно для того, чтобы во потом по этой строке делать выборку в БД.
-    """
-    def ready(self):
-        super().ready()
-        if 'mistakes_from_step' in self._view_args:
-            value = self._view_args['mistakes_from_step']
-            if isinstance(value, ThisObject):
-                value.flow_class = self.flow_class
-                self._view_args['mistakes_from_step'] = get_task_ref(value)
-
-
 class StartNodeView(LinkedNodeMixin, TranslatedNodeMixin, nodes.Start):
-    pass
-
-
-class ApproveViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):
     pass
 
 
@@ -52,3 +33,24 @@ class IfNode(TranslatedNodeMixin, nodes.If):
 
 class SplitNode(TranslatedNodeMixin, nodes.Split):
     pass
+
+
+class ApproveViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):
+
+    def ready(self):
+        super().ready()
+        # Добавляем к viewflow.ThisObject flow_class,
+        # иначе в будущем при вызове viewflow.fields.get_task_ref(ThisObject) выйдет ошибка.
+        if 'show_corrections' in self._view_args:
+            value = self._view_args['show_corrections']
+            if isinstance(value, list):
+                for obj in value:
+                    if isinstance(obj['for_step'], ThisObject):
+                        obj['for_step'].flow_class = self.flow_class
+
+        if 'can_create_corrections' in self._view_args:
+            value = self._view_args['can_create_corrections']
+            if isinstance(value, list):
+                for obj in value:
+                    if isinstance(obj['for_step'], ThisObject):
+                        obj['for_step'].flow_class = self.flow_class

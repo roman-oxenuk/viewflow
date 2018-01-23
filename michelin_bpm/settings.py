@@ -25,6 +25,7 @@ SECRET_KEY = '5$7x$_pz3g-==zzc@n!d63o392)^(jqc^@1^sgu3v6&nzwfkko'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+DEBUG_SQL = False
 INTERNAL_IPS = ['127.0.0.1']
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',') if os.environ.get('ALLOWED_HOSTS') else []
@@ -39,8 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'material',
-    'material.frontend',
+
     'viewflow',
     'viewflow.frontend',
     'reversion',
@@ -50,6 +50,8 @@ INSTALLED_APPS = [
 # Project apps
 INSTALLED_APPS += [
     'michelin_bpm.main',
+    'material',
+    'material.frontend',
 ]
 
 if DEBUG:
@@ -140,6 +142,29 @@ AUTH_PASSWORD_VALIDATORS = [
     # },
 ]
 
+if DEBUG_SQL:
+    LOGGING = {
+        'version': 1,
+        'filters': {
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue',
+            }
+        },
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+            }
+        },
+        'loggers': {
+            'django.db.backends': {
+                'level': 'DEBUG',
+                'handlers': ['console'],
+            }
+        }
+    }
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
@@ -172,3 +197,4 @@ MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/mnt/resource/michelin-bpm/')
 
 # Префикс для названия поле, в которые вводят корректировки.
 CORRECTION_FIELD_SUFFIX = '_correction'
+COMMENT_REQUEST_FIELD_SUFFIX = '_get_comment'

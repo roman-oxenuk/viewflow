@@ -1,0 +1,111 @@
+{% load material_form material_form_internal main i18n %}
+{% part form %}
+    {% if form.non_field_errors%}
+    <div>
+        {% for error in form.non_field_errors %}
+        <small class="error">{{ error }}</small>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% part form hidden %}{% for hidden in form.hidden_fields %}
+            {{ hidden }}
+    {% endfor %}{% endpart %}
+    {% if layout %}{% part form visible %}
+            {% render layout %}{% endrender %}
+    {% endpart %}{% else %}
+        {% part form visible %}
+
+            {% if '__all__' in fields_corrections %}
+                <span>Правки для всей заявки:</span>
+                <ul>
+                {% for non_field_correction in fields_corrections|get_item:'__all__' %}
+                    <li>
+
+                    {% if non_field_correction.is_active %}<span style="color: red;">{% endif %}
+                        {{ non_field_correction.msg }}
+                    {% if non_field_correction.is_active %}</span>{% endif %}
+
+                    ({{ non_field_correction.from_step }}, {% trans "Owner: " %} {{ non_field_correction.owner }})
+
+                    </li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% for bound_field in form.visible_fields %}
+                {% render bound_field %}{% endrender %}
+
+                {% if bound_field.name in fields_corrections %}
+                    <span>{% trans "Field history: " %}</span>
+                    <ul>
+                    {% for correction in fields_corrections|get_item:bound_field.name %}
+                        <li>
+                            {% if correction.is_active %}<span style="color: red;">{% endif %}
+                            {{ correction.msg }}
+                            {% if correction.is_active %}</span>{% endif %}
+                            ({{ correction.from_step }}, {% trans "Owner: " %} {{ correction.owner }})
+
+                            {% if correction.version_value %}
+                                <br>
+                                {% trans "Value was: " %} {{ correction.version_value }}
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+
+            {% endfor %}
+        {% endpart %}{% part 'inlines' %}
+            {% for inline in inlines %}
+                {{ inline }}
+            {% endfor %}
+        {% endpart %}
+    {% endif %}
+{% endpart %}
+
+
+
+{% comment %}
+{% load material_form material_form_internal main i18n %}
+{% part form %}
+    {% if form.non_field_errors%}
+    <div>
+        {% for error in form.non_field_errors %}
+        <small class="error">{{ error }}</small>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% part form hidden %}{% for hidden in form.hidden_fields %}
+            {{ hidden }}
+    {% endfor %}{% endpart %}
+    {% if layout %}{% part form visible %}
+            {% render layout %}{% endrender %}
+    {% endpart %}{% else %}
+        {% part form visible %}
+            {% for bound_field in form.visible_fields %}
+                {% render bound_field %}{% endrender %}
+
+                {{ fields_corrections }}
+
+
+                {% if bound_field.name in fields_corrections %}
+                    <ul>
+                    {% for correction in fields_corrections|get_item:bound_field.name %}
+                        <li>
+                            {{ correction.msg }}
+                            ({{ correction.from_step }}, {% trans "Owner: " %} {{ correction.owner }})
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+
+
+            {% endfor %}
+        {% endpart %}{% part 'inlines' %}
+            {% for inline in inlines %}
+                {{ inline }}
+            {% endfor %}
+        {% endpart %}
+    {% endif %}
+{% endpart %}
+{% endcomment %}
