@@ -2,6 +2,7 @@ appnope==0.1.0
 click==6.7
 decorator==4.1.2
 Django==1.11
+django-environ==0.4.4
 django-filter==1.1.0
 django-material==1.1.1
 django-reversion==2.0.12
@@ -19,7 +20,6 @@ prompt-toolkit==1.0.15
 psycopg2==2.7.3.2
 ptyprocess==0.5.2
 Pygments==2.2.0
-python-dotenv==0.7.1
 pytz==2017.3
 simplegeneric==0.8.1
 six==1.11.0
