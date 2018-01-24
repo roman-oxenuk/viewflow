@@ -12,6 +12,16 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import environ
+
+
+root = environ.Path(__file__) - 2 # two folder back
+env = environ.Env(      # set default values and casting
+    DEBUG=(bool, False),
+    DEBUG_SQL=(bool, False),
+    ALLOWED_HOSTS=(list, [])
+)
+environ.Env.read_env(env_file=os.path.join(str(root), '.env')) # reading .env file
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,11 +34,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '5$7x$_pz3g-==zzc@n!d63o392)^(jqc^@1^sgu3v6&nzwfkko'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-DEBUG_SQL = False
+DEBUG = env('DEBUG')
+DEBUG_SQL = env('DEBUG_SQL')
 INTERNAL_IPS = ['127.0.0.1']
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',') if os.environ.get('ALLOWED_HOSTS') else []
+ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
 
 # Application definition
@@ -116,9 +126,9 @@ WSGI_APPLICATION = 'michelin_bpm.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DJANGO_DB_NAME', 'michelin_bpm'),
-        'USER': os.environ.get('DJANGO_DB_USER', 'michelin_bpm'),
-        'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD', 'michelin_bpm'),
+        'NAME': env('DJANGO_DB_NAME'),
+        'USER': env('DJANGO_DB_USER'),
+        'PASSWORD': env('DJANGO_DB_PASSWORD', default=''),
         'HOST': 'localhost',
     }
 }

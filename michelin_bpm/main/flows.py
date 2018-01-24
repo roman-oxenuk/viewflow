@@ -8,7 +8,7 @@ from viewflow.fields import get_task_ref
 from viewflow.models import Process
 
 from michelin_bpm.main.models import ProposalProcess
-from michelin_bpm.main.nodes import StartNodeView, IfNode, ApproveViewNode
+from michelin_bpm.main.nodes import StartNodeView, IfNode, SwitchNode, EndNode, ApproveViewNode
 from michelin_bpm.main.views import CreateProposalProcessView, ApproveView, FixMistakesView
 from michelin_bpm.main.forms import FixMistakesForm, ApproveForm, LogistForm
 
@@ -178,7 +178,9 @@ class ProposalConfirmationFlow(Flow):
     )
 
     check_approve_by_region_chief = (
-        flow.Switch()
+        SwitchNode(
+            task_description=_('Check approve by region hief'),
+        )
         .Case(this.end, lambda a: not has_active_correction(a))
         .Case(
             this.get_comments_from_logist,
@@ -232,4 +234,6 @@ class ProposalConfirmationFlow(Flow):
         task_description=_('Item prepared')
     ).Next(this.end)
 
-    end = flow.End()
+    end = EndNode(
+        task_description=_('End')
+    )

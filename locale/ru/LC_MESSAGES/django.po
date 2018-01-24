@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-16 13:05+0000\n"
+"POT-Creation-Date: 2018-01-24 08:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,50 +20,86 @@ msgstr ""
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: main/flows.py:38
+#: main/flows.py:57
 msgid "Start"
 msgstr "Начало"
 
-#: main/flows.py:48
+#: main/flows.py:150
+msgid "Approve by region chief"
+msgstr "Проверка региональным шефом"
+
+#: main/flows.py:182
+msgid "Check approve by region chief"
+msgstr "Завершение проверки региональным шефом"
+
+#: main/flows.py:199
+msgid "Fix mistakes after region chief"
+msgstr "Правка корректировок после проверки региональным шефом"
+
+#: main/flows.py:211
+msgid "Get comments from logist"
+msgstr "Получение комментариев от логиста"
+
+#: main/flows.py:234
+msgid "Item prepared"
+msgstr "Заявка проверена"
+
+#: main/flows.py:238
+msgid "End"
+msgstr "Заявка согласована"
+
+#: main/templates/fields/django_fileinput.html:8
+msgid "File"
+msgstr "Файл"
+
+#: main/templates/fields/django_selectmultiple.html:7
+msgid "Choose your option"
+msgstr ""
+
+#: main/templates/main/proposalconfirmation/task.html:32
+msgid "Detail"
+msgstr ""
+
+#: main/templates/main/proposalconfirmation/task.html:35
+msgid "Done and continue on this process"
+msgstr "Сохранить и продолжить"
+
+#: main/templates/main/proposalconfirmation/task.html:36
+msgid "Done"
+msgstr "Сохранить"
+
+#: main/templates/material/form.html:28 main/templates/material/form.html:46
+msgid "Owner: "
+msgstr "Создатель: "
+
+#: main/templates/material/form.html:39
+msgid "Field history: "
+msgstr "История изменений: "
+
+#: main/templates/material/form.html:50
+msgid "Value was: "
+msgstr "Прошлое значение: "
+
 msgid "Approve by account manager"
 msgstr "Проверка аккаунт-менеджером"
 
-#: main/flows.py:57
 msgid "Check approve by account manager"
 msgstr "Завершение проверки аккаунт-менеджером"
 
-#: main/flows.py:68
 msgid "Fix mistakes after account manager"
 msgstr "Правка корректировок после проверки аккаунт-менеджером"
 
-#: main/flows.py:78
 msgid "Split flow"
 msgstr "Разделение процесса"
 
-#: main/flows.py:88
-msgid "Approve by credit manager"
-msgstr "Проверка кредитным-инспектором"
-
-#: main/flows.py:97
 msgid "Check approve by credit manager"
 msgstr "Завершение проверки кредитным-инспектором"
 
-#: main/flows.py:108
-msgid "Fix mistakes after credit manager"
-msgstr "Правка корректировок после проверки кредитным-инспектором"
-
-#: main/flows.py:120
 msgid "Approve by logist"
 msgstr "Проверка логистом"
 
-#: main/flows.py:129
 msgid "Check approve by logist"
 msgstr "Завершение проверки логистом"
 
-#: main/flows.py:140
 msgid "Fix mistakes after logist"
 msgstr "Правка корректировок после проверки логистом"
-
-#: main/flows.py:149
-msgid "Item prepared"
-msgstr "Заявка проверена"

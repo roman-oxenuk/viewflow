@@ -78,6 +78,9 @@ class ProposalProcess(Process):
         ).order_by('-created').first()
 
     def get_last_version(self, for_step=None):
+        # TODO MBPM-3:
+        # Удалить этот метод? Стрёмный он какой-то.
+        # Вместо него можно запрашивать Корректировку, и уже от неё брать версию.
         """
         Возвращает последнюю Версию (reversion.Version)
         у которой была Корректировка для указанной Задачи у текущей Заявки.

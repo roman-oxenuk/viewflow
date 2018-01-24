@@ -35,6 +35,14 @@ class SplitNode(TranslatedNodeMixin, nodes.Split):
     pass
 
 
+class SwitchNode(TranslatedNodeMixin, nodes.Switch):
+    pass
+
+
+class EndNode(TranslatedNodeMixin, nodes.End):
+    pass
+
+
 class ApproveViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):
 
     def ready(self):
