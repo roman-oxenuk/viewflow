@@ -28,9 +28,21 @@ class ProposalProcess(Process):
     bank_name = models.CharField(l_('Название банка'), max_length=255)
     account_number = models.CharField(l_('Номер расчётного счёта'), max_length=255)
 
+    j_code = models.CharField(l_('J-код'), max_length=255, null=True, blank=True)
+
+    is_needs_bibserve_account = models.BooleanField(l_('Is client needs to have a BibServe account?'), default=False)
+    bibserve_login = models.CharField(l_('BibServe Login'), max_length=255, null=True, blank=True)
+    bibserve_password = models.CharField(l_('BibServe Password'), max_length=255, null=True, blank=True)
+
+    acs = models.ForeignKey(
+        settings.AUTH_USER_MODEL, blank=True, null=True,
+        verbose_name=l_('Менеджер по работе с клиентами'),
+        related_name='acs_proposals'
+    )
     client = models.ForeignKey(
         settings.AUTH_USER_MODEL, blank=True, null=True, db_index=True,
-        on_delete=models.CASCADE, verbose_name=l_('Регистрируемый клиент')
+        on_delete=models.CASCADE, verbose_name=l_('Регистрируемый клиент'),
+        related_name='clients_proposals'
     )
 
     def get_status_display(self):
@@ -38,20 +50,45 @@ class ProposalProcess(Process):
 
     def get_corrections_all(self, for_steps):
         """
+        TODO MBPM-3:
+        Акктуализировать докстринги, а именно переменную for_steps
+
         Возвращает кверисет всех Корректировок (main.Correction) которые есть для указанной Задачи у текущей Заявки.
 
         :param for_step: list of string, название шага viewflow.models.Task.flow_task.
                             Строковое имя шага можно получить, использую функцию viewflow.fields.get_task_ref
         :return: queryset of michelin.main.models.Correction
         """
-        return Correction.objects.filter(
-            proposal=self,
-            for_step__in=for_steps
-        ).order_by('-created')
+        # {
+        #     'for_step': get_task_ref(corr_setting['for_step']),
+        #     'made_on': get_task_ref(corr_setting['made_on']) if ('made_on' in corr_setting) else None
+        # }
+        # corrections_qs = Correction.objects.filter(proposal=self)
+
+        corrections_qs = Correction.objects.none()
+        for for_step in for_steps:
+            if 'made_on_step' in for_step and for_step['made_on_step']:
+                corrections_qs = corrections_qs | Correction.objects.filter(
+                    proposal=self,
+                    for_step=for_step['for_step'],
+                    task__flow_task=for_step['made_on_step']
+                ).order_by('-created')
+            else:
+                corrections_qs = corrections_qs | Correction.objects.filter(
+                    proposal=self,
+                    for_step=for_step['for_step']
+                ).order_by('-created')
+        return corrections_qs
+        # return Correction.objects.filter(
+        #     proposal=self,
+        #     for_step__in=for_steps
+        # ).order_by('-created')
 
     def get_correction_active(self, for_step=None):
         """
-        Возвращает Корректировку (main.Correction), которая сейчас активна для указанной Задачи у текущей Заявки.
+        TODO MBPM-3:
+        Акктуализировать docstring -- возвращает qs с корректировками, которых может быть много
+        Возвращает Корректировки (main.Correction), которая сейчас активна для указанной Задачи у текущей Заявки.
 
         :param for_step: string, название шага viewflow.models.Task.flow_task.
                             Строковое имя шага можно получить, использую функцию viewflow.fields.get_task_ref
@@ -60,7 +97,7 @@ class ProposalProcess(Process):
         correction_qs = Correction.objects.filter(proposal=self, is_active=True)
         if for_step:
             correction_qs = correction_qs.filter(for_step=for_step)
-        return correction_qs.first()
+        return correction_qs
 
     def get_correction_last(self, for_step):
         """
@@ -130,8 +167,7 @@ class Correction(models.Model):
     class Meta:
         verbose_name = l_('Корректировка')
         verbose_name_plural = l_('Корректировка')
-        unique_together = ('proposal', 'task')      # У одной Задачи может быть
-                                                    # только одна Корректировка в рамках одной Заявки.
+
     proposal = models.ForeignKey(
         ProposalProcess,
         verbose_name=l_('Заявка')
@@ -189,9 +225,16 @@ def revision_saved(sender, revision, versions, **kwargs):
     proposal_versions = [version for version in versions if version._model == ProposalProcess]
     if proposal_versions:
         saved_proposal_version = proposal_versions[0]
+        # Для Клиента всегда должна быть одна активная Корретировка, т.к. он общается через Аккаунта,
+        # и только Аккаунт может создавать для него Корректировки.
+        # А править Заявку может только Клиент.
+        # TODO MBPM-3: Закрепить это на уровне констрейта в БД?
 
-        correction_obj = saved_proposal_version.object.get_correction_active()
-        if correction_obj:
-            correction_obj.is_active = False
-            correction_obj.fixed_in_version = saved_proposal_version
-            correction_obj.save()
+        # Если новую версию создал Клиент, то это значит, что он внёс изменения в Заявку и мы можем
+        # деактивировать предыдущую Корректировку от Аккаунта
+        if saved_proposal_version.object.client == saved_proposal_version.revision.user:
+            correction_obj = saved_proposal_version.object.get_correction_active().first()
+            if correction_obj:
+                correction_obj.is_active = False
+                correction_obj.fixed_in_version = saved_proposal_version
+                correction_obj.save()

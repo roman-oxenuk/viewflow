@@ -43,6 +43,10 @@ class EndNode(TranslatedNodeMixin, nodes.End):
     pass
 
 
+class ViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):
+    pass
+
+
 class ApproveViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):
 
     def ready(self):
@@ -55,6 +59,9 @@ class ApproveViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):
                 for obj in value:
                     if isinstance(obj['for_step'], ThisObject):
                         obj['for_step'].flow_class = self.flow_class
+
+                    if 'made_on_step' in obj and isinstance(obj['made_on_step'], ThisObject):
+                        obj['made_on_step'].flow_class = self.flow_class
 
         if 'can_create_corrections' in self._view_args:
             value = self._view_args['can_create_corrections']

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 from django.http import HttpResponseRedirect
 from django.conf import settings
 from django.forms.models import model_to_dict
@@ -38,11 +39,17 @@ class ShowCorrectionsMixin:
         На основании show_corrections и полей формы.
         """
         for_steps = []
+        # {'for_step': '', 'made_on_step': ''}
         # добавляем имя своего шага, чтобы видеть корректировки, созданные для этого шага
-        for_steps.append(get_task_ref(self.linked_node))
+        for_steps.append(
+            {'for_step': get_task_ref(self.linked_node)}
+        )
         # добавляем возможность видеть корректировки для других шагов, если это настроенно в ноде
         for corr_setting in self.show_corrections:
-            for_steps.append(get_task_ref(corr_setting['for_step']))
+            for_steps.append({
+                'for_step': get_task_ref(corr_setting['for_step']),
+                'made_on_step': get_task_ref(corr_setting['made_on_step']) if ('made_on_step' in corr_setting) else None
+            })
         corrections_qs = instance.get_corrections_all(for_steps)
 
         # Поля, которые видит пользователь в рамках этого view
@@ -62,31 +69,36 @@ class ShowCorrectionsMixin:
                     'owner': str(correction.owner),
                     'created': correction.created,
                     'is_active': correction.is_active,
-                    'version_value': None,
+                    'changed_fieldschanged_fields': None,
                 }
                 if '__all__' in fields_corrections:
                     fields_corrections['__all__'].append(non_field_corr)
                 else:
                     fields_corrections['__all__'] = [non_field_corr]
 
-                diff = ProposalProcess.get_diff_fields(
-                    model_to_dict(instance),
-                    correction.reviewed_version,
-                    fields
-                )
-                for (changed_field_name, changed_field_old_value) in diff.items():
-                    field_corr = {
-                        'msg': correction.data['__all__'],
-                        'from_step': str(correction.task.flow_task),
-                        'owner': str(correction.owner),
-                        'created': correction.created,
-                        'is_active': correction.is_active,
-                        'version_value': changed_field_old_value['old_value'],
-                    }
-                    if changed_field_name in fields_corrections:
-                        fields_corrections[changed_field_name].append(field_corr)
-                    else:
-                        fields_corrections[changed_field_name] = [field_corr]
+                if correction.fixed_in_version:
+                    base_instace = json.loads(correction.fixed_in_version.serialized_data)[0]['fields']
+                    diff = ProposalProcess.get_diff_fields(
+                        base_instace,
+                        correction.reviewed_version,
+                        fields
+                    )
+                    non_field_corr['changed_fields'] = diff
+                    for (changed_field_name, changed_field_old_value) in diff.items():
+                        field_corr = {
+                            'msg': correction.data['__all__'],
+                            'from_step': str(correction.task.flow_task),
+                            'owner': str(correction.owner),
+                            'created': correction.created,
+                            'is_active': correction.is_active,
+                            'version_value': None
+                        }
+                        if correction.fixed_in_version:
+                            field_corr['version_value'] = changed_field_old_value['old_value']
+                        if changed_field_name in fields_corrections:
+                            fields_corrections[changed_field_name].append(field_corr)
+                        else:
+                            fields_corrections[changed_field_name] = [field_corr]
 
         for field_name in fields:
             for correction in corrections_qs:
@@ -99,14 +111,16 @@ class ShowCorrectionsMixin:
                         'is_active': correction.is_active,
                         'version_value': None,
                     }
+                    if correction.fixed_in_version:
+                        base_instace = json.loads(correction.fixed_in_version.serialized_data)[0]['fields']
 
-                    diff = ProposalProcess.get_diff_fields(
-                        model_to_dict(instance),
-                        correction.reviewed_version,
-                        [field_name]
-                    )
-                    if diff:
-                        field_corr['version_value'] = diff[field_name]['old_value']
+                        diff = ProposalProcess.get_diff_fields(
+                            base_instace,
+                            correction.reviewed_version,
+                            [field_name]
+                        )
+                        if diff:
+                            field_corr['version_value'] = diff[field_name]['old_value']
 
                     if field_name in fields_corrections:
                         fields_corrections[field_name].append(field_corr)
@@ -147,14 +161,11 @@ class ApproveView(ShowCorrectionsMixin, UpdateProcessView):
 
     def form_valid(self, form, *args, **kwargs):
         """ Создаёт объект Корректировки, если есть поля с заполненными корректировками """
-
         # Деактивируем корректировку для нашего текущего шага
-        correction_obj = form.instance.get_correction_active(
+        corrections_qs = form.instance.get_correction_active(
             for_step=get_task_ref(self.linked_node)
         )
-        if correction_obj:
-            correction_obj.is_active = False
-            correction_obj.save()
+        corrections_qs.update(is_active=False)
 
         # TODO MBPM-3: Вынести запрос к БД из цикла
         for corr_settings in self.can_create_corrections:
@@ -197,3 +208,49 @@ class FixMistakesView(ShowCorrectionsMixin, UpdateProcessView):
             super().form_valid(form, **kwargs)
             reversion.set_user(self.request.user)
         return HttpResponseRedirect(self.get_success_url())
+
+
+class AddDataView(UpdateProcessView):
+
+    linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+
+        current_version = Version.objects.get_for_object(
+            kwargs['instance']
+        ).order_by(
+            '-revision__date_created'
+        ).first()
+
+        kwargs.update({
+            'current_version': current_version,
+            'linked_node': self.linked_node,
+        })
+        return kwargs
+
+    def form_valid(self, form, *args, **kwargs):
+        with reversion.create_revision():
+            super().form_valid(form, **kwargs)
+            reversion.set_user(self.request.user)
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class SeeDataView(UpdateProcessView):
+
+    linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+
+        current_version = Version.objects.get_for_object(
+            kwargs['instance']
+        ).order_by(
+            '-revision__date_created'
+        ).first()
+
+        kwargs.update({
+            'current_version': current_version,
+            'linked_node': self.linked_node,
+        })
+        return kwargs
