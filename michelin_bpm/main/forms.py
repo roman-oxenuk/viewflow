@@ -195,8 +195,11 @@ class FixMistakesForm(ModelForm):
         not_corrected = need_to_be_corrected - changed_fields
         if not_corrected:
             for field_name in not_corrected:
-                self.add_error(field_name, l_('Нужно изменить требуемое поле'))
-                self.add_error(field_name, correction_obj.data[field_name])
+                msg = l_(
+                    'Нужно изменить это поле в соответствие с корректировкой: ' +
+                    correction_obj.data[field_name]
+                )
+                self.add_error(field_name, msg)
 
         return self.cleaned_data
 
