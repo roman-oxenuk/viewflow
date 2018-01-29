@@ -1,0 +1,15 @@
+{% extends 'material/frontend/base.html' %}
+{% load i18n %}
+
+{% block content %}
+    {% block left-panel %}
+        <div class="left-panel">
+            <div class="card">
+                <div class="card-action row">
+                    <p><a href="{% url 'login' %}?next=/workflow/">{% trans 'Log in again' %}</a></p>
+                </div>
+            </div>
+        </div>
+    {% endblock %}
+    {% block right-panel %}{% endblock %}
+{% endblock %}

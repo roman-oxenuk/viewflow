@@ -17,16 +17,19 @@ from django.conf.urls import url, include
 from django.conf import settings
 from django.views import generic
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 
 from material.frontend import urls as frontend_urls
+from michelin_bpm.main.admin import admin_site
 
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
+    url(r'^accounts/logout/$', auth_views.logout,
+        {'template_name': 'main/registration/logged_out.html'}, name='logout'),
+    url(r'^admin/', admin_site.urls),
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),
     url(r'', include(frontend_urls)),
 ]
-
 
 if settings.DEBUG:
     import debug_toolbar
