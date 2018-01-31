@@ -19,7 +19,8 @@ root = environ.Path(__file__) - 2 # two folder back
 env = environ.Env(      # set default values and casting
     DEBUG=(bool, False),
     DEBUG_SQL=(bool, False),
-    ALLOWED_HOSTS=(list, [])
+    ALLOWED_HOSTS=(list, []),
+    INTERNAL_IPS=(list, [])
 )
 environ.Env.read_env(env_file=os.path.join(str(root), '.env')) # reading .env file
 
