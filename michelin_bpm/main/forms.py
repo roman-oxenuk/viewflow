@@ -424,7 +424,7 @@ class AddACSForm(ModelForm):
         self.fields['current_version'].initial = current_version
 
         User = get_user_model()
-        self.fields['acs'].queryset = User.objects.filter(groups__name='ASC')
+        self.fields['acs'].queryset = User.objects.filter(groups__name='ACS')
 
         for field_name, field in self.fields.items():
 
