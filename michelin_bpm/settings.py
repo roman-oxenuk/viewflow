@@ -36,7 +36,7 @@ SECRET_KEY = '5$7x$_pz3g-==zzc@n!d63o392)^(jqc^@1^sgu3v6&nzwfkko'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 DEBUG_SQL = env('DEBUG_SQL')
-INTERNAL_IPS = ['127.0.0.1']
+INTERNAL_IPS = env('INTERNAL_IPS')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
