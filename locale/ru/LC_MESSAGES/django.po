@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-24 08:58+0000\n"
+"POT-Creation-Date: 2018-01-30 14:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,31 +20,105 @@ msgstr ""
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: main/flows.py:57
+#: main/flows.py:79 main/templates/main/proposalconfirmation/start.html:7
+#: main/templates/main/proposalconfirmation/start.html:27
 msgid "Start"
-msgstr "Начало"
+msgstr "Отправить заявку на согласование"
 
-#: main/flows.py:150
+#: main/flows.py:89
+msgid "Approve by account manager"
+msgstr "Проверка аккаунт-менеджером"
+
+#: main/flows.py:134
+msgid "Check approve by account manager"
+msgstr "Завершение проверки аккаунт-менеджером"
+
+#: main/flows.py:165
+msgid "Fix mistakes after account manager"
+msgstr "Правка корректировок после проверки аккаунт-менеджером"
+
+#: main/flows.py:174
+msgid "Split flow"
+msgstr "Разделение процесса"
+
+#: main/flows.py:189
+msgid "Approve by credit manager"
+msgstr "Проверка кредитным-инспектором"
+
+#: main/flows.py:211
 msgid "Approve by region chief"
 msgstr "Проверка региональным шефом"
 
-#: main/flows.py:182
+#: main/flows.py:239
 msgid "Check approve by region chief"
 msgstr "Завершение проверки региональным шефом"
 
-#: main/flows.py:199
-msgid "Fix mistakes after region chief"
-msgstr "Правка корректировок после проверки региональным шефом"
-
-#: main/flows.py:211
+#: main/flows.py:251
 msgid "Get comments from logist"
 msgstr "Получение комментариев от логиста"
 
-#: main/flows.py:234
-msgid "Item prepared"
-msgstr "Заявка проверена"
+#: main/flows.py:272
+msgid "Join credit manager and region chief"
+msgstr ""
+"Соединение процесса после проверки Кредитным инспектором и Шефом региональна"
 
-#: main/flows.py:238
+#: main/flows.py:278
+msgid "Process to end or account manager"
+msgstr "Завершение проверки Кредитным инспектором и Шефом региональна"
+
+#: main/flows.py:285
+msgid "Split flow for ADV and BibServe Admin"
+msgstr "Разделение процесса для ADV и администратора BibServe"
+
+#: main/flows.py:297
+msgid "Add J-code by ADV"
+msgstr "Добавление J-кода"
+
+#: main/flows.py:307
+msgid "Add BibServe data"
+msgstr "Добавление реквизитов для доступа на BibServe"
+
+#: main/flows.py:314
+msgid "Join process after adding J-code and conditionally ddding BibServe data"
+msgstr ""
+"Соединение процесса после добавления J-кода и условной регистрацией Клиента "
+"на BibServe"
+
+#: main/flows.py:321
+msgid "Set credit limit"
+msgstr "Установление кредитного лимита"
+
+#: main/flows.py:331
+msgid "Approve paper docs"
+msgstr "Проверка бумажных документов"
+
+#: main/flows.py:354
+msgid "Check approve paper docs"
+msgstr "Завершение проверки бумажных документов"
+
+#: main/flows.py:364
+msgid "Unblock client by ADV"
+msgstr "Разблокировка Клиента во внутренних системах"
+
+#: main/flows.py:371
+msgid "Split flow for adding ACS and activating BibServe account"
+msgstr ""
+"Разделение процесса для добавления ACS и активации аккаунта на BibServe"
+
+#: main/flows.py:380
+msgid "Adding ACS"
+msgstr "Добавление ACS"
+
+#: main/flows.py:390
+msgid "Activating BibServe account"
+msgstr "Активация аккаунта на BibServe"
+
+#: main/flows.py:397
+msgid "Join process after adding ACS and activating BibServe account"
+msgstr ""
+"Соединение процесса после добавления ACS и активации аккаунта на BibServe"
+
+#: main/flows.py:401
 msgid "End"
 msgstr "Заявка согласована"
 
@@ -54,11 +128,134 @@ msgstr "Файл"
 
 #: main/templates/fields/django_selectmultiple.html:7
 msgid "Choose your option"
-msgstr ""
+msgstr "Выберите значение"
+
+#: main/templates/main/includes/flows_start_actions.html:13
+msgid "New process"
+msgstr "Новый процесс"
+
+#: main/templates/main/menu.html:3 main/templates/main/site_queue.html:6
+#: viewflow/site_queue.html:6
+msgid "Unassigned"
+msgstr "В общей очереди"
+
+#: main/templates/main/menu.html:4 main/templates/main/site_tasks.html:6
+#: viewflow/site_tasks.html:6
+msgid "Inbox"
+msgstr "Мои задачи"
+
+#: main/templates/main/menu.html:5 main/templates/main/site_archive.html:5
+#: viewflow/site_archive.html:5
+msgid "Participated"
+msgstr "Исходящие"
+
+#: main/templates/main/proposalconfirmation/base_task.html:29
+#: main/templates/main/proposalconfirmation/process_cancel.html:23
+#: main/templates/main/proposalconfirmation/process_detail.html:19
+#: main/templates/main/site_task_action.html:16
+#: viewflow/site_task_action.html:16
+msgid "Description"
+msgstr "Описание"
+
+#: main/templates/main/proposalconfirmation/base_task.html:36
+#: main/templates/main/proposalconfirmation/process_data.html:32
+#: main/templates/main/proposalconfirmation/process_detail.html:20
+msgid "Owner"
+msgstr "Создатель: "
+
+#: main/templates/main/proposalconfirmation/base_task.html:41
+msgid "Permission"
+msgstr "Права"
+
+#: main/templates/main/proposalconfirmation/base_task.html:49
+msgid "Created"
+msgstr "Создан"
+
+#: main/templates/main/proposalconfirmation/base_task.html:53
+#: main/templates/main/proposalconfirmation/process_cancel.html:24
+#: main/templates/main/proposalconfirmation/process_detail.html:21
+#: main/templates/main/proposalconfirmation/queue.html:13
+msgid "Started"
+msgstr "Начало"
+
+#: main/templates/main/proposalconfirmation/base_task.html:57
+#: main/templates/main/proposalconfirmation/process_detail.html:22
+#: main/templates/main/proposalconfirmation/queue.html:14
+msgid "Finished"
+msgstr "Завершён"
+
+#: main/templates/main/proposalconfirmation/base_task.html:65
+msgid "Previous tasks"
+msgstr "Предыдущий шаг"
+
+#: main/templates/main/proposalconfirmation/base_task.html:74
+msgid "Next tasks"
+msgstr "Следующий шаг"
+
+#: main/templates/main/proposalconfirmation/process_cancel.html:17
+#: main/templates/main/proposalconfirmation/process_detail.html:59
+msgid "Cancel"
+msgstr "Отмена"
+
+#: main/templates/main/proposalconfirmation/process_cancel.html:21
+#: main/templates/main/proposalconfirmation/process_detail.html:18
+#: main/templates/main/proposalconfirmation/queue.html:11
+#: main/templates/main/site_task_action.html:15
+#: viewflow/site_task_action.html:15
+msgid "#"
+msgstr "№"
+
+#: main/templates/main/proposalconfirmation/process_cancel.html:22
+#: main/templates/main/proposalconfirmation/queue.html:12
+msgid "Name"
+msgstr "Имя"
+
+#: main/templates/main/proposalconfirmation/process_cancel.html:25
+#: main/templates/main/proposalconfirmation/process_detail.html:23
+#: main/templates/main/proposalconfirmation/queue.html:16
+msgid "Status"
+msgstr "Статус"
+
+#: main/templates/main/proposalconfirmation/process_cancel.html:47
+msgid "UNCANCELABLE"
+msgstr "НЕОТМЕНЯЕМАЯ"
+
+#: main/templates/main/proposalconfirmation/process_data.html:8
+msgid "edit"
+msgstr "править"
+
+#: main/templates/main/proposalconfirmation/process_data.html:14
+msgid "Yes"
+msgstr "Да"
+
+#: main/templates/main/proposalconfirmation/process_data.html:15
+msgid "No"
+msgstr "Нет"
+
+#: main/templates/main/proposalconfirmation/process_data.html:27
+msgid "Active tasks"
+msgstr "Текущий шаг"
+
+#: main/templates/main/proposalconfirmation/process_data.html:31
+msgid "Task"
+msgstr "Шаг"
+
+#: main/templates/main/proposalconfirmation/queue.html:7
+msgid "Queue"
+msgstr "Очередь"
+
+#: main/templates/main/proposalconfirmation/queue.html:15
+#: main/templates/main/site_task_action.html:18
+#: viewflow/site_task_action.html:18
+msgid "Process"
+msgstr "Процесс"
 
 #: main/templates/main/proposalconfirmation/task.html:32
+#: main/templates/main/proposalconfirmation/task_action.html:12
+#: main/templates/main/proposalconfirmation/task_detail.html:6
+#: main/templates/main/proposalconfirmation/task_unassign.html:13
 msgid "Detail"
-msgstr ""
+msgstr "Подробнее"
 
 #: main/templates/main/proposalconfirmation/task.html:35
 msgid "Done and continue on this process"
@@ -66,40 +263,116 @@ msgstr "Сохранить и продолжить"
 
 #: main/templates/main/proposalconfirmation/task.html:36
 msgid "Done"
-msgstr "Сохранить"
+msgstr "Согласовано"
 
-#: main/templates/material/form.html:28 main/templates/material/form.html:46
+#: main/templates/main/proposalconfirmation/task_action.html:17
+#: main/templates/main/proposalconfirmation/task_unassign.html:18
+#: main/templates/main/site_task_action.html:6 viewflow/site_task_action.html:6
+msgid "Confirm"
+msgstr "Подтвердить"
+
+#: main/templates/main/proposalconfirmation/task_assign.html:5
+#: main/templates/main/proposalconfirmation/task_assign.html:9
+#: main/templates/main/proposalconfirmation/task_detail.html:21
+msgid "Assign"
+msgstr "Назначить"
+
+#: main/templates/main/proposalconfirmation/task_assign.html:22
+msgid "Assign to me and continue on this process"
+msgstr "Взять себе и открыть заявку"
+
+#: main/templates/main/proposalconfirmation/task_assign.html:23
+msgid "Assign to me"
+msgstr "Взять себе"
+
+#: main/templates/main/proposalconfirmation/task_detail.html:26
+#: main/templates/main/proposalconfirmation/task_unassign.html:5
+#: main/templates/main/proposalconfirmation/task_unassign.html:8
+msgid "Unassign"
+msgstr "Вернуть в общую очередь"
+
+#: main/templates/main/proposalconfirmation/task_detail.html:31
+msgid "Execute"
+msgstr "Выполнить"
+
+#: main/templates/main/registration/logged_out.html:9
+msgid "Log in again"
+msgstr "Войти снова"
+
+#: main/templates/main/registration/password_change_done.html:6
+#: main/templates/main/registration/password_change_form.html:6
+msgid "Home"
+msgstr "Домой"
+
+#: main/templates/main/registration/password_change_done.html:7
+#: main/templates/main/registration/password_change_form.html:7
+msgid "Password change"
+msgstr "Изменить пароль"
+
+#: main/templates/main/registration/password_change_done.html:15
+msgid "Your password was changed."
+msgstr "Ваш пароль был изменён."
+
+#: main/templates/main/registration/password_change_form.html:18
+msgid ""
+"Please enter your old password, for security's sake, and then enter your new "
+"password twice so we can verify you typed it in correctly."
+msgstr "Введите свой старый пароль, а затем введите новый пароль дважды."
+
+#: main/templates/main/registration/password_change_form.html:25
+msgid "Change my password"
+msgstr "Изменить мой пароль"
+
+#: main/templates/main/site_task_action.html:17
+#: viewflow/site_task_action.html:17
+msgid "Summary"
+msgstr "Итог"
+
+#: main/templates/main/site_task_action.html:29
+#: viewflow/site_task_action.html:29
+msgid "No task selected"
+msgstr "Ни одной задачи не выделенно"
+
+#: main/templates/material/form.html:33 main/templates/material/form.html:52
 msgid "Owner: "
 msgstr "Создатель: "
 
-#: main/templates/material/form.html:39
+#: main/templates/material/form.html:44
 msgid "Field history: "
 msgstr "История изменений: "
 
-#: main/templates/material/form.html:50
+#: main/templates/material/form.html:56
 msgid "Value was: "
 msgstr "Прошлое значение: "
 
-msgid "Approve by account manager"
-msgstr "Проверка аккаунт-менеджером"
+#: main/templates/material/frontend/base.html:84
+#: templates/material/frontend/base.html:84
+msgid "Log out"
+msgstr "Выйти"
 
-msgid "Check approve by account manager"
-msgstr "Завершение проверки аккаунт-менеджером"
+#: main/templates/material/frontend/base.html:86
+#: templates/material/frontend/base.html:86
+msgid "Log in"
+msgstr "Войти"
 
-msgid "Fix mistakes after account manager"
-msgstr "Правка корректировок после проверки аккаунт-менеджером"
+#: main/templates/material/frontend/base_site.html:5
+#: main/templates/material/frontend/base_site.html:6
+#: templates/material/frontend/base_site.html:5
+#: templates/material/frontend/base_site.html:6
+msgid "Michelin Proposal Registration"
+msgstr "Регистрация заявки Michelin"
 
-msgid "Split flow"
-msgstr "Разделение процесса"
+msgid "Processes"
+msgstr "Процессы"
 
-msgid "Check approve by credit manager"
-msgstr "Завершение проверки кредитным-инспектором"
+msgid "Start and continue on this process"
+msgstr "Сохранить и продолжить !!"
 
-msgid "Approve by logist"
-msgstr "Проверка логистом"
-
-msgid "Check approve by logist"
-msgstr "Завершение проверки логистом"
+msgid "Item prepared"
+msgstr "Заявка проверена"
 
 msgid "Fix mistakes after logist"
 msgstr "Правка корректировок после проверки логистом"
+
+msgid "Is client needs to have a BibServe account?"
+msgstr "Нужна ли регистрация в BibServe?"

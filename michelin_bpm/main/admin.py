@@ -9,7 +9,24 @@ from django.utils.translation import gettext_lazy as l_
 from reversion.admin import VersionAdmin
 from viewflow.models import Process, Task
 from viewflow.admin import ProcessAdmin, TaskAdmin
+from material.frontend.models import Module
+
 from michelin_bpm.main.models import ProposalProcess, Correction
+
+
+class ModuleAdmin(admin.ModelAdmin):  # noqa D102
+    actions = None
+    icon = '<i class="material-icons">view_module</i>'
+    list_display = ['label', 'installed']
+    readonly_fields = ['label']
+
+    def has_add_permission(self, request):
+        """Module added automatically during the database migration."""
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Module deletion is no allowed."""
+        return False
 
 
 User = get_user_model()
@@ -46,3 +63,5 @@ admin_site.register(Task, TaskAdmin)
 
 admin_site.register(ProposalProcess, ProposalProcessAdmin)
 admin_site.register(Correction)
+
+admin_site.register(Module, ModuleAdmin)

@@ -33,27 +33,34 @@ class ApproveForm(ModelForm):
         self.show_corrections = kwargs.pop('show_corrections', [])
         current_version = kwargs.pop('current_version')
         self.can_create_corrections = kwargs.pop('can_create_corrections')
+        self.fields_corrections = kwargs.pop('fields_corrections')
 
         super().__init__(*args, **kwargs)
 
         self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
         self.fields['current_version'].initial = current_version
 
-        reviewed_version = None
-        last_correction = self.instance.get_correction_last(get_task_ref(self.linked_node))
-        if last_correction:
-            reviewed_version = last_correction.reviewed_version
-
         fields_with_corrections = OrderedDict()
-
         # Добавляем non_field поля для корректировки
-        for corr_data in self.can_create_corrections:
+        for corr_settings in self.can_create_corrections:
+            # Если задана опция is_can_answer_only, то проверяем, есть ли корректировки,
+            # на которые нужно отвечать. И если такие есть, то показываем поля для ответа.
+            if 'is_can_answer_only' in corr_settings and corr_settings['is_can_answer_only']:
+                has_correction = False
+                if '__all__' in self.fields_corrections:
+                    has_correction = bool([
+                        corr for corr in self.fields_corrections['__all__']
+                        if get_task_ref(corr_settings['for_step']) == get_task_ref(corr['from_step_obj'])
+                    ])
+                if not has_correction:
+                    continue
+
             non_field_correction = forms.CharField(
                 max_length=255,
                 required=False,
-                label=corr_data['non_field_corr_label'],
+                label=corr_settings['non_field_corr_label'],
             )
-            fields_with_corrections['__all__' + corr_data['field_suffix']] = non_field_correction
+            fields_with_corrections['__all__' + corr_settings['field_suffix']] = non_field_correction
 
         # Добавляем корректирующие поля для каждого поля
         for field_name, field in self.fields.items():
@@ -67,13 +74,25 @@ class ApproveForm(ModelForm):
             field.widget.attrs['readonly'] = True
             fields_with_corrections[field_name] = field
 
-            for corr_data in self.can_create_corrections:
+            # Если задана опция is_can_answer_only, то проверяем, есть ли корректировки,
+            # на которые нужно отвечать. И если такие есть, то показываем поля для ответа.
+            for corr_settings in self.can_create_corrections:
+                if 'is_can_answer_only' in corr_settings and corr_settings['is_can_answer_only']:
+                    has_correction = False
+                    if field_name in self.fields_corrections:
+                        has_correction = bool([
+                            corr for corr in self.fields_corrections[field_name]
+                            if get_task_ref(corr_settings['for_step']) == get_task_ref(corr['from_step_obj'])
+                        ])
+                    if not has_correction:
+                        continue
+
                 # добавляем корректирующее поле к каждому полю на форме
-                correction_field_name = field_name + corr_data['field_suffix']
+                correction_field_name = field_name + corr_settings['field_suffix']
                 fields_with_corrections[correction_field_name] = forms.CharField(
                     max_length=255,
                     required=False,
-                    label=str(corr_data['field_label_prefix']) + str(field.label).lower()
+                    label=str(corr_settings['field_label_prefix']) + str(field.label).lower()
                 )
 
         self.fields = fields_with_corrections
@@ -87,6 +106,8 @@ class ApproveForm(ModelForm):
             raise ValidationError(
                 'Не удалось сохранить форму, т.к. заявка уже изменилась. Обновите страницу.'
             )
+
+        # TODO MBPM-3 Проверить, насколько актуален этот код и следует ли его удалить.
 
         # Если даже в self.can_create_corrections указанна возможность создавать несколько Корректировок,
         # то всё равно после сохранения формы может быть создана Корректировка только одного вида.
@@ -159,6 +180,8 @@ class FixMistakesForm(ModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
+        # TODO MBPM-3: fields_corrections не используется на этой форме, в отличие от ApproveForm
+        kwargs.pop('fields_corrections')
         self.linked_node = kwargs.pop('linked_node')
         super().__init__(*args, **kwargs)
 

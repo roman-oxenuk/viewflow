@@ -2,11 +2,11 @@
 from django.utils.translation import ugettext_lazy as l_, ugettext as _
 from django.conf import settings
 
-from viewflow import flow, frontend
+from viewflow import flow
 from viewflow.base import this, Flow
 from viewflow.fields import get_task_ref
-from viewflow.models import Process
 
+from michelin_bpm.main.apps import register
 from michelin_bpm.main.models import ProposalProcess
 from michelin_bpm.main.nodes import StartNodeView, IfNode, SplitNode, SwitchNode, EndNode, ApproveViewNode, ViewNode
 from michelin_bpm.main.views import (
@@ -47,6 +47,8 @@ def has_active_correction(activation, for_step=None):
 
 
 def is_already_has_task(activation, task):
+    # TODO MBPM-3:
+    # Кажется эта функция не используется
     if not hasattr(task, 'flow_class'):
         setattr(task, 'flow_class', ProposalConfirmationFlow)
 
@@ -57,11 +59,12 @@ def is_already_has_task(activation, task):
     ).exists()
 
 
-@frontend.register
+@register
 class ProposalConfirmationFlow(Flow):
 
     process_class = ProposalProcess
     process_title = l_('Обработка заявки')
+    process_menu_title = 'Все заявки'
     summary_template = "{{ flow_class.process_title }} - {{ process.get_status_display }}"
 
     start = (
@@ -84,7 +87,7 @@ class ProposalConfirmationFlow(Flow):
             task_description=_('Approve by account manager'),
             # TODO MBPM-3:
             # Переименовать can_create_corrections в can_create_messages ?
-            can_create_corrections = [
+            can_create_corrections=[
                 {
                     'for_step': this.fix_mistakes_after_account_manager,
                     'field_suffix': CORR_SUFFIX,
@@ -96,22 +99,25 @@ class ProposalConfirmationFlow(Flow):
                     'field_suffix': COMMENT_SUFFIX,
                     'field_label_prefix': l_('Кредитному инспектору уточнение для поля '),
                     'non_field_corr_label': l_('Кредитному инспектору уточнение для всей заявки.'),
+                    'is_can_answer_only': True
                 },
                 {
                     'for_step': this.approve_by_region_chief,
                     'field_suffix': CORR_SUFFIX_2,
                     'field_label_prefix': l_('Шефу региона уточнение для поля '),
                     'non_field_corr_label': l_('Шефу региона уточнение для всей заявки.'),
+                    'is_can_answer_only': True
                 },
                 {
                     'for_step': this.approve_paper_docs,
                     'field_suffix': CORR_SUFFIX_3,
                     'field_label_prefix': l_('Для Sales Admin уточнение для поля '),
                     'non_field_corr_label': l_('Для Sales Admin уточнение для всей заявки.'),
+                    'is_can_answer_only': True
                 },
 
             ],
-            show_corrections = [
+            show_corrections=[
                 {'for_step': this.fix_mistakes_after_account_manager},
                 {'for_step': this.approve_by_credit_manager},
                 {'for_step': this.approve_by_region_chief},
@@ -179,7 +185,7 @@ class ProposalConfirmationFlow(Flow):
             ApproveView,
             form_class=ApproveForm,
             task_description=_('Approve by credit manager'),
-            can_create_corrections = [
+            can_create_corrections=[
                 {
                     'for_step': this.approve_by_account_manager,
                     'field_suffix': CORR_SUFFIX,
@@ -187,7 +193,7 @@ class ProposalConfirmationFlow(Flow):
                     'non_field_corr_label': l_('Корректировка для всей заявки.'),
                 }
             ],
-            show_corrections = [
+            show_corrections=[
                 {'for_step': this.approve_by_account_manager, 'made_on_step': this.approve_by_credit_manager},
                 {'for_step': this.fix_mistakes_after_account_manager}
             ],
@@ -201,7 +207,7 @@ class ProposalConfirmationFlow(Flow):
             ApproveView,
             form_class=ApproveForm,
             task_description=_('Approve by region chief'),
-            can_create_corrections = [
+            can_create_corrections=[
                 {
                     'for_step': this.approve_by_account_manager,
                     'field_suffix': CORR_SUFFIX,
@@ -215,7 +221,7 @@ class ProposalConfirmationFlow(Flow):
                     'non_field_corr_label': l_('Запрос комментария для всей заявки.'),
                 }
             ],
-            show_corrections = [
+            show_corrections=[
                 {'for_step': this.get_comments_from_logist},
                 {'for_step': this.approve_by_account_manager, 'made_on_step': this.approve_by_region_chief},
                 {'for_step': this.fix_mistakes_after_account_manager}
@@ -241,7 +247,7 @@ class ProposalConfirmationFlow(Flow):
             ApproveView,
             form_class=LogistForm,
             task_description=_('Get comments from logist'),
-            can_create_corrections = [
+            can_create_corrections=[
                 {
                     'for_step': this.approve_by_region_chief,
                     'field_suffix': COMMENT_SUFFIX,
@@ -252,7 +258,7 @@ class ProposalConfirmationFlow(Flow):
             # TODO MBPM-3: переименовать на
             # additionaly_show_corrections -- дополнительно показываем корректировки с каких шагов
             # И наверное лучше сделать просто списком.
-            show_corrections = [
+            show_corrections=[
                 {'for_step': this.approve_by_region_chief}
             ]
         ).Permission(
@@ -321,7 +327,7 @@ class ProposalConfirmationFlow(Flow):
             ApproveView,
             form_class=ApproveForm,
             task_description=_('Approve paper docs'),
-            can_create_corrections = [
+            can_create_corrections=[
                 {
                     'for_step': this.approve_by_account_manager,
                     'field_suffix': CORR_SUFFIX,
@@ -329,7 +335,7 @@ class ProposalConfirmationFlow(Flow):
                     'non_field_corr_label': l_('Корректировка для всей заявки.'),
                 }
             ],
-            show_corrections = [
+            show_corrections=[
                 {'for_step': this.approve_by_account_manager, 'made_on_step': this.approve_paper_docs},
                 {'for_step': this.fix_mistakes_after_account_manager}
             ],

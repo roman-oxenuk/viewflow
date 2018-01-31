@@ -62,6 +62,7 @@ INSTALLED_APPS += [
     'michelin_bpm.main',
     'material',
     'material.frontend',
+    'michelin_bpm.main.apps.MichelinBPMFrontendConfig',
 ]
 
 if DEBUG:
@@ -87,6 +88,7 @@ if DEBUG:
 
 
 ROOT_URLCONF = 'michelin_bpm.urls'
+
 
 TEMPLATES = [
     {
@@ -201,6 +203,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
 
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/mnt/resource/michelin-bpm/static')
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/mnt/resource/michelin-bpm/')

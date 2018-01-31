@@ -1,4 +1,4 @@
-{% extends 'viewflow/base_module.html' %}
+{% extends 'main/base_module.html' %}
 {% load i18n viewflow viewflow_frontend material_form material_frontend main %}
 
 {% block breadcrumbs_items %}
@@ -32,7 +32,9 @@
                         <a class="btn btn-flat black-text" href="{% flowurl activation.task 'detail' %}?{{ request|query_back }}">{% trans 'Detail' %}</a>
                     </div>
                     <div class="col s9 right-align">
+                        {% comment %}
                         <button type="submit" name="_continue" class="btn btn-flat">{% trans 'Done and continue on this process' %}</button>
+                        {% endcomment %}
                         <button type="submit" name="_done" class="btn primary white-text">{% trans 'Done' %}</button>
                     </div>
                     {% endblock %}
@@ -42,9 +44,11 @@
     </div>
 </div>
 {% endblock %}
+{% comment %}
 {% block right-panel %}
 <div class="right-panel">
     {% include_process_data activation.process %}
 </div>
 {% endblock %}
+{% endcomment %}
 {% endblock %}

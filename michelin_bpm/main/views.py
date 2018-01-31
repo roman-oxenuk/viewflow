@@ -66,6 +66,7 @@ class ShowCorrectionsMixin:
                 non_field_corr = {
                     'msg': correction.data['__all__'],
                     'from_step': str(correction.task.flow_task),
+                    'from_step_obj': correction.task.flow_task,
                     'owner': str(correction.owner),
                     'created': correction.created,
                     'is_active': correction.is_active,
@@ -88,6 +89,7 @@ class ShowCorrectionsMixin:
                         field_corr = {
                             'msg': correction.data['__all__'],
                             'from_step': str(correction.task.flow_task),
+                            'from_step_obj': correction.task.flow_task,
                             'owner': str(correction.owner),
                             'created': correction.created,
                             'is_active': correction.is_active,
@@ -106,6 +108,7 @@ class ShowCorrectionsMixin:
                     field_corr = {
                         'msg': correction.data[field_name],
                         'from_step': str(correction.task.flow_task),
+                        'from_step_obj': correction.task.flow_task,
                         'owner': str(correction.owner),
                         'created': correction.created,
                         'is_active': correction.is_active,
@@ -133,6 +136,13 @@ class ShowCorrectionsMixin:
         context_data = super().get_context_data(**kwargs)
         context_data['fields_corrections'] = self.get_fields_corrections(self.get_object())
         return context_data
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({
+            'fields_corrections': self.get_fields_corrections(self.get_object())
+        })
+        return kwargs
 
 
 class ApproveView(ShowCorrectionsMixin, UpdateProcessView):
