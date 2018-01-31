@@ -264,6 +264,44 @@ class AddJCodeADVForm(ModelForm):
                 field.widget.attrs['readonly'] = True
 
 
+class AddDCodeLogistForm(ModelForm):
+    # TODO MBPM-3:
+    # Добавить валидацию поле D-Code.
+    # Проверять по шаблону или хотя бы по кол-ву символов.
+
+    current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())
+
+    class Meta:
+        model = ProposalProcess
+        fields = [
+            'country', 'city', 'company_name', 'inn',
+            'bank_name', 'account_number', 'd_code'
+        ]
+        can_edit = ['d_code']
+
+    def __init__(self, *args, **kwargs):
+        self.linked_node = kwargs.pop('linked_node')
+        current_version = kwargs.pop('current_version')
+
+        super().__init__(*args, **kwargs)
+
+        self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
+        self.fields['d_code'].required = True
+
+        self.fields['current_version'].initial = current_version
+
+        for field_name, field in self.fields.items():
+
+            # пропускаем спрятанное служебное поле или поле корректировки
+            if field_name == 'current_version':
+                continue
+
+            # делаем поле неактивным
+            if field_name not in self.Meta.can_edit:
+                field.widget.attrs['readonly'] = True
+
+
+
 class AddBibServerDataForm(ModelForm):
 
     current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())

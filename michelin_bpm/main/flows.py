@@ -14,7 +14,7 @@ from michelin_bpm.main.views import (
 )
 from michelin_bpm.main.forms import (
     FixMistakesForm, ApproveForm, LogistForm, AddJCodeADVForm, AddBibServerDataForm, SetCreditLimitForm,
-    UnblockClientForm, AddACSForm, ActivateBibserveAccountForm
+    UnblockClientForm, AddACSForm, ActivateBibserveAccountForm, AddDCodeLogistForm
 )
 
 
@@ -275,17 +275,8 @@ class ProposalConfirmationFlow(Flow):
             lambda a: not has_active_correction(a),
             task_description=_('Process to end or account manager')
         )
-        .Then(this.split_flow_for_adv_and_bibserve_admin)
+        .Then(this.add_j_code_by_adv)
         .Else(this.approve_by_account_manager)
-    )
-
-    split_flow_for_adv_and_bibserve_admin = (
-        SplitNode(task_description=_('Split flow for ADV and BibServe Admin'))
-        .Next(this.add_j_code_by_adv)
-        .Next(
-            this.add_bibserve_data,
-            cond=lambda a: a.process.is_needs_bibserve_account
-        )
     )
 
     add_j_code_by_adv = (
@@ -295,7 +286,26 @@ class ProposalConfirmationFlow(Flow):
             task_description=_('Add J-code by ADV'),
         ).Permission(
             auto_create=True
-        ).Next(this.join_j_code_by_adv_and_bibserve_data)
+        ).Next(this.split_flow_for_adding_d_code_and_bibserve_admin)
+    )
+
+    split_flow_for_adding_d_code_and_bibserve_admin = (
+        SplitNode(task_description=_('Split flow for ADV and BibServe Admin'))
+        .Next(this.add_d_code_by_logist)
+        .Next(
+            this.add_bibserve_data,
+            cond=lambda a: a.process.is_needs_bibserve_account
+        )
+    )
+
+    add_d_code_by_logist = (
+        ViewNode(
+            AddDataView,
+            form_class=AddDCodeLogistForm,
+            task_description=_('Add D-code by Logist'),
+        ).Permission(
+            auto_create=True
+        ).Next(this.join_adding_d_code_and_bibserve_data)
     )
 
     add_bibserve_data = (
@@ -305,10 +315,10 @@ class ProposalConfirmationFlow(Flow):
             task_description=_('Add BibServe data'),
         ).Permission(
             auto_create=True
-        ).Next(this.join_j_code_by_adv_and_bibserve_data)
+        ).Next(this.join_adding_d_code_and_bibserve_data)
     )
 
-    join_j_code_by_adv_and_bibserve_data = flow.Join(
+    join_adding_d_code_and_bibserve_data = flow.Join(
         task_description=_('Join process after adding J-code and conditionally ddding BibServe data')
     ).Next(this.set_credit_limit)
 

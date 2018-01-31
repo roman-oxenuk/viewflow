@@ -29,6 +29,7 @@ class ProposalProcess(Process):
     account_number = models.CharField(l_('Номер расчётного счёта'), max_length=255)
 
     j_code = models.CharField(l_('J-код'), max_length=255, null=True, blank=True)
+    d_code = models.CharField(l_('D-код'), max_length=255, null=True, blank=True)
 
     is_needs_bibserve_account = models.BooleanField(l_('Is client needs to have a BibServe account?'), default=False)
     bibserve_login = models.CharField(l_('BibServe Login'), max_length=255, null=True, blank=True)
