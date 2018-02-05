@@ -20,8 +20,47 @@
 <div class="left-panel">
     <div class="card">
         <div class="card-content">
-            <div class="card-title">{% block task_title %}{{ activation.task.flow_task.task_title|default:activation.task.flow_task }}{% endblock %}</div>
+            <div class="card-title">
+                {% block task_title %}
+                    {{ activation.task.flow_task.task_title|default:activation.task.flow_task }}
+                {% endblock %}
+            </div>
             <div class="task-detail">
+                <div class="row">
+                    <div class="col s12">
+                        <blockquote>
+                            {% if  activation.task.flow_task.task_comments %}
+                                {{ activation.task.flow_task.task_comments }}
+                            {% else %}
+                                {{ activation.task.flow_task.task_title|default:activation.task.flow_task }}
+                            {% endif %}
+                        </blockquote>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="input-field col s4">
+                        <i class="material-icons prefix">description</i>
+                        <input type="text" disabled value="{{ activation.process.company_name }}" />
+                        <label class="active">{% trans 'Company name' %}</label>
+                    </div>
+                    <div class="input-field col s4">
+                        {% comment %}
+                        <i class="material-icons prefix">description</i>
+                        {% endcomment %}
+                        <input type="text" disabled value="{{ activation.process.city }}" />
+                        <label class="active">{% trans 'City' %}</label>
+                    </div>
+                    <div class="input-field col s4">
+                        {% comment %}
+                        <i class="material-icons prefix">description</i>
+                        {% endcomment %}
+                        <input type="text" disabled value="{{ activation.process.country }}" />
+                        <label class="active">{% trans 'Country' %}</label>
+                    </div>
+                </div>
+
+                {% comment %}
                 <div class="row">
                     <div class="input-field col s12">
                         <i class="material-icons prefix">description</i>
@@ -29,12 +68,16 @@
                         <label class="active">{% trans 'Description' %}</label>
                     </div>
                 </div>
+                {% endcomment %}
+
+                {% comment %}
                 <div class="row">
                     <div class="input-field col s4">
                         <i class="material-icons prefix">account_circle</i>
                         <input type="text" disabled value="{{ activation.task.owner|default:'----------' }}" />
                         <label class="active">{% trans 'Owner' %}</label>
                     </div>
+
                     {% if activation.task.owner_permission %}
                     <div class="input-field col s8">
                         <input type="text" disabled value="{{ activation.task.owner_permission }}" />
@@ -42,6 +85,8 @@
                     </div>
                     {% endif %}
                 </div>
+                {% endcomment %}
+
                 <div class="row">
                     <div class="input-field col s4">
                         <i class="material-icons prefix">access_time</i>

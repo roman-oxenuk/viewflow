@@ -21,6 +21,16 @@ class MichelinBPMFrontendConfig(ViewflowFrontendConfig):
     def base_template(self):
         return get_template('main/base_module.html')
 
+    def register(self, flow_class, viewset_class=None):
+        """Register a flow class at the frontend."""
+        from .viewset import MichelinFlowViewSet
+
+        if flow_class not in self._registry:
+            if viewset_class is None:
+                viewset_class = MichelinFlowViewSet
+
+            self._registry[flow_class] = viewset_class(flow_class=flow_class)
+
 
 def register(flow_class, viewset_class=None):
     from django.apps import apps

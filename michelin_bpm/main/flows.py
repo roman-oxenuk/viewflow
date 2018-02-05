@@ -65,7 +65,8 @@ class ProposalConfirmationFlow(Flow):
     process_class = ProposalProcess
     process_title = l_('Обработка заявки')
     process_menu_title = 'Все заявки'
-    summary_template = "{{ flow_class.process_title }} - {{ process.get_status_display }}"
+    process_client_menu_title = 'Мои заявки'
+    summary_template = '"{{ process.company_name }}" {{ process.city }}, {{ process.country }}'
 
     start = (
         StartNodeView(
@@ -85,6 +86,8 @@ class ProposalConfirmationFlow(Flow):
             ApproveView,
             form_class=ApproveForm,
             task_description=_('Approve by account manager'),
+            task_comments='Аккаунт-менеджер проверяет заявку',
+            action_title='Согласовано',
             # TODO MBPM-3:
             # Переименовать can_create_corrections в can_create_messages ?
             can_create_corrections=[
@@ -160,7 +163,8 @@ class ProposalConfirmationFlow(Flow):
         ApproveViewNode(
             FixMistakesView,
             form_class=FixMistakesForm,
-            task_description=_('Fix mistakes after account manager')
+            task_description=_('Fix mistakes after account manager'),
+            action_title='Сохранить',
         ).Permission(
             auto_create=True
         ).Assign(
@@ -185,6 +189,7 @@ class ProposalConfirmationFlow(Flow):
             ApproveView,
             form_class=ApproveForm,
             task_description=_('Approve by credit manager'),
+            action_title='Согласовано',
             can_create_corrections=[
                 {
                     'for_step': this.approve_by_account_manager,
@@ -207,6 +212,8 @@ class ProposalConfirmationFlow(Flow):
             ApproveView,
             form_class=ApproveForm,
             task_description=_('Approve by region chief'),
+            task_comments='Шеф региона проверяет заявку',
+            action_title='Согласовано',
             can_create_corrections=[
                 {
                     'for_step': this.approve_by_account_manager,
@@ -247,6 +254,7 @@ class ProposalConfirmationFlow(Flow):
             ApproveView,
             form_class=LogistForm,
             task_description=_('Get comments from logist'),
+            action_title='Сохранить',
             can_create_corrections=[
                 {
                     'for_step': this.approve_by_region_chief,
@@ -284,6 +292,7 @@ class ProposalConfirmationFlow(Flow):
             AddDataView,
             form_class=AddJCodeADVForm,
             task_description=_('Add J-code by ADV'),
+            action_title='J-код добавлен',
         ).Permission(
             auto_create=True
         ).Next(this.split_flow_for_adding_d_code_and_bibserve_admin)
@@ -303,6 +312,7 @@ class ProposalConfirmationFlow(Flow):
             AddDataView,
             form_class=AddDCodeLogistForm,
             task_description=_('Add D-code by Logist'),
+            action_title='D-код добавлен',
         ).Permission(
             auto_create=True
         ).Next(this.join_adding_d_code_and_bibserve_data)
@@ -313,6 +323,7 @@ class ProposalConfirmationFlow(Flow):
             AddDataView,
             form_class=AddBibServerDataForm,
             task_description=_('Add BibServe data'),
+            action_title='BibServe данные добавлены',
         ).Permission(
             auto_create=True
         ).Next(this.join_adding_d_code_and_bibserve_data)
@@ -327,6 +338,7 @@ class ProposalConfirmationFlow(Flow):
             SeeDataView,
             form_class=SetCreditLimitForm,
             task_description=_('Set credit limit'),
+            action_title='Кредитный лимит установлен',
         ).Permission(
             auto_create=True
         ).Next(this.approve_paper_docs)
@@ -337,6 +349,7 @@ class ProposalConfirmationFlow(Flow):
             ApproveView,
             form_class=ApproveForm,
             task_description=_('Approve paper docs'),
+            action_title='Данные в документах совпадают с данными в системе',
             can_create_corrections=[
                 {
                     'for_step': this.approve_by_account_manager,
@@ -370,6 +383,7 @@ class ProposalConfirmationFlow(Flow):
             SeeDataView,
             form_class=UnblockClientForm,
             task_description=_('Unblock client by ADV'),
+            action_title='Клиент разблокирован',
         ).Permission(
             auto_create=True
         ).Next(this.split_flow_for_add_acs_and_bibserve_activation)
@@ -378,7 +392,10 @@ class ProposalConfirmationFlow(Flow):
     split_flow_for_add_acs_and_bibserve_activation = (
         SplitNode(task_description=_('Split flow for adding ACS and activating BibServe account'))
         .Next(this.add_acs)
-        .Next(this.activate_bibserve_account)
+        .Next(
+            this.activate_bibserve_account,
+            cond=lambda a: a.process.is_needs_bibserve_account
+        )
     )
 
     add_acs = (
@@ -386,6 +403,7 @@ class ProposalConfirmationFlow(Flow):
             AddDataView,
             form_class=AddACSForm,
             task_description=_('Adding ACS'),
+            action_title='ACS прикреплён',
         ).Permission(
             auto_create=True
         ).Next(this.join_add_acs_and_activate_bibserve_account)
@@ -396,6 +414,7 @@ class ProposalConfirmationFlow(Flow):
             SeeDataView,
             form_class=ActivateBibserveAccountForm,
             task_description=_('Activating BibServe account'),
+            action_title='BibServe аккаунт активирован',
         ).Permission(
             auto_create=True
         ).Next(this.join_add_acs_and_activate_bibserve_account)

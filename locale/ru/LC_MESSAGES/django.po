@@ -255,7 +255,7 @@ msgstr "Процесс"
 #: main/templates/main/proposalconfirmation/task_detail.html:6
 #: main/templates/main/proposalconfirmation/task_unassign.html:13
 msgid "Detail"
-msgstr "Подробнее"
+msgstr "Детали задачи"
 
 #: main/templates/main/proposalconfirmation/task.html:35
 msgid "Done and continue on this process"
@@ -289,11 +289,11 @@ msgstr "Взять себе"
 #: main/templates/main/proposalconfirmation/task_unassign.html:5
 #: main/templates/main/proposalconfirmation/task_unassign.html:8
 msgid "Unassign"
-msgstr "Вернуть в общую очередь"
+msgstr "Вернуть задачу в общую очередь"
 
 #: main/templates/main/proposalconfirmation/task_detail.html:31
 msgid "Execute"
-msgstr "Выполнить"
+msgstr "Продолжить"
 
 #: main/templates/main/registration/logged_out.html:9
 msgid "Log in again"
@@ -326,7 +326,7 @@ msgstr "Изменить мой пароль"
 #: main/templates/main/site_task_action.html:17
 #: viewflow/site_task_action.html:17
 msgid "Summary"
-msgstr "Итог"
+msgstr "Название"
 
 #: main/templates/main/site_task_action.html:29
 #: viewflow/site_task_action.html:29

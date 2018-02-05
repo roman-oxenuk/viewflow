@@ -6,4 +6,6 @@
 <a class="active" href="{% flowurl view.flow_class 'index' %}?{{ request|query_back }}">{{ view.flow_class.process_title }}</a>
 {% endblock %}
 
-{% block action_btn %}{% include 'viewflow/includes/flow_start_actions.html' %}{% endblock %}
+{% block action_btn %}
+{% include 'viewflow/includes/flow_start_actions.html' %}
+{% endblock %}

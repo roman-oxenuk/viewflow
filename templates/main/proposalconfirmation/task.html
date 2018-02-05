@@ -8,19 +8,44 @@
 <a class="active" href="{% flowurl activation.task 'detail' %}?{{ request|query_back }}">{{ activation.flow_task }} / #{{ activation.task.pk }}</a>
 {% endblock %}
 
-
 {% block content %}
 {% block left-panel %}
 <div class="left-panel">
     <div class="card">
         <form role="form" method="POST" enctype="multipart/form-data">
             <div class="card-content">
+
                 <div class="card-title">
                     {{ activation.task.summary|default:activation.task.flow_task }}
+                    {% comment %}
                     <h6>{{ activation.process.summary }}</h6>
+                    {% endcomment %}
                 </div>
                 {% block task_form %}
                 {% csrf_token %}
+
+                {% comment %}
+                <table class="striped">
+                    <thead>
+                      <tr>
+                          <th>Поле</th>
+                          <th>Значение</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for field in form %}
+                            {% if activation.process|get_attr:field.name %}
+                                <tr>
+                                    <td>{{ field.label }}</td>
+                                    <td>{{ activation.process|get_attr:field.name }}</td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endcomment %}
+
                 {% form template='material/form.html' form=form %}{% endform %}
                 {{ activation.management_form }}
                 {% endblock %}
@@ -28,14 +53,19 @@
             <div class="card-action">
                 <div class="row">
                     {% block task_actions %}
-                    <div class="col s3">
-                        <a class="btn btn-flat black-text" href="{% flowurl activation.task 'detail' %}?{{ request|query_back }}">{% trans 'Detail' %}</a>
-                    </div>
-                    <div class="col s9 right-align">
-                        {% comment %}
-                        <button type="submit" name="_continue" class="btn btn-flat">{% trans 'Done and continue on this process' %}</button>
-                        {% endcomment %}
-                        <button type="submit" name="_done" class="btn primary white-text">{% trans 'Done' %}</button>
+                    {% check_is_client user as is_client %}
+                    {% if not is_client %}
+                        <div class="col s3">
+                            <a class="btn btn-flat black-text" href="{% flowurl activation.task 'detail' %}?{{ request|query_back }}">
+                                {% trans 'Detail' %}
+                            </a>
+                        </div>
+                    {% endif %}
+                    <div class="col {% if is_client %}s12{% else %}s9{% endif %} right-align">
+                        <button type="submit" name="_done" class="btn primary white-text">
+                            {% trans 'Done' as default_action_title %}
+                            {{ action_title|default:default_action_title }}
+                        </button>
                     </div>
                     {% endblock %}
                 </div>

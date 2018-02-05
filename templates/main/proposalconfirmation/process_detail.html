@@ -67,11 +67,15 @@
     </div>
 </div>
 {% endblock %}
+
 {% block right-panel %}
+{% comment %}
 <div class="right-panel">
     {% with hide_active_tasks=True %}
     {% include_process_data process %}
     {% endwith %}
 </div>
+{% endcomment %}
 {% endblock %}
+
 {% endblock %}

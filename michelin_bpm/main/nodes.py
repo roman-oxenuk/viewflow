@@ -18,6 +18,14 @@ class TranslatedNodeMixin:
     """
     При приведении к строке возвращает переведённое имя
     """
+    task_comments = None
+
+    def __init__(self, *args, **kwargs):
+        task_comments = kwargs.pop('task_comments', None)
+        if task_comments:
+            self.task_comments = task_comments
+        super().__init__(*args, **kwargs)
+
     def __str__(self):
         name = super().__str__()
         return str(l_(name.lower().capitalize()))

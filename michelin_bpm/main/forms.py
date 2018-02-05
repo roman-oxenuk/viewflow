@@ -301,7 +301,6 @@ class AddDCodeLogistForm(ModelForm):
                 field.widget.attrs['readonly'] = True
 
 
-
 class AddBibServerDataForm(ModelForm):
 
     current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())
@@ -425,6 +424,7 @@ class AddACSForm(ModelForm):
 
         User = get_user_model()
         self.fields['acs'].queryset = User.objects.filter(groups__name='ACS')
+        self.fields['acs'].required = True
 
         for field_name, field in self.fields.items():
 

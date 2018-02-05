@@ -3,12 +3,15 @@ import json
 from django.http import HttpResponseRedirect
 from django.conf import settings
 from django.forms.models import model_to_dict
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 
 import reversion
 from reversion.models import Version
 from viewflow.flow.views.task import UpdateProcessView
 from viewflow.flow.views import CreateProcessView
 from viewflow.fields import get_task_ref
+from viewflow.frontend.views import ProcessListView
 
 from michelin_bpm.main.models import ProposalProcess, Correction
 
@@ -145,12 +148,27 @@ class ShowCorrectionsMixin:
         return kwargs
 
 
-class ApproveView(ShowCorrectionsMixin, UpdateProcessView):
+class ActionTitleMixin:
+
+    action_title = None
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data['action_title'] = self.action_title
+        return context_data
+
+
+class ApproveView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
 
     linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
     can_create_corrections = []   # Корректировки для каких шагов могут быть созданный в рамках этого View
     show_corrections = []   # Какие дополнительные Корректировки могут быть показаны кроме тех,
                             # что созданны для текущего шага self.linke_node
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data['action_title'] = self.action_title
+        return context_data
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -199,7 +217,7 @@ class ApproveView(ShowCorrectionsMixin, UpdateProcessView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class FixMistakesView(ShowCorrectionsMixin, UpdateProcessView):
+class FixMistakesView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
 
     linked_node = None
     show_corrections = []
@@ -220,7 +238,7 @@ class FixMistakesView(ShowCorrectionsMixin, UpdateProcessView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class AddDataView(UpdateProcessView):
+class AddDataView(ActionTitleMixin, UpdateProcessView):
 
     linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
 
@@ -246,7 +264,7 @@ class AddDataView(UpdateProcessView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class SeeDataView(UpdateProcessView):
+class SeeDataView(ActionTitleMixin, UpdateProcessView):
 
     linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
 
@@ -264,3 +282,14 @@ class SeeDataView(UpdateProcessView):
             'linked_node': self.linked_node,
         })
         return kwargs
+
+
+@method_decorator(login_required, name='dispatch')
+class MichelinProcessListView(ProcessListView):
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        is_client = self.request.user.groups.filter(name='Клиенты').exists()
+        if is_client:
+            queryset = queryset.filter(client=self.request.user)
+        return queryset
