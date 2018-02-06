@@ -76,24 +76,24 @@ class ApproveForm(ModelForm):
 
             # Если задана опция is_can_answer_only, то проверяем, есть ли корректировки,
             # на которые нужно отвечать. И если такие есть, то показываем поля для ответа.
-            for corr_settings in self.can_create_corrections:
-                if 'is_can_answer_only' in corr_settings and corr_settings['is_can_answer_only']:
-                    has_correction = False
-                    if field_name in self.fields_corrections:
-                        has_correction = bool([
-                            corr for corr in self.fields_corrections[field_name]
-                            if get_task_ref(corr_settings['for_step']) == get_task_ref(corr['from_step_obj'])
-                        ])
-                    if not has_correction:
-                        continue
+            # for corr_settings in self.can_create_corrections:
+            #     if 'is_can_answer_only' in corr_settings and corr_settings['is_can_answer_only']:
+            #         has_correction = False
+            #         if field_name in self.fields_corrections:
+            #             has_correction = bool([
+            #                 corr for corr in self.fields_corrections[field_name]
+            #                 if get_task_ref(corr_settings['for_step']) == get_task_ref(corr['from_step_obj'])
+            #             ])
+            #         if not has_correction:
+            #             continue
 
-                # добавляем корректирующее поле к каждому полю на форме
-                correction_field_name = field_name + corr_settings['field_suffix']
-                fields_with_corrections[correction_field_name] = forms.CharField(
-                    max_length=255,
-                    required=False,
-                    label=str(corr_settings['field_label_prefix']) + str(field.label).lower()
-                )
+            #     # добавляем корректирующее поле к каждому полю на форме
+            #     correction_field_name = field_name + corr_settings['field_suffix']
+            #     fields_with_corrections[correction_field_name] = forms.CharField(
+            #         max_length=255,
+            #         required=False,
+            #         label=str(corr_settings['field_label_prefix']) + str(field.label).lower()
+            #     )
 
         self.fields = fields_with_corrections
 

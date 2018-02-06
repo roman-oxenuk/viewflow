@@ -163,7 +163,7 @@ class ApproveView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
     linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
     can_create_corrections = []   # Корректировки для каких шагов могут быть созданный в рамках этого View
     show_corrections = []   # Какие дополнительные Корректировки могут быть показаны кроме тех,
-                            # что созданны для текущего шага self.linke_node
+                            # что созданны для текущего шага self.linked_node
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)

@@ -73,12 +73,24 @@ class ProposalConfirmationFlow(Flow):
             CreateProposalProcessView,
             fields=[
                 'country', 'city', 'company_name', 'inn',
-                'bank_name', 'account_number', 'is_needs_bibserve_account'
+                'bank_name', 'account_number',
             ],
             task_description=_('Start')
         ).Permission(
             auto_create=True
-        ).Next(this.approve_by_account_manager)
+        ).Next(this.split_to_sales_admin)
+    )
+
+    split_to_sales_admin = (
+        SplitNode(task_description=_('Split to Sales Admin'))
+        .Next(this.approve_paper_docs)
+        .Next(this.split_for_credit_and_account_manager)
+    )
+
+    split_for_credit_and_account_manager = (
+        SplitNode(task_description=_('Split for credit and Account Manager'))
+        .Next(this.approve_by_account_manager)
+        .Next(this.approve_by_credit_manager)
     )
 
     approve_by_account_manager = (
@@ -90,121 +102,11 @@ class ProposalConfirmationFlow(Flow):
             action_title='Согласовано',
             # TODO MBPM-3:
             # Переименовать can_create_corrections в can_create_messages ?
-            can_create_corrections=[
-                {
-                    'for_step': this.fix_mistakes_after_account_manager,
-                    'field_suffix': CORR_SUFFIX,
-                    'field_label_prefix': l_('Клиенту корректировка для поля '),
-                    'non_field_corr_label': l_('Клиенту корректировка для всей заявки.'),
-                },
-                {
-                    'for_step': this.approve_by_credit_manager,
-                    'field_suffix': COMMENT_SUFFIX,
-                    'field_label_prefix': l_('Кредитному инспектору уточнение для поля '),
-                    'non_field_corr_label': l_('Кредитному инспектору уточнение для всей заявки.'),
-                    'is_can_answer_only': True
-                },
-                {
-                    'for_step': this.approve_by_region_chief,
-                    'field_suffix': CORR_SUFFIX_2,
-                    'field_label_prefix': l_('Шефу региона уточнение для поля '),
-                    'non_field_corr_label': l_('Шефу региона уточнение для всей заявки.'),
-                    'is_can_answer_only': True
-                },
-                {
-                    'for_step': this.approve_paper_docs,
-                    'field_suffix': CORR_SUFFIX_3,
-                    'field_label_prefix': l_('Для Sales Admin уточнение для поля '),
-                    'non_field_corr_label': l_('Для Sales Admin уточнение для всей заявки.'),
-                    'is_can_answer_only': True
-                },
-
-            ],
-            show_corrections=[
-                {'for_step': this.fix_mistakes_after_account_manager},
-                {'for_step': this.approve_by_credit_manager},
-                {'for_step': this.approve_by_region_chief},
-                {'for_step': this.approve_paper_docs},
-            ],
+            can_create_corrections=[],
+            show_corrections=[],
         ).Permission(
             auto_create=True
-        ).Next(this.check_approve_by_account_manager)
-    )
-
-    check_approve_by_account_manager = (
-        SwitchNode(task_description=_('Check approve by account manager'))
-        .Case(this.split_flow, lambda a: not has_active_correction(a))
-        .Case(
-            this.fix_mistakes_after_account_manager,
-            lambda a: has_active_correction(a, for_step=this.fix_mistakes_after_account_manager)
-        )
-        .Case(
-            this.split_flow,
-            lambda a: (
-                has_active_correction(a, for_step=this.approve_by_credit_manager) and
-                has_active_correction(a, for_step=this.approve_by_region_chief)
-            )
-        )
-        .Case(
-            this.approve_by_credit_manager,
-            lambda a: has_active_correction(a, for_step=this.approve_by_credit_manager)
-        )
-        .Case(
-            this.approve_by_region_chief,
-            lambda a: has_active_correction(a, for_step=this.approve_by_region_chief)
-        )
-        .Case(
-            this.approve_paper_docs,
-            lambda a: has_active_correction(a, for_step=this.approve_paper_docs)
-        )
-    )
-
-    fix_mistakes_after_account_manager = (
-        ApproveViewNode(
-            FixMistakesView,
-            form_class=FixMistakesForm,
-            task_description=_('Fix mistakes after account manager'),
-            action_title='Сохранить',
-        ).Permission(
-            auto_create=True
-        ).Assign(
-            lambda activation: activation.process.created_by
-        ).Next(this.approve_by_account_manager)
-    )
-
-    split_flow = (
-        SplitNode(task_description=_('Split flow'))
-        .Next(
-            this.approve_by_credit_manager,
-            cond=lambda a: not is_already_has_task(a, this.approve_by_credit_manager)
-        )
-        .Next(
-            this.approve_by_region_chief,
-            cond=lambda a: not is_already_has_task(a, this.approve_by_region_chief)
-        )
-    )
-
-    approve_by_credit_manager = (
-        ApproveViewNode(
-            ApproveView,
-            form_class=ApproveForm,
-            task_description=_('Approve by credit manager'),
-            action_title='Согласовано',
-            can_create_corrections=[
-                {
-                    'for_step': this.approve_by_account_manager,
-                    'field_suffix': CORR_SUFFIX,
-                    'field_label_prefix': l_('Корректировка для поля '),
-                    'non_field_corr_label': l_('Корректировка для всей заявки.'),
-                }
-            ],
-            show_corrections=[
-                {'for_step': this.approve_by_account_manager, 'made_on_step': this.approve_by_credit_manager},
-                {'for_step': this.fix_mistakes_after_account_manager}
-            ],
-        ).Permission(
-            auto_create=True
-        ).Next(this.join_credit_manager_and_region_chief)
+        ).Next(this.approve_by_region_chief)
     )
 
     approve_by_region_chief = (
@@ -216,12 +118,6 @@ class ProposalConfirmationFlow(Flow):
             action_title='Согласовано',
             can_create_corrections=[
                 {
-                    'for_step': this.approve_by_account_manager,
-                    'field_suffix': CORR_SUFFIX,
-                    'field_label_prefix': l_('Корректировка для поля '),
-                    'non_field_corr_label': l_('Корректировка для всей заявки.'),
-                },
-                {
                     'for_step': this.get_comments_from_logist,
                     'field_suffix': COMMENT_SUFFIX,
                     'field_label_prefix': l_('Запросить комментарий у логиста для поля '),
@@ -230,8 +126,6 @@ class ProposalConfirmationFlow(Flow):
             ],
             show_corrections=[
                 {'for_step': this.get_comments_from_logist},
-                {'for_step': this.approve_by_account_manager, 'made_on_step': this.approve_by_region_chief},
-                {'for_step': this.fix_mistakes_after_account_manager}
             ],
         )
         .Permission(
@@ -246,7 +140,7 @@ class ProposalConfirmationFlow(Flow):
             this.get_comments_from_logist,
             lambda a: has_active_correction(a, for_step=this.get_comments_from_logist)
         )
-        .Default(this.join_credit_manager_and_region_chief)
+        .Default(this.join_credit_and_account_manager)
     )
 
     get_comments_from_logist = (
@@ -274,17 +168,35 @@ class ProposalConfirmationFlow(Flow):
         ).Next(this.approve_by_region_chief)
     )
 
-    join_credit_manager_and_region_chief = flow.Join(
-        task_description=_('Join credit manager and region chief')
-    ).Next(this.process_to_end_or_account_manager)
+    approve_by_credit_manager = (
+        ApproveViewNode(
+            ApproveView,
+            form_class=ApproveForm,
+            task_description=_('Approve by credit manager'),
+            action_title='Согласовано',
+            can_create_corrections=[],
+            show_corrections=[],
+        ).Permission(
+            auto_create=True
+        ).Next(this.join_credit_and_account_manager)
+    )
 
-    process_to_end_or_account_manager = (
-        IfNode(
-            lambda a: not has_active_correction(a),
-            task_description=_('Process to end or account manager')
-        )
-        .Then(this.add_j_code_by_adv)
-        .Else(this.approve_by_account_manager)
+    join_credit_and_account_manager = flow.Join(
+        task_description=_('Join credit and account manager')
+    ).Next(this.approve_by_adv)
+
+    approve_by_adv = (
+        ApproveViewNode(
+            ApproveView,
+            form_class=ApproveForm,
+            task_description=_('Approve by ADV'),
+            task_comments='ADV согласовывает заявку',
+            action_title='Согласовано',
+            can_create_corrections=[],
+            show_corrections=[],
+        ).Permission(
+            auto_create=True
+        ).Next(this.add_j_code_by_adv)
     )
 
     add_j_code_by_adv = (
@@ -295,16 +207,7 @@ class ProposalConfirmationFlow(Flow):
             action_title='J-код добавлен',
         ).Permission(
             auto_create=True
-        ).Next(this.split_flow_for_adding_d_code_and_bibserve_admin)
-    )
-
-    split_flow_for_adding_d_code_and_bibserve_admin = (
-        SplitNode(task_description=_('Split flow for ADV and BibServe Admin'))
-        .Next(this.add_d_code_by_logist)
-        .Next(
-            this.add_bibserve_data,
-            cond=lambda a: a.process.is_needs_bibserve_account
-        )
+        ).Next(this.add_d_code_by_logist)
     )
 
     add_d_code_by_logist = (
@@ -315,23 +218,8 @@ class ProposalConfirmationFlow(Flow):
             action_title='D-код добавлен',
         ).Permission(
             auto_create=True
-        ).Next(this.join_adding_d_code_and_bibserve_data)
+        ).Next(this.set_credit_limit)
     )
-
-    add_bibserve_data = (
-        ViewNode(
-            AddDataView,
-            form_class=AddBibServerDataForm,
-            task_description=_('Add BibServe data'),
-            action_title='BibServe данные добавлены',
-        ).Permission(
-            auto_create=True
-        ).Next(this.join_adding_d_code_and_bibserve_data)
-    )
-
-    join_adding_d_code_and_bibserve_data = flow.Join(
-        task_description=_('Join process after adding J-code and conditionally ddding BibServe data')
-    ).Next(this.set_credit_limit)
 
     set_credit_limit = (
         ViewNode(
@@ -341,7 +229,7 @@ class ProposalConfirmationFlow(Flow):
             action_title='Кредитный лимит установлен',
         ).Permission(
             auto_create=True
-        ).Next(this.approve_paper_docs)
+        ).Next(this.join_from_sales_admin)
     )
 
     approve_paper_docs = (
@@ -350,32 +238,18 @@ class ProposalConfirmationFlow(Flow):
             form_class=ApproveForm,
             task_description=_('Approve paper docs'),
             action_title='Данные в документах совпадают с данными в системе',
-            can_create_corrections=[
-                {
-                    'for_step': this.approve_by_account_manager,
-                    'field_suffix': CORR_SUFFIX,
-                    'field_label_prefix': l_('Корректировка для поля '),
-                    'non_field_corr_label': l_('Корректировка для всей заявки.'),
-                }
-            ],
-            show_corrections=[
-                {'for_step': this.approve_by_account_manager, 'made_on_step': this.approve_paper_docs},
-                {'for_step': this.fix_mistakes_after_account_manager}
-            ],
+            can_create_corrections=[],
+            show_corrections=[],
         )
         .Permission(
             auto_create=True
         )
-        .Next(this.check_approve_paper_docs)
+        .Next(this.join_from_sales_admin)
     )
 
-    check_approve_paper_docs = (
-        IfNode(
-            lambda a: not has_active_correction(a),
-            task_description=_('Check approve paper docs')
-        )
-        .Then(this.unblock_client)
-        .Else(this.approve_by_account_manager)
+    join_from_sales_admin = (
+        flow.Join(task_description=_('Join from sales admin'))
+        .Next(this.unblock_client)
     )
 
     unblock_client = (
@@ -386,16 +260,7 @@ class ProposalConfirmationFlow(Flow):
             action_title='Клиент разблокирован',
         ).Permission(
             auto_create=True
-        ).Next(this.split_flow_for_add_acs_and_bibserve_activation)
-    )
-
-    split_flow_for_add_acs_and_bibserve_activation = (
-        SplitNode(task_description=_('Split flow for adding ACS and activating BibServe account'))
-        .Next(this.add_acs)
-        .Next(
-            this.activate_bibserve_account,
-            cond=lambda a: a.process.is_needs_bibserve_account
-        )
+        ).Next(this.add_acs)
     )
 
     add_acs = (
@@ -406,23 +271,8 @@ class ProposalConfirmationFlow(Flow):
             action_title='ACS прикреплён',
         ).Permission(
             auto_create=True
-        ).Next(this.join_add_acs_and_activate_bibserve_account)
+        ).Next(this.end)
     )
-
-    activate_bibserve_account = (
-        ViewNode(
-            SeeDataView,
-            form_class=ActivateBibserveAccountForm,
-            task_description=_('Activating BibServe account'),
-            action_title='BibServe аккаунт активирован',
-        ).Permission(
-            auto_create=True
-        ).Next(this.join_add_acs_and_activate_bibserve_account)
-    )
-
-    join_add_acs_and_activate_bibserve_account = flow.Join(
-        task_description=_('Join process after adding ACS and activating BibServe account')
-    ).Next(this.end)
 
     end = EndNode(
         task_description=_('End')
