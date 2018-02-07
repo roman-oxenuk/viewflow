@@ -301,7 +301,7 @@ class AddDCodeLogistForm(ModelForm):
                 field.widget.attrs['readonly'] = True
 
 
-class AddBibServerDataForm(ModelForm):
+class CreateBibServerAccountForm(ModelForm):
 
     current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())
 
@@ -310,9 +310,8 @@ class AddBibServerDataForm(ModelForm):
         fields = [
             'country', 'city', 'company_name', 'inn',
             'bank_name', 'account_number',
-            'bibserve_login', 'bibserve_password'
         ]
-        can_edit = ['bibserve_login', 'bibserve_password']
+        can_edit = []
 
     def __init__(self, *args, **kwargs):
         self.linked_node = kwargs.pop('linked_node')
@@ -321,9 +320,6 @@ class AddBibServerDataForm(ModelForm):
         super().__init__(*args, **kwargs)
 
         self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
-        self.fields['bibserve_login'].required = True
-        self.fields['bibserve_password'].required = True
-
         self.fields['current_version'].initial = current_version
 
         for field_name, field in self.fields.items():
@@ -445,9 +441,10 @@ class ActivateBibserveAccountForm(ModelForm):
         model = ProposalProcess
         fields = [
             'country', 'city', 'company_name', 'inn',
-            'bank_name', 'account_number'
+            'bank_name', 'account_number',
+            'bibserve_login', 'bibserve_password'
         ]
-        can_edit = []
+        can_edit = ['bibserve_login', 'bibserve_password']
 
     def __init__(self, *args, **kwargs):
         self.linked_node = kwargs.pop('linked_node')
@@ -457,6 +454,9 @@ class ActivateBibserveAccountForm(ModelForm):
 
         self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
         self.fields['current_version'].initial = current_version
+
+        self.fields['bibserve_login'].required = True
+        self.fields['bibserve_password'].required = True
 
         for field_name, field in self.fields.items():
 

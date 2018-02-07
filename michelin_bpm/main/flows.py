@@ -13,7 +13,7 @@ from michelin_bpm.main.views import (
     CreateProposalProcessView, ApproveView, FixMistakesView, AddDataView, SeeDataView
 )
 from michelin_bpm.main.forms import (
-    FixMistakesForm, ApproveForm, LogistForm, AddJCodeADVForm, AddBibServerDataForm, SetCreditLimitForm,
+    FixMistakesForm, ApproveForm, LogistForm, AddJCodeADVForm, CreateBibServerAccountForm, SetCreditLimitForm,
     UnblockClientForm, AddACSForm, ActivateBibserveAccountForm, AddDCodeLogistForm
 )
 
@@ -73,7 +73,7 @@ class ProposalConfirmationFlow(Flow):
             CreateProposalProcessView,
             fields=[
                 'country', 'city', 'company_name', 'inn',
-                'bank_name', 'account_number',
+                'bank_name', 'account_number', 'is_needs_bibserve_account'
             ],
             task_description=_('Start')
         ).Permission(
@@ -207,6 +207,26 @@ class ProposalConfirmationFlow(Flow):
             action_title='J-код добавлен',
         ).Permission(
             auto_create=True
+        ).Next(this.check_bibserve_creation_needed)
+    )
+
+    check_bibserve_creation_needed = (
+        SwitchNode(task_description=_('Check if BibServe account creation needed'))
+        .Case(
+            this.create_bibserve_account,
+            lambda a: a.process.is_needs_bibserve_account
+        )
+        .Default(this.add_d_code_by_logist)
+    )
+
+    create_bibserve_account = (
+        ViewNode(
+            SeeDataView,
+            form_class=CreateBibServerAccountForm,
+            task_description=_('Create BibServe account'),
+            action_title='BibServe-аккаунт создан',
+        ).Permission(
+            auto_create=True
         ).Next(this.add_d_code_by_logist)
     )
 
@@ -258,6 +278,26 @@ class ProposalConfirmationFlow(Flow):
             form_class=UnblockClientForm,
             task_description=_('Unblock client by ADV'),
             action_title='Клиент разблокирован',
+        ).Permission(
+            auto_create=True
+        ).Next(this.check_bibserve_activation_needed)
+    )
+
+    check_bibserve_activation_needed = (
+        SwitchNode(task_description=_('Check if BibServe activation needed'))
+        .Case(
+            this.activate_bibserve_account,
+            lambda a: a.process.is_needs_bibserve_account
+        )
+        .Default(this.add_acs)
+    )
+
+    activate_bibserve_account = (
+        ViewNode(
+            AddDataView,
+            form_class=ActivateBibserveAccountForm,
+            task_description=_('Activating BibServe account'),
+            action_title='BibServe аккаунт активирован',
         ).Permission(
             auto_create=True
         ).Next(this.add_acs)
