@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.utils.translation import ugettext_lazy as l_, ugettext as _
+from django.utils.decorators import method_decorator
 from django.conf import settings
 
 from viewflow import flow
@@ -7,15 +8,19 @@ from viewflow.base import this, Flow
 from viewflow.fields import get_task_ref
 
 from michelin_bpm.main.apps import register
-from michelin_bpm.main.models import ProposalProcess
-from michelin_bpm.main.nodes import StartNodeView, IfNode, SplitNode, SwitchNode, EndNode, ApproveViewNode, ViewNode
+from michelin_bpm.main.models import ProposalProcess, BibServeProcess
+from michelin_bpm.main.nodes import (
+    StartNodeView, IfNode, SplitNode, SwitchNode, EndNode, ApproveViewNode, ViewNode, StartFunctionNode
+)
 from michelin_bpm.main.views import (
-    CreateProposalProcessView, ApproveView, FixMistakesView, AddDataView, SeeDataView
+    CreateProposalProcessView, ApproveView, FixMistakesView, AddDataView, SeeDataView, AddJCodeView,
+    UnblockClientView, CreateBibServerAccountView, ActivateBibServeAccountView
 )
 from michelin_bpm.main.forms import (
     FixMistakesForm, ApproveForm, LogistForm, AddJCodeADVForm, CreateBibServerAccountForm, SetCreditLimitForm,
     UnblockClientForm, AddACSForm, ActivateBibserveAccountForm, AddDCodeLogistForm
 )
+from michelin_bpm.main.signals import client_unblocked
 
 
 CORR_SUFFIX = settings.CORRECTION_FIELD_SUFFIX
@@ -75,7 +80,7 @@ class ProposalConfirmationFlow(Flow):
                 'country', 'city', 'company_name', 'inn',
                 'bank_name', 'account_number', 'is_needs_bibserve_account'
             ],
-            task_description=_('Start')
+            task_description=_('Start of proposal approval process')
         ).Permission(
             auto_create=True
         ).Next(this.split_to_sales_admin)
@@ -201,30 +206,10 @@ class ProposalConfirmationFlow(Flow):
 
     add_j_code_by_adv = (
         ViewNode(
-            AddDataView,
+            AddJCodeView,
             form_class=AddJCodeADVForm,
             task_description=_('Add J-code by ADV'),
             action_title='J-код добавлен',
-        ).Permission(
-            auto_create=True
-        ).Next(this.check_bibserve_creation_needed)
-    )
-
-    check_bibserve_creation_needed = (
-        SwitchNode(task_description=_('Check if BibServe account creation needed'))
-        .Case(
-            this.create_bibserve_account,
-            lambda a: a.process.is_needs_bibserve_account
-        )
-        .Default(this.add_d_code_by_logist)
-    )
-
-    create_bibserve_account = (
-        ViewNode(
-            SeeDataView,
-            form_class=CreateBibServerAccountForm,
-            task_description=_('Create BibServe account'),
-            action_title='BibServe-аккаунт создан',
         ).Permission(
             auto_create=True
         ).Next(this.add_d_code_by_logist)
@@ -274,30 +259,10 @@ class ProposalConfirmationFlow(Flow):
 
     unblock_client = (
         ViewNode(
-            SeeDataView,
+            UnblockClientView,
             form_class=UnblockClientForm,
             task_description=_('Unblock client by ADV'),
             action_title='Клиент разблокирован',
-        ).Permission(
-            auto_create=True
-        ).Next(this.check_bibserve_activation_needed)
-    )
-
-    check_bibserve_activation_needed = (
-        SwitchNode(task_description=_('Check if BibServe activation needed'))
-        .Case(
-            this.activate_bibserve_account,
-            lambda a: a.process.is_needs_bibserve_account
-        )
-        .Default(this.add_acs)
-    )
-
-    activate_bibserve_account = (
-        ViewNode(
-            AddDataView,
-            form_class=ActivateBibserveAccountForm,
-            task_description=_('Activating BibServe account'),
-            action_title='BibServe аккаунт активирован',
         ).Permission(
             auto_create=True
         ).Next(this.add_acs)
@@ -315,5 +280,90 @@ class ProposalConfirmationFlow(Flow):
     )
 
     end = EndNode(
-        task_description=_('End')
+        task_description=_('End of proposal confirmation process')
     )
+
+
+@register
+class BibServeFlow(Flow):
+
+    process_class = BibServeProcess
+    process_title = l_('Регистрация BibServe аккаунта')
+    process_menu_title = 'Создание BibServe аккаунта'
+    process_client_menu_title = 'Создание BibServe аккаунта'
+    # TODO MBPM-3
+    # Убрать комментарии:
+    # summary_template = '"{{ process.company_name }}" {{ process.city }}, {{ process.country }}'
+
+    start = (
+        StartFunctionNode(
+            this.start_bibserve,
+            task_description=_('Start of BibServe account creation proccess')
+        )
+        .Next(this.create_account)
+    )
+
+    create_account = (
+        ViewNode(
+            CreateBibServerAccountView,
+            form_class=CreateBibServerAccountForm,
+            task_description=_('Create BibServe account'),
+            action_title='BibServe-аккаунт создан',
+        ).Permission(
+            auto_create=True
+        ).Next(this.check_is_allowed_to_activate)
+    )
+
+    check_is_allowed_to_activate = (
+        IfNode(
+            lambda activation: activation.process.is_allowed_to_activate,
+            task_description=_('Check is allowed to activate'),
+        )
+        .Then(this.activate_account)
+        .Else(this.wait_for_allowed_to_activate)
+    )
+
+    wait_for_allowed_to_activate = (
+        flow.Signal(
+            client_unblocked, this.client_unblocked_handler,
+            sender=UnblockClientView,
+            task_loader=this.task_loader,
+            allow_skip=True
+        ).Next(this.activate_account)
+    )
+
+    activate_account = (
+        ViewNode(
+            ActivateBibServeAccountView,
+            form_class=ActivateBibserveAccountForm,
+            task_description=_('Activating BibServe account'),
+            action_title='BibServe аккаунт активирован',
+        ).Permission(
+            auto_create=True
+        ).Next(this.end)
+    )
+
+    end = EndNode(
+        task_description=_('End of BibServe account creation process')
+    )
+
+    @method_decorator(flow.flow_start_func)
+    def start_bibserve(self, activation, proposal):
+        activation.prepare()
+        activation.process.proposal = proposal
+        activation.done()
+
+    @method_decorator(flow.flow_signal)
+    def client_unblocked_handler(self, sender, activation, **signal_kwargs):
+        activation.prepare()
+        activation.done()
+
+    @staticmethod
+    def task_loader(flow_task, **kwargs):
+        proposal = kwargs['proposal']
+        # Проверяем, есть ли у текущей заявки процесс по созданию BibServe-аккаунта
+        if hasattr(proposal, 'bibserveprocess'):
+            return flow_task.flow_class.task_class._default_manager.filter(
+                flow_task=get_task_ref(flow_task),
+                process_id=proposal.bibserveprocess.id
+            ).first()

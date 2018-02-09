@@ -264,6 +264,15 @@ class AddDataView(ActionTitleMixin, UpdateProcessView):
         return HttpResponseRedirect(self.get_success_url())
 
 
+class AddJCodeView(AddDataView):
+
+    def form_valid(self, form, *args, **kwargs):
+        if form.instance.is_needs_bibserve_account:
+            from michelin_bpm.main.flows import BibServeFlow
+            BibServeFlow.start.run(form.instance)
+        return super().form_valid(form, *args, **kwargs)
+
+
 class SeeDataView(ActionTitleMixin, UpdateProcessView):
 
     linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
@@ -282,6 +291,28 @@ class SeeDataView(ActionTitleMixin, UpdateProcessView):
             'linked_node': self.linked_node,
         })
         return kwargs
+
+
+class BibServerAccountMixin:
+
+    def get_object(self, queryset=None):
+        return self.activation.process.bibserveprocess.proposal
+
+
+class CreateBibServerAccountView(BibServerAccountMixin, SeeDataView):
+    pass
+
+
+class ActivateBibServeAccountView(BibServerAccountMixin, AddDataView):
+    pass
+
+
+class UnblockClientView(SeeDataView):
+
+    def form_valid(self, form, *args, **kwargs):
+        from michelin_bpm.main.signals import client_unblocked
+        client_unblocked.send(sender=self.__class__, proposal=form.instance)
+        return super().form_valid(form, *args, **kwargs)
 
 
 @method_decorator(login_required, name='dispatch')

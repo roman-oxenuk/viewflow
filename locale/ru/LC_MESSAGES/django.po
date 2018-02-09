@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-02-07 15:44+0000\n"
+"POT-Creation-Date: 2018-02-09 11:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,96 +20,105 @@ msgstr ""
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: main/flows.py:78
-msgid "Start"
-msgstr "Отправить заявку на согласование"
+#: main/flows.py:83
+msgid "Start of proposal approval process"
+msgstr "Начало согласования заявки"
 
-#: main/flows.py:85
+#: main/flows.py:90
 msgid "Split to Sales Admin"
 msgstr "Разделение на проверку бумажных документов и согласования"
 
-#: main/flows.py:91
+#: main/flows.py:96
 msgid "Split for credit and Account Manager"
 msgstr "Разделение на проверку кредитным инспектором и аккаунт-менеджером"
 
-#: main/flows.py:100
+#: main/flows.py:105
 msgid "Approve by account manager"
 msgstr "Проверка аккаунт-менеджером"
 
-#: main/flows.py:116
+#: main/flows.py:121
 msgid "Approve by region chief"
 msgstr "Проверка региональным шефом"
 
-#: main/flows.py:138
+#: main/flows.py:143
 msgid "Check approve by region chief"
 msgstr "Завершение проверки региональным шефом"
 
-#: main/flows.py:150
+#: main/flows.py:155
 msgid "Get comments from logist"
 msgstr "Получение комментариев от логиста"
 
-#: main/flows.py:175
+#: main/flows.py:180
 msgid "Approve by credit manager"
 msgstr "Проверка кредитным инспектором"
 
-#: main/flows.py:185
+#: main/flows.py:190
 msgid "Join credit and account manager"
 msgstr "Соединение проверки кредитным инспектором и аккаунт-менеджером"
 
-#: main/flows.py:192
+#: main/flows.py:197
 msgid "Approve by ADV"
 msgstr "Проверка ADV"
 
-#: main/flows.py:206
+#: main/flows.py:211
 msgid "Add J-code by ADV"
 msgstr "Добавление J-кода ADV"
 
-#: main/flows.py:214
-msgid "Check if BibServe account creation needed"
-msgstr "Проверка, нужно ли создание BibServe-аккаунта"
-
-#: main/flows.py:226
-msgid "Create BibServe account"
-msgstr "Создание BibServe-аккаунта"
-
-#: main/flows.py:237
+#: main/flows.py:222
 msgid "Add D-code by Logist"
 msgstr "Добавление D-кода логистом"
 
-#: main/flows.py:248
+#: main/flows.py:233
 msgid "Set credit limit"
 msgstr "Установление кредитного лимита"
 
-#: main/flows.py:259
+#: main/flows.py:244
 msgid "Approve paper docs"
 msgstr "Проверка бумажных документов"
 
-#: main/flows.py:271
+#: main/flows.py:256
 msgid "Join from sales admin"
 msgstr "Соединение проверки документов и согласований"
 
-#: main/flows.py:279
+#: main/flows.py:264
 msgid "Unblock client by ADV"
 msgstr "Разблокировка клиента во внутренних системах"
 
-#: main/flows.py:287
-msgid "Check if BibServe activation needed"
-msgstr "Проверка, нужна ли активация BibServe-аккаунта"
-
-#: main/flows.py:299
-msgid "Activating BibServe account"
-msgstr "Активация аккаунта на BibServe"
-
-#: main/flows.py:310
+#: main/flows.py:275
 msgid "Adding ACS"
 msgstr "Добавление ACS"
 
-#: main/flows.py:318
-msgid "End"
-msgstr "Заявка согласована"
+#: main/flows.py:283
+msgid "End of proposal confirmation process"
+msgstr "Завершение согласования заявки"
 
-msgid "Join Credit And Account Manager"
-msgstr "Соединение проверки кредитным инспектором и аккаунт-менеджером"
+#: main/flows.py:301
+msgid "Start of BibServe account creation proccess"
+msgstr "Начало создания BibServe-аккаунта"
+
+#: main/flows.py:310
+msgid "Create BibServe account"
+msgstr "Создание BibServe-аккаунта"
+
+#: main/flows.py:336
+msgid "Activating BibServe account"
+msgstr "Активация аккаунта на BibServe"
+
+
+#~ msgid "End"
+#~ msgstr "Заявка согласована"
+
+msgid "Start"
+msgstr "Отправить заявку на согласование"
+
+#~ msgid "Check if BibServe account creation needed"
+#~ msgstr "Проверка, нужно ли создание BibServe-аккаунта"
+
+#~ msgid "Check if BibServe activation needed"
+#~ msgstr "Проверка, нужна ли активация BibServe-аккаунта"
+
+#~ msgid "Join Credit And Account Manager"
+#~ msgstr "Соединение проверки кредитным инспектором и аккаунт-менеджером"
 
 msgid "Add j-code by adv"
 msgstr "Добавление J-кода ADV"
@@ -123,47 +132,47 @@ msgstr "Добавление D-кода логистом"
 msgid "Add d code by logist"
 msgstr "Добавление D-кода логистом"
 
-msgid "Unblock client by adv"
-msgstr "Разблокировка клиента во внутренних системах"
+#~ msgid "Unblock client by adv"
+#~ msgstr "Разблокировка клиента во внутренних системах"
 
-msgid "Adding acs"
-msgstr "Добавление ACS"
+#~ msgid "Adding acs"
+#~ msgstr "Добавление ACS"
 
-msgid "Split flow"
-msgstr "Разделение процесса"
+#~ msgid "Split flow"
+#~ msgstr "Разделение процесса"
 
-msgid "Join credit manager and region chief"
-msgstr ""
-"Соединение процесса после проверки Кредитным инспектором и Шефом региона"
+#~ msgid "Join credit manager and region chief"
+#~ msgstr ""
+#~ "Соединение процесса после проверки Кредитным инспектором и Шефом региона"
 
-msgid "Check approve by account manager"
-msgstr "Завершение проверки аккаунт-менеджером"
+#~ msgid "Check approve by account manager"
+#~ msgstr "Завершение проверки аккаунт-менеджером"
 
-msgid "Fix mistakes after account manager"
-msgstr "Правка корректировок после проверки аккаунт-менеджером"
+#~ msgid "Fix mistakes after account manager"
+#~ msgstr "Правка корректировок после проверки аккаунт-менеджером"
 
-msgid "Split flow for ADV and BibServe Admin"
-msgstr "Разделение процесса для ADV и администратора BibServe"
+#~ msgid "Split flow for ADV and BibServe Admin"
+#~ msgstr "Разделение процесса для ADV и администратора BibServe"
 
-msgid "Add BibServe data"
-msgstr "Добавление реквизитов для доступа на BibServe"
+#~ msgid "Add BibServe data"
+#~ msgstr "Добавление реквизитов для доступа на BibServe"
 
-msgid ""
-"Join process after adding J-code and conditionally ddding BibServe data"
-msgstr ""
-"Соединение процесса после добавления J-кода и условной регистрацией "
-"Клиента на BibServe"
+#~ msgid ""
+#~ "Join process after adding J-code and conditionally ddding BibServe data"
+#~ msgstr ""
+#~ "Соединение процесса после добавления J-кода и условной регистрацией "
+#~ "Клиента на BibServe"
 
-msgid "Check approve paper docs"
-msgstr "Завершение проверки бумажных документов"
+#~ msgid "Check approve paper docs"
+#~ msgstr "Завершение проверки бумажных документов"
 
-msgid "Split flow for adding ACS and activating BibServe account"
-msgstr ""
-"Разделение процесса для добавления ACS и активации аккаунта на BibServe"
+#~ msgid "Split flow for adding ACS and activating BibServe account"
+#~ msgstr ""
+#~ "Разделение процесса для добавления ACS и активации аккаунта на BibServe"
 
-msgid "Join process after adding ACS and activating BibServe account"
-msgstr ""
-"Соединение процесса после добавления ACS и активации аккаунта на BibServe"
+#~ msgid "Join process after adding ACS and activating BibServe account"
+#~ msgstr ""
+#~ "Соединение процесса после добавления ACS и активации аккаунта на BibServe"
 
 msgid "File"
 msgstr "Файл"

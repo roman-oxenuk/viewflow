@@ -157,6 +157,19 @@ class ProposalProcess(Process):
         return diff_fields
 
 
+@reversion.register()
+class BibServeProcess(Process):
+
+    class Meta:
+        verbose_name = l_('BibServe аккаунт')
+        verbose_name_plural = l_('BibServe аккаунты')
+
+    proposal = models.OneToOneField(ProposalProcess, verbose_name=l_('Заявка'))
+    login = models.CharField(l_('Login'), max_length=255, null=True, blank=True)
+    password = models.CharField(l_('Password'), max_length=255, null=True, blank=True)
+    is_allowed_to_activate = models.BooleanField(l_('Is allowed to activate'), default=False)
+
+
 class Correction(models.Model):
     """
     Модель, в которой хранятся данные о том, что должен откорректировать Клиент в своей заявке.

@@ -35,6 +35,10 @@ class StartNodeView(LinkedNodeMixin, TranslatedNodeMixin, nodes.Start):
     pass
 
 
+class StartFunctionNode(TranslatedNodeMixin, nodes.StartFunction):
+    pass
+
+
 class IfNode(TranslatedNodeMixin, nodes.If):
     pass
 
