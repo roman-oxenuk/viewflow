@@ -13,7 +13,7 @@ from viewflow.flow.views import CreateProcessView
 from viewflow.fields import get_task_ref
 from viewflow.frontend.views import ProcessListView
 
-from michelin_bpm.main.models import ProposalProcess, Correction
+from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
 
 
 CORR_SUFFIX = settings.CORRECTION_FIELD_SUFFIX
@@ -322,5 +322,10 @@ class MichelinProcessListView(ProcessListView):
         queryset = super().get_queryset()
         is_client = self.request.user.groups.filter(name='Клиенты').exists()
         if is_client:
-            queryset = queryset.filter(client=self.request.user)
+            if queryset.model == ProposalProcess:
+                queryset = queryset.filter(client=self.request.user)
+
+            if queryset.model == BibServeProcess:
+                queryset = queryset.filter(proposal__client=self.request.user)
+
         return queryset
