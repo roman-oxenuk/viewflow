@@ -41,26 +41,6 @@ class ApproveForm(ModelForm):
         self.fields['current_version'].initial = current_version
 
         fields_with_corrections = OrderedDict()
-        # Добавляем non_field поля для корректировки
-        for corr_settings in self.can_create_corrections:
-            # Если задана опция is_can_answer_only, то проверяем, есть ли корректировки,
-            # на которые нужно отвечать. И если такие есть, то показываем поля для ответа.
-            if 'is_can_answer_only' in corr_settings and corr_settings['is_can_answer_only']:
-                has_correction = False
-                if '__all__' in self.fields_corrections:
-                    has_correction = bool([
-                        corr for corr in self.fields_corrections['__all__']
-                        if get_task_ref(corr_settings['for_step']) == get_task_ref(corr['from_step_obj'])
-                    ])
-                if not has_correction:
-                    continue
-
-            non_field_correction = forms.CharField(
-                max_length=255,
-                required=False,
-                label=corr_settings['non_field_corr_label'],
-            )
-            fields_with_corrections['__all__' + corr_settings['field_suffix']] = non_field_correction
 
         # Добавляем корректирующие поля для каждого поля
         for field_name, field in self.fields.items():
@@ -94,6 +74,35 @@ class ApproveForm(ModelForm):
             #         required=False,
             #         label=str(corr_settings['field_label_prefix']) + str(field.label).lower()
             #     )
+
+        # Добавляем non_field поля для корректировки
+        for corr_settings in self.can_create_corrections:
+            # Если задана опция is_can_answer_only, то проверяем, есть ли корректировки,
+            # на которые нужно отвечать. И если такие есть, то показываем поля для ответа.
+            if 'is_can_answer_only' in corr_settings and corr_settings['is_can_answer_only']:
+                has_correction = False
+                if '__all__' in self.fields_corrections:
+                    has_correction = bool([
+                        corr for corr in self.fields_corrections['__all__']
+                        if get_task_ref(corr_settings['for_step']) == get_task_ref(corr['from_step_obj'])
+                    ])
+                if not has_correction:
+                    continue
+
+            non_field_correction = forms.CharField(
+                max_length=255,
+                required=False,
+                label=corr_settings['non_field_corr_label'],
+                widget=forms.TextInput(
+                    attrs={
+                        'data-correction-field': 'true',
+                        'action_btn_label': corr_settings['action_btn_label'],
+                        'action_btn_name': corr_settings['action_btn_name'],
+                        'action_btn_class': corr_settings['action_btn_class'],
+                    }
+                )
+            )
+            fields_with_corrections['__all__' + corr_settings['action_btn_name']] = non_field_correction
 
         self.fields = fields_with_corrections
 

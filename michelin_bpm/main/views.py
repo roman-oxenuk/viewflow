@@ -150,11 +150,11 @@ class ShowCorrectionsMixin:
 
 class ActionTitleMixin:
 
-    action_title = None
+    done_btn_title = None
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        context_data['action_title'] = self.action_title
+        context_data['done_btn_title'] = self.done_btn_title
         return context_data
 
 
@@ -164,11 +164,30 @@ class ApproveView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
     can_create_corrections = []   # Корректировки для каких шагов могут быть созданный в рамках этого View
     show_corrections = []   # Какие дополнительные Корректировки могут быть показаны кроме тех,
                             # что созданны для текущего шага self.linked_node
+    done_btn_title = None
 
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
-        context_data['action_title'] = self.action_title
-        return context_data
+    def get_available_actions(self):
+        return [corr_settings['action_btn_name'] for corr_settings in self.can_create_corrections]
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+
+        # Если форма отправлена по нажатию какой-то кнопки, кроме "done",
+        # то это предполагает, что пользователь оставил комментарий к заявке.
+        # Поэтому поле для с соответствующим комментарием должно быть обязательно заполнено.
+        actions = self.get_available_actions()
+        applied_actions = set(actions) & set(request.POST)
+        if applied_actions:
+            for act in applied_actions:
+                for field_name, field in form.fields.items():
+                    if field_name.endswith(act):
+                        field.required = True
+
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -198,9 +217,9 @@ class ApproveView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
         # TODO MBPM-3: Вынести запрос к БД из цикла
         for corr_settings in self.can_create_corrections:
             correction_data = dict([
-                (name.replace(corr_settings['field_suffix'], ''), value)
+                (name.replace(corr_settings['action_btn_name'], ''), value)
                 for name, value in form.cleaned_data.items()
-                if name.endswith(corr_settings['field_suffix']) and value
+                if name.endswith(corr_settings['action_btn_name']) and value
             ])
             if correction_data:
                 Correction.objects.create(
@@ -270,6 +289,15 @@ class AddJCodeView(AddDataView):
         if form.instance.is_needs_bibserve_account:
             from michelin_bpm.main.flows import BibServeFlow
             BibServeFlow.start.run(form.instance)
+        return super().form_valid(form, *args, **kwargs)
+
+
+class PaperDocsSentView(AddDataView):
+
+    def form_valid(self, form, *args, **kwargs):
+        if form.instance.is_needs_bibserve_account:
+            from michelin_bpm.main.flows import PaperDocsApprovalFlow
+            PaperDocsApprovalFlow.start.run(form.instance)
         return super().form_valid(form, *args, **kwargs)
 
 

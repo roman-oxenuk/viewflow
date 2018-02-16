@@ -170,6 +170,16 @@ class BibServeProcess(Process):
     is_allowed_to_activate = models.BooleanField(l_('Is allowed to activate'), default=False)
 
 
+@reversion.register()
+class PaperDocsProcess(Process):
+
+    class Meta:
+        verbose_name = l_('Бумажные документы')
+        verbose_name_plural = l_('Бумажные документы')
+
+    proposal = models.OneToOneField(ProposalProcess, verbose_name=l_('Заявка'))
+
+
 class Correction(models.Model):
     """
     Модель, в которой хранятся данные о том, что должен откорректировать Клиент в своей заявке.
