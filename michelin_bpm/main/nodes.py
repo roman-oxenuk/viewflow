@@ -2,7 +2,12 @@
 from viewflow import ThisObject
 from viewflow.flow import nodes
 from viewflow.fields import get_task_ref
+from viewflow.activation import STATUS
+
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as l_
+from django.views import generic
+from django.conf.urls import url
 
 
 class LinkedNodeMixin:
@@ -57,6 +62,55 @@ class EndNode(TranslatedNodeMixin, nodes.End):
 
 class ViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):
     pass
+
+
+class DownloadableViewNode(ViewNode):
+
+    download_view_class = generic.TemplateView
+
+    @property
+    def download_view(self):
+        return self.download_view_class.as_view()
+
+    def urls(self):
+        urls = super().urls()
+        urls.append(
+            url(r'^(?P<process_pk>\d+)/{}/(?P<task_pk>\d+)/download/$'.format(self.name),
+                self.download_view, {'flow_task': self}, name="{}__download".format(self.name)))
+        return urls
+
+    def get_task_url(self, task, url_type='guess', namespace='', **kwargs):
+        """Handle `assign`, `unassign` and `execute` url_types.
+
+        If url_type is `guess` task check is it can be assigned, unassigned or executed.
+        If true, the action would be returned as guess result url.
+        """
+        user = kwargs.get('user', None)
+
+        # assign
+        if url_type in ['assign', 'guess']:
+            if task.status == STATUS.NEW and self.can_assign(user, task):
+                url_name = '{}:{}__assign'.format(namespace, self.name)
+                return reverse(url_name, kwargs={'process_pk': task.process_id, 'task_pk': task.pk})
+
+        # execute
+        if url_type in ['execute', 'guess']:
+            if task.status == STATUS.ASSIGNED and self.can_execute(user, task):
+                url_name = '{}:{}'.format(namespace, self.name)
+                return reverse(url_name, kwargs={'process_pk': task.process_id, 'task_pk': task.pk})
+
+        # unassign
+        if url_type in ['unassign']:
+            if task.status == STATUS.ASSIGNED and self.can_unassign(user, task):
+                url_name = '{}:{}__unassign'.format(namespace, self.name)
+                return reverse(url_name, kwargs={'process_pk': task.process_id, 'task_pk': task.pk})
+
+        # download
+        if url_type in ['download']:
+            url_name = '{}:{}__download'.format(namespace, self.name)
+            return reverse(url_name, kwargs={'process_pk': task.process_id, 'task_pk': task.pk})
+
+        return super().get_task_url(task, url_type, namespace=namespace, **kwargs)
 
 
 class ApproveViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):

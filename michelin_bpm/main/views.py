@@ -277,6 +277,8 @@ class SeeDataView(ActionTitleMixin, UpdateProcessView):
 
     linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
 
+    template_name = 'main/proposalconfirmation/task_downloadable.html'
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
 
