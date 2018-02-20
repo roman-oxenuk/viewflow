@@ -4,6 +4,7 @@ from django.contrib.admin import AdminSite
 from django.contrib.auth import get_user_model
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Group
+from django.contrib.sites.models import Site
 from django.utils.translation import gettext_lazy as l_
 
 from reversion.admin import VersionAdmin
@@ -12,6 +13,9 @@ from viewflow.admin import ProcessAdmin, TaskAdmin
 from material.frontend.models import Module
 
 from michelin_bpm.main.models import ProposalProcess, Correction
+
+
+User = get_user_model()
 
 
 class ModuleAdmin(admin.ModelAdmin):  # noqa D102
@@ -27,9 +31,6 @@ class ModuleAdmin(admin.ModelAdmin):  # noqa D102
     def has_delete_permission(self, request, obj=None):
         """Module deletion is no allowed."""
         return False
-
-
-User = get_user_model()
 
 
 class MichelinAdminSite(AdminSite):
@@ -55,6 +56,11 @@ class ProposalProcessAdmin(VersionAdmin):
     ]
 
 
+class SiteAdmin(admin.ModelAdmin):
+    list_display = ('domain', 'name')
+    search_fields = ('domain', 'name')
+
+
 admin_site.register(User, auth_admin.UserAdmin)
 admin_site.register(Group, auth_admin.GroupAdmin)
 
@@ -65,3 +71,4 @@ admin_site.register(ProposalProcess, ProposalProcessAdmin)
 admin_site.register(Correction)
 
 admin_site.register(Module, ModuleAdmin)
+admin_site.register(Site, SiteAdmin)

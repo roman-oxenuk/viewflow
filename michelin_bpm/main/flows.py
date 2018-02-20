@@ -2,6 +2,8 @@
 from django.utils.translation import ugettext_lazy as l_, ugettext as _
 from django.utils.decorators import method_decorator
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
 from viewflow import flow
 from viewflow.base import this, Flow
@@ -14,11 +16,12 @@ from michelin_bpm.main.nodes import (
 )
 from michelin_bpm.main.views import (
     CreateProposalProcessView, ApproveView, FixMistakesView, AddDataView, SeeDataView, AddJCodeView,
-    UnblockClientView, CreateBibServerAccountView, ActivateBibServeAccountView
+    UnblockClientView, CreateBibServerAccountView, ActivateBibServeAccountView, ClientAddDataView
 )
 from michelin_bpm.main.forms import (
     FixMistakesForm, ApproveForm, LogistForm, AddJCodeADVForm, CreateBibServerAccountForm, SetCreditLimitForm,
-    UnblockClientForm, AddACSForm, ActivateBibserveAccountForm, AddDCodeLogistForm
+    UnblockClientForm, AddACSForm, ActivateBibserveAccountForm, AddDCodeLogistForm, CreateProcessAndUserClientForm,
+    SendLinkForm
 )
 from michelin_bpm.main.signals import client_unblocked
 
@@ -77,211 +80,55 @@ class ProposalConfirmationFlow(Flow):
         StartNodeView(
             CreateProposalProcessView,
             fields=[
-                'country', 'city', 'company_name', 'inn',
-                'bank_name', 'account_number', 'is_needs_bibserve_account'
+                'person_login', 'person_email', 'person_first_name', 'person_last_name',
+                'inn', 'mdm_id', 'phone'
             ],
             task_description=_('Start of proposal approval process')
         ).Permission(
             auto_create=True
-        ).Next(this.split_to_sales_admin)
+        ).Next(this.create_user)
     )
 
-    split_to_sales_admin = (
-        SplitNode(task_description=_('Split to Sales Admin'))
-        .Next(this.approve_paper_docs)
-        .Next(this.split_for_credit_and_account_manager)
-    )
+    create_user = flow.Handler(
+        this.perform_create_user
+    ).Next(this.add_data_by_client)
 
-    split_for_credit_and_account_manager = (
-        SplitNode(task_description=_('Split for credit and Account Manager'))
-        .Next(this.approve_by_account_manager)
-        .Next(this.approve_by_credit_manager)
-    )
-
-    approve_by_account_manager = (
-        ApproveViewNode(
-            ApproveView,
-            form_class=ApproveForm,
-            task_description=_('Approve by account manager'),
-            task_comments='Аккаунт-менеджер проверяет заявку',
-            action_title='Согласовано',
-            # TODO MBPM-3:
-            # Переименовать can_create_corrections в can_create_messages ?
-            can_create_corrections=[],
-            show_corrections=[],
-        ).Permission(
-            auto_create=True
-        ).Next(this.approve_by_region_chief)
-    )
-
-    approve_by_region_chief = (
-        ApproveViewNode(
-            ApproveView,
-            form_class=ApproveForm,
-            task_description=_('Approve by region chief'),
-            task_comments='Шеф региона проверяет заявку',
-            action_title='Согласовано',
-            can_create_corrections=[
-                {
-                    'for_step': this.get_comments_from_logist,
-                    'field_suffix': COMMENT_SUFFIX,
-                    'field_label_prefix': l_('Запросить комментарий у логиста для поля '),
-                    'non_field_corr_label': l_('Запрос комментария для всей заявки.'),
-                }
-            ],
-            show_corrections=[
-                {'for_step': this.get_comments_from_logist},
-            ],
-        )
-        .Permission(
-            auto_create=True
-        )
-        .Next(this.check_approve_by_region_chief)
-    )
-
-    check_approve_by_region_chief = (
-        SwitchNode(task_description=_('Check approve by region chief'))
-        .Case(
-            this.get_comments_from_logist,
-            lambda a: has_active_correction(a, for_step=this.get_comments_from_logist)
-        )
-        .Default(this.join_credit_and_account_manager)
-    )
-
-    get_comments_from_logist = (
-        ApproveViewNode(
-            ApproveView,
-            form_class=LogistForm,
-            task_description=_('Get comments from logist'),
-            action_title='Сохранить',
-            can_create_corrections=[
-                {
-                    'for_step': this.approve_by_region_chief,
-                    'field_suffix': COMMENT_SUFFIX,
-                    'field_label_prefix': l_('Пояснение шефу региона для поля '),
-                    'non_field_corr_label': l_('Пояснение шефу региона для всей заявки.'),
-                }
-            ],
-            # TODO MBPM-3: переименовать на
-            # additionaly_show_corrections -- дополнительно показываем корректировки с каких шагов
-            # И наверное лучше сделать просто списком.
-            show_corrections=[
-                {'for_step': this.approve_by_region_chief}
-            ]
-        ).Permission(
-            auto_create=True
-        ).Next(this.approve_by_region_chief)
-    )
-
-    approve_by_credit_manager = (
-        ApproveViewNode(
-            ApproveView,
-            form_class=ApproveForm,
-            task_description=_('Approve by credit manager'),
-            action_title='Согласовано',
-            can_create_corrections=[],
-            show_corrections=[],
-        ).Permission(
-            auto_create=True
-        ).Next(this.join_credit_and_account_manager)
-    )
-
-    join_credit_and_account_manager = flow.Join(
-        task_description=_('Join credit and account manager')
-    ).Next(this.approve_by_adv)
-
-    approve_by_adv = (
-        ApproveViewNode(
-            ApproveView,
-            form_class=ApproveForm,
-            task_description=_('Approve by ADV'),
-            task_comments='ADV согласовывает заявку',
-            action_title='Согласовано',
-            can_create_corrections=[],
-            show_corrections=[],
-        ).Permission(
-            auto_create=True
-        ).Next(this.add_j_code_by_adv)
-    )
-
-    add_j_code_by_adv = (
+    add_data_by_client = (
         ViewNode(
-            AddJCodeView,
-            form_class=AddJCodeADVForm,
-            task_description=_('Add J-code by ADV'),
-            action_title='J-код добавлен',
-        ).Permission(
-            auto_create=True
-        ).Next(this.add_d_code_by_logist)
-    )
-
-    add_d_code_by_logist = (
-        ViewNode(
-            AddDataView,
+            ClientAddDataView,
             form_class=AddDCodeLogistForm,
-            task_description=_('Add D-code by Logist'),
+            task_description=_('Client adds data'),
             action_title='D-код добавлен',
         ).Permission(
             auto_create=True
-        ).Next(this.set_credit_limit)
-    )
-
-    set_credit_limit = (
-        ViewNode(
-            SeeDataView,
-            form_class=SetCreditLimitForm,
-            task_description=_('Set credit limit'),
-            action_title='Кредитный лимит установлен',
-        ).Permission(
-            auto_create=True
-        ).Next(this.join_from_sales_admin)
-    )
-
-    approve_paper_docs = (
-        ApproveViewNode(
-            ApproveView,
-            form_class=ApproveForm,
-            task_description=_('Approve paper docs'),
-            action_title='Данные в документах совпадают с данными в системе',
-            can_create_corrections=[],
-            show_corrections=[],
-        )
-        .Permission(
-            auto_create=True
-        )
-        .Next(this.join_from_sales_admin)
-    )
-
-    join_from_sales_admin = (
-        flow.Join(task_description=_('Join from sales admin'))
-        .Next(this.unblock_client)
-    )
-
-    unblock_client = (
-        ViewNode(
-            UnblockClientView,
-            form_class=UnblockClientForm,
-            task_description=_('Unblock client by ADV'),
-            action_title='Клиент разблокирован',
-        ).Permission(
-            auto_create=True
-        ).Next(this.add_acs)
-    )
-
-    add_acs = (
-        ViewNode(
-            AddDataView,
-            form_class=AddACSForm,
-            task_description=_('Adding ACS'),
-            action_title='ACS прикреплён',
-        ).Permission(
-            auto_create=True
+        ).Assign(
+            lambda activation: activation.process.client
         ).Next(this.end)
     )
 
     end = EndNode(
         task_description=_('End of proposal confirmation process')
     )
+
+    def perform_create_user(self, activation, **kwargs):
+        User = get_user_model()
+        new_user = User(**{
+            'username': activation.process.person_login,
+            'email': activation.process.person_email,
+            'first_name': activation.process.person_first_name,
+            'last_name': activation.process.person_last_name,
+        })
+        new_user.save()
+
+        clients = Group.objects.get(id=settings.CLIENTS_GROUP_ID)
+        clients.user_set.add(new_user)
+
+        activation.process.client = new_user
+        activation.process.save()
+
+        password_reset_form = SendLinkForm({'email': new_user.email})
+        password_reset_form.is_valid()
+        password_reset_form.save()
 
 
 @register

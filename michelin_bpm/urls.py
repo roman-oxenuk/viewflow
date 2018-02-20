@@ -20,11 +20,15 @@ from django.contrib.auth import views as auth_views
 
 from material.frontend import urls as frontend_urls
 from michelin_bpm.main.admin import admin_site
+from michelin_bpm.main.views import EnterClientPasswordView
 
 
 urlpatterns = [
     url(r'^accounts/logout/$', auth_views.logout,
         {'template_name': 'main/registration/logged_out.html'}, name='logout'),
+    url(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+        EnterClientPasswordView.as_view(), name='client_set_password'),
+
     url(r'^admin/', admin_site.urls),
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),
     url(r'', include(frontend_urls)),

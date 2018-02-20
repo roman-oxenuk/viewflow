@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 import json
+
 from django.http import HttpResponseRedirect
 from django.conf import settings
-from django.forms.models import model_to_dict
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-
+from django.contrib.auth.views import PasswordResetConfirmView
+from django.utils.translation import ugettext_lazy as _
 import reversion
 from reversion.models import Version
+
 from viewflow.flow.views.task import UpdateProcessView
 from viewflow.flow.views import CreateProcessView
 from viewflow.fields import get_task_ref
 from viewflow.frontend.views import ProcessListView
-
 from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
+from michelin_bpm.main.forms import ClientSetPasswordForm
 
 
 CORR_SUFFIX = settings.CORRECTION_FIELD_SUFFIX
@@ -24,14 +26,19 @@ class CreateProposalProcessView(CreateProcessView):
 
     linked_node = None
 
-    def form_valid(self, *args, **kwargs):
-        self.activation.process.client = self.request.user
 
-        with reversion.create_revision():
-            super().form_valid(*args, **kwargs)
-            reversion.set_user(self.request.user)
+class EnterClientPasswordView(PasswordResetConfirmView):
 
-        return HttpResponseRedirect(self.get_success_url())
+    template_name = 'main/registration/password_reset_confirm.html'
+    title = _('Enter password')
+    form_class = ClientSetPasswordForm
+    post_reset_login = True
+    success_url = '/'
+
+    def dispatch(self, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            return HttpResponseRedirect('/')
+        return super().dispatch(*args, **kwargs)
 
 
 class ShowCorrectionsMixin:
@@ -262,6 +269,17 @@ class AddDataView(ActionTitleMixin, UpdateProcessView):
             super().form_valid(form, **kwargs)
             reversion.set_user(self.request.user)
         return HttpResponseRedirect(self.get_success_url())
+
+
+class ClientAddDataView(AddDataView):
+
+    def get_form_kwargs(self):
+        kwargs = super(UpdateProcessView, self).get_form_kwargs()
+        kwargs.update({
+            'linked_node': self.linked_node,
+            'current_version': None
+        })
+        return kwargs
 
 
 class AddJCodeView(AddDataView):

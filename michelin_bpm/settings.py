@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
     'viewflow',
     'viewflow.frontend',
@@ -135,6 +136,8 @@ DATABASES = {
     }
 }
 
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -178,6 +181,15 @@ if DEBUG_SQL:
     }
 
 
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    'django.contrib.auth.hashers.BCryptPasswordHasher',
+]
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
@@ -198,6 +210,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+SITE_ID = 1
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
@@ -213,3 +226,10 @@ CORRECTION_FIELD_SUFFIX = '_correction'
 COMMENT_REQUEST_FIELD_SUFFIX = '_get_comment'
 CORRECTION_FIELD_SUFFIX_2 = '_correction_2'
 CORRECTION_FIELD_SUFFIX_3 = '_correction_3'
+
+DB_MAILER_API_KEY = 'd84f32d0-6351-4f5a-b771-b074d5d4'
+DB_MAILER_ROOT_URL = 'http://mail1.centrobit.ru'
+DEFAULT_FROM_EMAIL = 'info@centrobit.ru'
+
+# id группы Клиентов
+CLIENTS_GROUP_ID = 1
