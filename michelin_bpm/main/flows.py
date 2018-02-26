@@ -64,6 +64,16 @@ def is_already_has_task(activation, task):
     ).exists()
 
 
+def is_already_done(activation, task):
+    if not hasattr(task, 'flow_class'):
+        setattr(task, 'flow_class', ProposalConfirmationFlow)
+
+    return activation.process.task_set.filter(
+        flow_task=get_task_ref(task),
+        status='DONE'
+    ).exists()
+
+
 @register
 class ProposalConfirmationFlow(Flow):
 
@@ -107,11 +117,92 @@ class ProposalConfirmationFlow(Flow):
             action_title='Согласовано',
             # TODO MBPM-3:
             # Переименовать can_create_corrections в can_create_messages ?
-            can_create_corrections=[],
+            can_create_corrections=[
+                {
+                    'for_step': this.fix_mistakes_after_account_manager,
+                    'field_suffix': CORR_SUFFIX,
+                    'field_label_prefix': l_('Клиенту корректировка для поля '),
+                    'non_field_corr_label': l_('Клиенту корректировка для всей заявки.'),
+                },
+            ],
+            show_corrections=[
+                {'for_step': this.fix_mistakes_after_account_manager},
+                {'for_step': this.approve_by_credit_manager},
+                {'for_step': this.approve_by_region_chief},
+                {'for_step': this.approve_paper_docs},
+            ],
+        ).Permission(
+            auto_create=True
+        ).Next(this.choose_the_path)
+    )
+
+    choose_the_path = (
+        SwitchNode(task_description=_('Choose the path'))
+        .Case(
+            this.fix_mistakes_after_account_manager,
+            lambda a: (
+                is_already_done(a, task=this.join_credit_and_account_manager) and
+                has_active_correction(a, for_step=this.approve_by_credit_manager)
+            )
+        )
+        .Case(
+            this.approve_by_credit_manager,
+            lambda a: (
+                is_already_done(a, task=this.join_credit_and_account_manager) and
+                has_active_correction(a, for_step=this.approve_by_credit_manager)
+            )
+        )
+        .Default(this.join_credit_and_account_manager)
+    )
+
+    approve_by_credit_manager = (
+        ApproveViewNode(
+            ApproveView,
+            form_class=ApproveForm,
+            task_description=_('Approve by credit manager'),
+            action_title='Согласовано',
+            can_create_corrections=[
+                {
+                    'for_step': this.approve_by_account_manager,
+                    'field_suffix': COMMENT_SUFFIX,
+                    'field_label_prefix': l_('Заблокировать заявку из-за этого поля'),
+                    'non_field_corr_label': l_('Заблокировать заявку'),
+                }
+            ],
             show_corrections=[],
         ).Permission(
             auto_create=True
-        ).Next(this.approve_by_region_chief)
+        ).Next(this.join_credit_and_account_manager)
+    )
+
+    join_credit_and_account_manager = flow.Join(
+        task_description=_('Join credit and account manager')
+    ).Next(this.check_approve_by_credit_and_account_manager)
+
+    check_approve_by_credit_and_account_manager = (
+        SwitchNode(task_description=_('Check approve by credit and account manager'))
+        .Case(
+            this.approve_by_account_manager,
+            lambda a: has_active_correction(a, for_step=this.approve_by_account_manager)
+        )
+        .Case(
+            this.fix_mistakes_after_account_manager,
+            lambda a: has_active_correction(a, for_step=this.fix_mistakes_after_account_manager)
+        )
+        .Default(this.approve_by_region_chief)
+    )
+
+    fix_mistakes_after_account_manager = (
+        ApproveViewNode(
+            FixMistakesView,
+            form_class=FixMistakesForm,
+            task_description=_('Fix mistakes after account manager'),
+            action_title='Сохранить',
+        ).Permission(
+            auto_create=True
+        ).Assign(
+            lambda activation: activation.process.created_by
+        ).Next(this.end)
     )
 
     approve_by_region_chief = (
@@ -145,7 +236,7 @@ class ProposalConfirmationFlow(Flow):
             this.get_comments_from_logist,
             lambda a: has_active_correction(a, for_step=this.get_comments_from_logist)
         )
-        .Default(this.join_credit_and_account_manager)
+        .Default(this.approve_by_adv)
     )
 
     get_comments_from_logist = (
@@ -172,23 +263,6 @@ class ProposalConfirmationFlow(Flow):
             auto_create=True
         ).Next(this.approve_by_region_chief)
     )
-
-    approve_by_credit_manager = (
-        ApproveViewNode(
-            ApproveView,
-            form_class=ApproveForm,
-            task_description=_('Approve by credit manager'),
-            action_title='Согласовано',
-            can_create_corrections=[],
-            show_corrections=[],
-        ).Permission(
-            auto_create=True
-        ).Next(this.join_credit_and_account_manager)
-    )
-
-    join_credit_and_account_manager = flow.Join(
-        task_description=_('Join credit and account manager')
-    ).Next(this.approve_by_adv)
 
     approve_by_adv = (
         ApproveViewNode(
