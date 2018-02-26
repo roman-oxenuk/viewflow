@@ -19,6 +19,13 @@ def get_attr(obj, key):
     return None
 
 
+@register.filter
+def has_attr(obj, key):
+    if hasattr(obj, key):
+        return True
+    return False
+
+
 @register.assignment_tag
 def check_is_client(user):
     return user.groups.filter(name='Клиенты').exists()

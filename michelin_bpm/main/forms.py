@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-from collections import OrderedDict
-
 from django import forms
-from django.conf import settings
 from django.forms import ModelForm, ValidationError
 from django.utils.translation import ugettext_lazy as l_
 from django.contrib.auth import get_user_model
@@ -13,13 +10,31 @@ from viewflow.fields import get_task_ref
 from michelin_bpm.main.models import ProposalProcess
 
 
-CORR_SUFFIX = settings.CORRECTION_FIELD_SUFFIX
-COMMENT_SUFFIX = settings.COMMENT_REQUEST_FIELD_SUFFIX
-
-
-class ApproveForm(ModelForm):
-
+class VersionFormMixin(ModelForm):
+    """
+    Миксин, проверяющий, не изменилась ли версия заявки, которую только что просматривал пользователь.
+    Нужно использовать его в одном ViewNode с michelin_bpm.main.views.VersionViewMixin
+    """
     current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        current_version = kwargs.pop('current_version')
+        super().__init__(*args, **kwargs)
+        self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
+        self.fields['current_version'].initial = current_version
+
+    def clean(self):
+        self.cleaned_data = super().clean()
+        # проверяем, последнюю ли версию заявки просматривал пользователь:
+        last_version = self.instance.get_last_version()
+        if last_version != self.cleaned_data['current_version']:
+            raise ValidationError(
+                'Не удалось сохранить форму, т.к. заявка уже изменилась. Обновите страницу.'
+            )
+        return self.cleaned_data
+
+
+class ApproveForm(VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
@@ -31,51 +46,16 @@ class ApproveForm(ModelForm):
     def __init__(self, *args, **kwargs):
         self.linked_node = kwargs.pop('linked_node')
         self.show_corrections = kwargs.pop('show_corrections', [])
-        current_version = kwargs.pop('current_version')
         self.can_create_corrections = kwargs.pop('can_create_corrections')
         self.fields_corrections = kwargs.pop('fields_corrections')
 
         super().__init__(*args, **kwargs)
 
-        self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
-        self.fields['current_version'].initial = current_version
-
-        fields_with_corrections = OrderedDict()
-
-        # Добавляем корректирующие поля для каждого поля
-        for field_name, field in self.fields.items():
-
-            # пропускаем спрятанное служебное поле или поле корректировки
-            if field_name == 'current_version':
-                fields_with_corrections[field_name] = field
-                continue
-
-            # делаем поле неактивным
+        # Делаем каждое поле неактивным
+        for field in self.fields.values():
             field.widget.attrs['readonly'] = True
-            fields_with_corrections[field_name] = field
 
-            # Если задана опция is_can_answer_only, то проверяем, есть ли корректировки,
-            # на которые нужно отвечать. И если такие есть, то показываем поля для ответа.
-            # for corr_settings in self.can_create_corrections:
-            #     if 'is_can_answer_only' in corr_settings and corr_settings['is_can_answer_only']:
-            #         has_correction = False
-            #         if field_name in self.fields_corrections:
-            #             has_correction = bool([
-            #                 corr for corr in self.fields_corrections[field_name]
-            #                 if get_task_ref(corr_settings['for_step']) == get_task_ref(corr['from_step_obj'])
-            #             ])
-            #         if not has_correction:
-            #             continue
-
-            #     # добавляем корректирующее поле к каждому полю на форме
-            #     correction_field_name = field_name + corr_settings['field_suffix']
-            #     fields_with_corrections[correction_field_name] = forms.CharField(
-            #         max_length=255,
-            #         required=False,
-            #         label=str(corr_settings['field_label_prefix']) + str(field.label).lower()
-            #     )
-
-        # Добавляем non_field поля для корректировки
+        # Добавляем поля для корректировки и комментариев согласно настройкам в self.can_create_corrections
         for corr_settings in self.can_create_corrections:
             # Если задана опция is_can_answer_only, то проверяем, есть ли корректировки,
             # на которые нужно отвечать. И если такие есть, то показываем поля для ответа.
@@ -102,81 +82,7 @@ class ApproveForm(ModelForm):
                     }
                 )
             )
-            fields_with_corrections['__all__' + corr_settings['action_btn_name']] = non_field_correction
-
-        self.fields = fields_with_corrections
-
-    def clean(self):
-        self.cleaned_data = super().clean()
-
-        # проверяем, последнюю ли версию заявки просматривал пользователь:
-        last_version = self.instance.get_last_version()
-        if last_version != self.cleaned_data['current_version']:
-            raise ValidationError(
-                'Не удалось сохранить форму, т.к. заявка уже изменилась. Обновите страницу.'
-            )
-
-        # TODO MBPM-3 Проверить, насколько актуален этот код и следует ли его удалить.
-
-        # Если даже в self.can_create_corrections указанна возможность создавать несколько Корректировок,
-        # то всё равно после сохранения формы может быть создана Корректировка только одного вида.
-        # Иначе мы не будем понимать, на какой шаг дальше отправить заявку.
-        # correction_data = []
-        # if len(self.can_create_corrections) > 1:
-        #     for corr_settings in self.can_create_corrections:
-        #         step_corr = dict([
-        #             (name.replace(corr_settings['field_suffix'], ''), value)
-        #             for name, value in self.cleaned_data.items()
-        #             if name.endswith(corr_settings['field_suffix']) and value
-        #         ])
-        #         if step_corr:
-        #             correction_data.append(step_corr)
-
-        #     if len(correction_data) > 1:
-        #         raise ValidationError('Можно создавать корректировки только одного вида.')
-
-        return self.cleaned_data
-
-
-class LogistForm(ApproveForm):
-
-    class Meta:
-        model = ProposalProcess
-        fields = ['country', 'city', 'company_name']
-
-    def clean(self):
-        """ Проверяем, внёс ли Логист свою корректировку в ответ на корректировку Шефа """
-        self.cleaned_data = super().clean()
-
-        corrections_qs = self.instance.get_correction_active(for_step=get_task_ref(self.linked_node))
-        # Для Логиста всегда должна быть одна активная Корретировка, т.к. он общается только с Шефом региона,
-        # и только Шеф региона может создавать для него Корректировки.
-        # TODO MBPM-3: Закрепить это на уровне констрейта в БД?
-        correction_obj = corrections_qs.first()
-        need_to_be_commented = set(correction_obj.data.keys())
-
-        for corr_settings in self.can_create_corrections:
-            commented_fields = set([
-                field_name.replace(corr_settings['field_suffix'], '')
-                for field_name in self.changed_data
-                if field_name.endswith(corr_settings['field_suffix'])
-            ])
-
-        if '__all__' in need_to_be_commented:
-            if not self.changed_data:
-                msg = l_(
-                    'Нужно обавить хотя бы один комментарий в соответствие с корретировкой: ' +
-                    correction_obj.data['__all__']
-                )
-                self.add_error(None, msg)
-            need_to_be_commented.remove('__all__')
-
-        not_commented = need_to_be_commented - commented_fields
-        if not_commented:
-            for field_name in not_commented:
-                self.add_error(field_name, l_('Нужно оставить комментарий для этого поля'))
-
-        return self.cleaned_data
+            self.fields['__all__' + corr_settings['action_btn_name']] = non_field_correction
 
 
 class FixMistakesForm(ModelForm):
@@ -200,7 +106,6 @@ class FixMistakesForm(ModelForm):
         # Проверяем, изменились ли те поля, к которым были указаны корректировки
         # correction_obj = self.instance.get_correction_active(for_step=get_task_ref(self.linked_node))
         # need_to_be_corrected = set(correction_obj.data.keys())
-
         corrections_qs = self.instance.get_correction_active(for_step=get_task_ref(self.linked_node))
         # Для Клиента всегда должна быть одна активная Корретировка, т.к. он общается через Аккаунта,
         # и только Аккаунт может создавать для него Корректировки
@@ -236,13 +141,32 @@ class FixMistakesForm(ModelForm):
         return self.cleaned_data
 
 
-class AddJCodeADVForm(ModelForm):
+class LogistForm(ApproveForm):
+
+    class Meta:
+        model = ProposalProcess
+        fields = ['country', 'city', 'company_name']
+
+
+class AddDataFormMixin:
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not hasattr(self.Meta, 'can_edit'):
+            self.Meta.can_edit = []
+        for field_name, field in self.fields.items():
+            # делаем поле неактивным
+            if field_name not in self.Meta.can_edit:
+                field.widget.attrs['readonly'] = True
+            else:
+                field.widget.attrs['placeholder'] = 'Кликните для редактирования'
+                field.required = True
+
+
+class AddJCodeADVForm(AddDataFormMixin, VersionFormMixin, ModelForm):
     # TODO MBPM-3:
     # Добавить валидацию поле J-Code.
     # Проверять по шаблону или хотя бы по кол-ву символов.
-
-    current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())
-
     class Meta:
         model = ProposalProcess
         fields = [
@@ -251,35 +175,11 @@ class AddJCodeADVForm(ModelForm):
         ]
         can_edit = ['j_code']
 
-    def __init__(self, *args, **kwargs):
-        self.linked_node = kwargs.pop('linked_node')
-        current_version = kwargs.pop('current_version')
 
-        super().__init__(*args, **kwargs)
-
-        self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
-        self.fields['j_code'].required = True
-
-        self.fields['current_version'].initial = current_version
-
-        for field_name, field in self.fields.items():
-
-            # пропускаем спрятанное служебное поле или поле корректировки
-            if field_name == 'current_version':
-                continue
-
-            # делаем поле неактивным
-            if field_name not in self.Meta.can_edit:
-                field.widget.attrs['readonly'] = True
-
-
-class AddDCodeLogistForm(ModelForm):
+class AddDCodeLogistForm(AddDataFormMixin, VersionFormMixin, ModelForm):
     # TODO MBPM-3:
     # Добавить валидацию поле D-Code.
     # Проверять по шаблону или хотя бы по кол-ву символов.
-
-    current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())
-
     class Meta:
         model = ProposalProcess
         fields = [
@@ -288,31 +188,8 @@ class AddDCodeLogistForm(ModelForm):
         ]
         can_edit = ['d_code']
 
-    def __init__(self, *args, **kwargs):
-        self.linked_node = kwargs.pop('linked_node')
-        current_version = kwargs.pop('current_version')
 
-        super().__init__(*args, **kwargs)
-
-        self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
-        self.fields['d_code'].required = True
-
-        self.fields['current_version'].initial = current_version
-
-        for field_name, field in self.fields.items():
-
-            # пропускаем спрятанное служебное поле или поле корректировки
-            if field_name == 'current_version':
-                continue
-
-            # делаем поле неактивным
-            if field_name not in self.Meta.can_edit:
-                field.widget.attrs['readonly'] = True
-
-
-class CreateBibServerAccountForm(ModelForm):
-
-    current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())
+class CreateBibServerAccountForm(AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
@@ -322,29 +199,8 @@ class CreateBibServerAccountForm(ModelForm):
         ]
         can_edit = []
 
-    def __init__(self, *args, **kwargs):
-        self.linked_node = kwargs.pop('linked_node')
-        current_version = kwargs.pop('current_version')
 
-        super().__init__(*args, **kwargs)
-
-        self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
-        self.fields['current_version'].initial = current_version
-
-        for field_name, field in self.fields.items():
-
-            # пропускаем спрятанное служебное поле или поле корректировки
-            if field_name == 'current_version':
-                continue
-
-            # делаем поле неактивным
-            if field_name not in self.Meta.can_edit:
-                field.widget.attrs['readonly'] = True
-
-
-class SetCreditLimitForm(ModelForm):
-
-    current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())
+class SetCreditLimitForm(AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
@@ -354,29 +210,8 @@ class SetCreditLimitForm(ModelForm):
         ]
         can_edit = []
 
-    def __init__(self, *args, **kwargs):
-        self.linked_node = kwargs.pop('linked_node')
-        current_version = kwargs.pop('current_version')
 
-        super().__init__(*args, **kwargs)
-
-        self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
-        self.fields['current_version'].initial = current_version
-
-        for field_name, field in self.fields.items():
-
-            # пропускаем спрятанное служебное поле или поле корректировки
-            if field_name == 'current_version':
-                continue
-
-            # делаем поле неактивным
-            if field_name not in self.Meta.can_edit:
-                field.widget.attrs['readonly'] = True
-
-
-class UnblockClientForm(ModelForm):
-
-    current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())
+class UnblockClientForm(AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
@@ -386,29 +221,8 @@ class UnblockClientForm(ModelForm):
         ]
         can_edit = []
 
-    def __init__(self, *args, **kwargs):
-        self.linked_node = kwargs.pop('linked_node')
-        current_version = kwargs.pop('current_version')
 
-        super().__init__(*args, **kwargs)
-
-        self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
-        self.fields['current_version'].initial = current_version
-
-        for field_name, field in self.fields.items():
-
-            # пропускаем спрятанное служебное поле или поле корректировки
-            if field_name == 'current_version':
-                continue
-
-            # делаем поле неактивным
-            if field_name not in self.Meta.can_edit:
-                field.widget.attrs['readonly'] = True
-
-
-class AddACSForm(ModelForm):
-
-    current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())
+class AddACSForm(AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
@@ -419,32 +233,13 @@ class AddACSForm(ModelForm):
         can_edit = ['acs']
 
     def __init__(self, *args, **kwargs):
-        self.linked_node = kwargs.pop('linked_node')
-        current_version = kwargs.pop('current_version')
-
         super().__init__(*args, **kwargs)
-
-        self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
-        self.fields['current_version'].initial = current_version
-
         User = get_user_model()
         self.fields['acs'].queryset = User.objects.filter(groups__name='ACS')
         self.fields['acs'].required = True
 
-        for field_name, field in self.fields.items():
 
-            # пропускаем спрятанное служебное поле или поле корректировки
-            if field_name == 'current_version':
-                continue
-
-            # делаем поле неактивным
-            if field_name not in self.Meta.can_edit:
-                field.widget.attrs['readonly'] = True
-
-
-class ActivateBibserveAccountForm(ModelForm):
-
-    current_version = forms.ModelChoiceField(queryset=None, widget=forms.HiddenInput())
+class ActivateBibserveAccountForm(AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
@@ -454,25 +249,3 @@ class ActivateBibserveAccountForm(ModelForm):
             'bibserve_login', 'bibserve_password'
         ]
         can_edit = ['bibserve_login', 'bibserve_password']
-
-    def __init__(self, *args, **kwargs):
-        self.linked_node = kwargs.pop('linked_node')
-        current_version = kwargs.pop('current_version')
-
-        super().__init__(*args, **kwargs)
-
-        self.fields['current_version'].queryset = Version.objects.get_for_object(self.instance)
-        self.fields['current_version'].initial = current_version
-
-        self.fields['bibserve_login'].required = True
-        self.fields['bibserve_password'].required = True
-
-        for field_name, field in self.fields.items():
-
-            # пропускаем спрятанное служебное поле или поле корректировки
-            if field_name == 'current_version':
-                continue
-
-            # делаем поле неактивным
-            if field_name not in self.Meta.can_edit:
-                field.widget.attrs['readonly'] = True

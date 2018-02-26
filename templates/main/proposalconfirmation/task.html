@@ -42,16 +42,6 @@
 
                     <div id="michelin-actions" class="col s9 right-align">
 
-                        {% comment %}
-                        {% check_is_form_with_correction_field form as is_able_to_block %}
-                        {% if is_able_to_block %}
-                            <button type="submit" id="block-btn" name="_block" class="btn primary white-text red lighten-1">
-                                {% trans 'Block proposal' as default_block_btn_title %}
-                                {{ block_btn_title|default:default_block_btn_title }}
-                            </button>
-                        {% endif %}
-                        {% endcomment %}
-
                         {% for corr_field in form %}
                             {% if 'data-correction-field' in corr_field.field.widget.attrs %}
                                 <button type="submit" id="block-btn" name="{{ corr_field.field.widget.attrs.action_btn_name }}" class="btn primary {{ corr_field.field.widget.attrs.action_btn_class }}">

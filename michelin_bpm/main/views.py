@@ -2,7 +2,6 @@
 import json
 from django.http import HttpResponseRedirect
 from django.conf import settings
-from django.forms.models import model_to_dict
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 
@@ -14,10 +13,6 @@ from viewflow.fields import get_task_ref
 from viewflow.frontend.views import ProcessListView
 
 from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
-
-
-CORR_SUFFIX = settings.CORRECTION_FIELD_SUFFIX
-COMMENT_SUFFIX = settings.COMMENT_REQUEST_FIELD_SUFFIX
 
 
 class CreateProposalProcessView(CreateProcessView):
@@ -34,7 +29,45 @@ class CreateProposalProcessView(CreateProcessView):
         return HttpResponseRedirect(self.get_success_url())
 
 
+class ActionTitleMixin:
+    """
+    Миксин, передающий done_btn_title в форму.
+    done_btn_title -- надпись на той кнопке, которая переводит заявку на следующий шаг.
+    """
+    done_btn_title = None
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data['done_btn_title'] = self.done_btn_title
+        return context_data
+
+
+class VersionViewMixin:
+    """
+    Миксин, передающий в форму текущую версию заявки.
+    Версия нужна для того, чтобы понимать,
+    к какой версии Заявки был добавлен комментарий (или какая версия Заявки была согласована).
+    """
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+
+        current_version = Version.objects.get_for_object(
+            kwargs['instance']
+        ).order_by(
+            '-revision__date_created'
+        ).first()
+
+        kwargs.update({'current_version': current_version})
+        return kwargs
+
+
+class BaseView(VersionViewMixin, ActionTitleMixin):
+    pass
+
+
 class ShowCorrectionsMixin:
+
+    linked_node = None
 
     def get_fields_corrections(self, instance):
         """
@@ -143,28 +176,28 @@ class ShowCorrectionsMixin:
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs.update({
-            'fields_corrections': self.get_fields_corrections(self.get_object())
+            'fields_corrections': self.get_fields_corrections(self.get_object()),
+            'linked_node': self.linked_node
         })
         return kwargs
 
 
-class ActionTitleMixin:
-
-    done_btn_title = None
-
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
-        context_data['done_btn_title'] = self.done_btn_title
-        return context_data
-
-
-class ApproveView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
-
-    linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
-    can_create_corrections = []   # Корректировки для каких шагов могут быть созданный в рамках этого View
-    show_corrections = []   # Какие дополнительные Корректировки могут быть показаны кроме тех,
-                            # что созданны для текущего шага self.linked_node
-    done_btn_title = None
+class ApproveView(BaseView, ShowCorrectionsMixin, UpdateProcessView):
+    """
+    Вью для согласования заявки.
+    Аттрибуты вью:
+    linked_node -- инстанс viewflow.Node, к которому прикреплён текущий ApproveView.
+                    При создании Корректировки в поле Correction.for_step сохраняется linked_node,
+                    закодированный через viewflow.fields.get_task_ref().
+                    Поэтому в дальнейшем по полю Correction.for_step мы можем фильтровать Корректировки.
+                    Например чтобы показывать только те, которые определены в ApproveView.show_corrections.
+    can_create_corrections -- Корректировки для каких шагов могут быть созданный в рамках этого ApproveView.
+    show_corrections -- какие дополнительные Корректировки могут быть показаны.
+                        Кроме тех, что созданны для текущего шага, опередённого в self.linked_node.
+    """
+    linked_node = None
+    can_create_corrections = []
+    show_corrections = []
 
     def get_available_actions(self):
         return [corr_settings['action_btn_name'] for corr_settings in self.can_create_corrections]
@@ -186,23 +219,14 @@ class ApproveView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
 
         if form.is_valid():
             return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
+        return self.form_invalid(form)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-
-        current_version = Version.objects.get_for_object(
-            kwargs['instance']
-        ).order_by(
-            '-revision__date_created'
-        ).first()
-
         kwargs.update({
-            'current_version': current_version,
-            'linked_node': self.linked_node,
             'can_create_corrections': self.can_create_corrections,
             'show_corrections': self.show_corrections,
+            'linked_node': self.linked_node,
         })
         return kwargs
 
@@ -236,19 +260,13 @@ class ApproveView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class FixMistakesView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
+class FixMistakesView(BaseView, ShowCorrectionsMixin, UpdateProcessView):
 
-    linked_node = None
     show_corrections = []
 
     def get_queryset(self):
         proposal_qs = super().get_queryset()
         return proposal_qs.filter(client=self.request.user)
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update({'linked_node': self.linked_node})
-        return kwargs
 
     def form_valid(self, form, **kwargs):
         with reversion.create_revision():
@@ -257,25 +275,18 @@ class FixMistakesView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView)
         return HttpResponseRedirect(self.get_success_url())
 
 
-class AddDataView(ActionTitleMixin, UpdateProcessView):
+class SeeDataView(BaseView, UpdateProcessView):
+    """
+    Вью, просто показывающее данные в Заявке.
+    Применяется, например, для случая, когда пользователь должен перенести данные из Заявки в другие системы.
+    """
+    pass
 
-    linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-
-        current_version = Version.objects.get_for_object(
-            kwargs['instance']
-        ).order_by(
-            '-revision__date_created'
-        ).first()
-
-        kwargs.update({
-            'current_version': current_version,
-            'linked_node': self.linked_node,
-        })
-        return kwargs
-
+class AddDataView(SeeDataView):
+    """
+    Вью, в котором пользователь добавляет какие-то данные к заявке.
+    """
     def form_valid(self, form, *args, **kwargs):
         with reversion.create_revision():
             super().form_valid(form, **kwargs)
@@ -292,33 +303,12 @@ class AddJCodeView(AddDataView):
         return super().form_valid(form, *args, **kwargs)
 
 
-class PaperDocsSentView(AddDataView):
+class UnblockClientView(SeeDataView):
 
     def form_valid(self, form, *args, **kwargs):
-        if form.instance.is_needs_bibserve_account:
-            from michelin_bpm.main.flows import PaperDocsApprovalFlow
-            PaperDocsApprovalFlow.start.run(form.instance)
+        from michelin_bpm.main.signals import client_unblocked
+        client_unblocked.send(sender=self.__class__, proposal=form.instance)
         return super().form_valid(form, *args, **kwargs)
-
-
-class SeeDataView(ActionTitleMixin, UpdateProcessView):
-
-    linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-
-        current_version = Version.objects.get_for_object(
-            kwargs['instance']
-        ).order_by(
-            '-revision__date_created'
-        ).first()
-
-        kwargs.update({
-            'current_version': current_version,
-            'linked_node': self.linked_node,
-        })
-        return kwargs
 
 
 class BibServerAccountMixin:
@@ -333,14 +323,6 @@ class CreateBibServerAccountView(BibServerAccountMixin, SeeDataView):
 
 class ActivateBibServeAccountView(BibServerAccountMixin, AddDataView):
     pass
-
-
-class UnblockClientView(SeeDataView):
-
-    def form_valid(self, form, *args, **kwargs):
-        from michelin_bpm.main.signals import client_unblocked
-        client_unblocked.send(sender=self.__class__, proposal=form.instance)
-        return super().form_valid(form, *args, **kwargs)
 
 
 @method_decorator(login_required, name='dispatch')

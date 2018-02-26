@@ -46,6 +46,7 @@
     </ul>
 {% endif %}
 
+
 <table class="striped proposal-data">
     <thead>
       <tr>
@@ -59,11 +60,20 @@
     <tbody>
         {{ form.current_version }}
         {% for field in form %}
-            {% if activation.process|get_attr:field.name %}
+            {% if activation.process|has_attr:field.name %}
                 <tr>
                     <td></td>   <!-- Плейсхолдер для кнопки фолдинга полей -->
                     <td>{{ field.label }}</td>
-                    <td>{{ field }}</td>
+                    <td>
+                        {{ field }}
+                        {% if field.errors %}
+                            <ul>
+                                {% for error in field.errors %}
+                                    <li class="red-text">{{error}}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </td>
                     <td class="field-history-folding">
                         {% if field.name in fields_corrections %}
                             <a href="#">
@@ -74,7 +84,7 @@
                 </tr>
 
                 {% if field.name in fields_corrections %}
-                    {% for correction in fields_corrections|get_item:field.name %}
+                    {% for correction in fields_corrections|get_attr:field.name %}
                         <tr class="field-history-row"></tr>
                         <tr class="field-history-row">
                             <td></td>

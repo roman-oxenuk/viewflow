@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from viewflow import ThisObject
 from viewflow.flow import nodes
-from viewflow.fields import get_task_ref
 from django.utils.translation import gettext_lazy as l_
 
 
@@ -55,7 +54,7 @@ class EndNode(TranslatedNodeMixin, nodes.End):
     pass
 
 
-class ViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):
+class ViewNode(TranslatedNodeMixin, nodes.View):
     pass
 
 

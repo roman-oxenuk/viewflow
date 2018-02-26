@@ -211,9 +211,3 @@ STATIC_URL = '/static/'
 
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/mnt/resource/michelin-bpm/static')
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/mnt/resource/michelin-bpm/')
-
-# Префикс для названия поле, в которые вводят корректировки.
-CORRECTION_FIELD_SUFFIX = '_correction'
-COMMENT_REQUEST_FIELD_SUFFIX = '_get_comment'
-CORRECTION_FIELD_SUFFIX_2 = '_correction_2'
-CORRECTION_FIELD_SUFFIX_3 = '_correction_3'
