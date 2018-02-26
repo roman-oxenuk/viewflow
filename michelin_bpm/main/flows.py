@@ -20,8 +20,7 @@ from michelin_bpm.main.views import (
 )
 from michelin_bpm.main.forms import (
     FixMistakesForm, ApproveForm, LogistForm, AddJCodeADVForm, CreateBibServerAccountForm, SetCreditLimitForm,
-    UnblockClientForm, AddACSForm, ActivateBibserveAccountForm, AddDCodeLogistForm, CreateProcessAndUserClientForm,
-    SendLinkForm
+    UnblockClientForm, AddACSForm, ActivateBibserveAccountForm, AddDCodeLogistForm, SendLinkForm
 )
 from michelin_bpm.main.signals import client_unblocked
 
