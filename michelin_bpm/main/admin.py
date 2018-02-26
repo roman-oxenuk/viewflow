@@ -11,7 +11,7 @@ from viewflow.models import Process, Task
 from viewflow.admin import ProcessAdmin, TaskAdmin
 from material.frontend.models import Module
 
-from michelin_bpm.main.models import ProposalProcess, Correction
+from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess, PaperDocsProcess
 
 
 class ModuleAdmin(admin.ModelAdmin):  # noqa D102
@@ -65,3 +65,6 @@ admin_site.register(ProposalProcess, ProposalProcessAdmin)
 admin_site.register(Correction)
 
 admin_site.register(Module, ModuleAdmin)
+
+admin_site.register(BibServeProcess)
+admin_site.register(PaperDocsProcess)

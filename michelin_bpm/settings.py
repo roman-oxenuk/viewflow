@@ -189,6 +189,10 @@ LANGUAGES = [
 ]
 LOCALE_PATHS = (os.path.join(os.path.dirname(__file__), '..', 'locale'),)
 
+FORMAT_MODULE_PATH = [
+    'michelin_bpm.main.formats',
+]
+
 
 TIME_ZONE = 'UTC'
 

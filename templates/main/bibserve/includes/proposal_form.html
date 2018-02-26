@@ -1,0 +1,123 @@
+{% load i18n viewflow viewflow_frontend material_form material_frontend main %}
+
+{% block task_form %}
+{% csrf_token %}
+{% if '__all__' in fields_corrections %}
+    <span class="all-corrections-title">Корректировки для заявки:</span>
+    <ul class="all-corrections">
+    {% for non_field_correction in fields_corrections|get_item:'__all__' %}
+        <li>
+            <span class="
+                {% if non_field_correction.changed_fields %}all-history-folding {% endif %}
+                {% if non_field_correction.is_active %}red-text text-lighten-1{% endif %}">
+                {{ non_field_correction.msg }}
+            </span>
+            <span class="correction-step">
+                ({{ non_field_correction.from_step }}, {{ non_field_correction.owner }})
+            </span>
+
+            {% if non_field_correction.changed_fields %}
+                <div class="all-history-data">
+                    <table class="striped proposal-data">
+                        {% for field in form %}
+                            {% if activation.process.proposal|get_attr:field.name %}
+
+                                {% if non_field_correction.changed_fields|get_item:field.name  %}
+                                    <tr>
+                                        <td>{{ field.label }}</td>
+                                        <td>
+                                            {{ non_field_correction.changed_fields|get_item:field.name|get_item:"new_value" }}
+
+                                            <s>
+                                                {{ non_field_correction.changed_fields|get_item:field.name|get_item:"old_value" }}
+                                            </s>
+
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+                            {% endif %}
+                        {% endfor %}
+                    </table>
+                </div>
+            {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+
+<table class="striped proposal-data">
+    <thead>
+      <tr>
+          <th></th>     <!-- Плейсхолдер для кнопки фолдинга полей -->
+          <th>Поле</th>
+          <th>Значение</th>
+          <th></th>  <!-- Плейсхолдер для кнопки истории изменения полей -->
+      </tr>
+    </thead>
+
+    <tbody>
+        {{ form.current_version }}
+        {% for field in form %}
+            {% if activation.process.proposal|has_attr:field.name %}
+                <tr>
+                    <td></td>   <!-- Плейсхолдер для кнопки фолдинга полей -->
+                    <td>{{ field.label }}</td>
+                    <td>{{ field }}</td>
+                    <td class="field-history-folding">
+                        {% if field.name in fields_corrections %}
+                            <a href="#">
+                                <i class="fas fa-history"></i>
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% if field.name in fields_corrections %}
+                    {% for correction in fields_corrections|get_attr:field.name %}
+                        <tr class="field-history-row"></tr>
+                        <tr class="field-history-row">
+                            <td></td>
+                            <td></td>
+                            <td>
+                                <div class="field-history-data">
+                                    {% if correction.version_value %}
+                                        {{ correction.version_value }}
+                                    {% endif %}
+
+                                    {% if correction.is_active %}<span class="red-text text-lighten-1">{% endif %}
+                                        <span class="correction-step">
+                                        ({{ correction.msg }})
+                                        </span>
+                                    {% if correction.is_active %}</span>{% endif %}
+                                </div>
+                            </td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% for corr_field in form %}
+    {% if 'data-correction-field' in corr_field.field.widget.attrs %}
+        <div class="row">
+            <div class="input-field col s12 corr-field">
+                {{ corr_field|remove_required }}
+                <label for="{{ corr_field.id_for_label }}">{{ corr_field.label }}</label>
+            </div>
+            {% if corr_field.errors %}
+                <ul class="errors-list">
+                    {% for error in corr_field.errors %}
+                        <li class="red-text text-lighten-1">{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endfor %}

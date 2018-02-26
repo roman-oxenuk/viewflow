@@ -22,3 +22,17 @@ def get_attr(obj, key):
 @register.assignment_tag
 def check_is_client(user):
     return user.groups.filter(name='Клиенты').exists()
+
+
+@register.assignment_tag
+def check_is_form_with_correction_field(form):
+    return bool([
+        field for name, field in form.fields.items()
+        if 'data-correction-field' in field.widget.attrs
+    ])
+
+
+@register.filter
+def remove_required(field):
+    field.field.required = False
+    return field
