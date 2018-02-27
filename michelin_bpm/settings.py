@@ -232,4 +232,4 @@ DB_MAILER_ROOT_URL = 'http://mail1.centrobit.ru'
 DEFAULT_FROM_EMAIL = 'info@centrobit.ru'
 
 # id группы Клиентов
-CLIENTS_GROUP_ID = 1
+CLIENTS_GROUP_ID = os.environ.get('CLIENTS_GROUP_ID', 1)
