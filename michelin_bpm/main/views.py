@@ -1,32 +1,35 @@
 # -*- coding: utf-8 -*-
 import json
+
 from django.http import HttpResponseRedirect
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-
+from django.contrib.auth.views import PasswordResetConfirmView
+from django.utils.translation import ugettext_lazy as _
 import reversion
 from reversion.models import Version
+
 from viewflow.flow.views.task import UpdateProcessView
 from viewflow.flow.views import CreateProcessView
 from viewflow.fields import get_task_ref
 from viewflow.frontend.views import ProcessListView
-
 from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
+from michelin_bpm.main.forms import ClientSetPasswordForm
 
 
-class CreateProposalProcessView(CreateProcessView):
+class EnterClientPasswordView(PasswordResetConfirmView):
 
-    linked_node = None
+    template_name = 'main/registration/password_reset_confirm.html'
+    title = _('Enter password')
+    form_class = ClientSetPasswordForm
+    post_reset_login = True
+    success_url = '/'
 
-    def form_valid(self, *args, **kwargs):
-        self.activation.process.client = self.request.user
-
-        with reversion.create_revision():
-            super().form_valid(*args, **kwargs)
-            reversion.set_user(self.request.user)
-
-        return HttpResponseRedirect(self.get_success_url())
+    def dispatch(self, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            return HttpResponseRedirect('/')
+        return super().dispatch(*args, **kwargs)
 
 
 class ActionTitleMixin:
@@ -63,6 +66,17 @@ class VersionViewMixin:
 
 class BaseView(VersionViewMixin, ActionTitleMixin):
     pass
+
+
+class CreateProposalProcessView(CreateProcessView):
+
+    linked_node = None
+
+    def form_valid(self, *args, **kwargs):
+        with reversion.create_revision():
+            super().form_valid(*args, **kwargs)
+            reversion.set_user(self.request.user)
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class ShowCorrectionsMixin:
@@ -292,6 +306,10 @@ class AddDataView(SeeDataView):
             super().form_valid(form, **kwargs)
             reversion.set_user(self.request.user)
         return HttpResponseRedirect(self.get_success_url())
+
+
+class ClientAddDataView(AddDataView):
+    pass
 
 
 class AddJCodeView(AddDataView):

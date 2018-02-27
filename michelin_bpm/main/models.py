@@ -24,12 +24,19 @@ class ProposalProcess(Process):
     city = models.CharField(l_('Город'), max_length=255)
     company_name = models.CharField(l_('Название компании'), max_length=255)
     inn = models.CharField(l_('ИНН'), max_length=255)
+    phone = models.CharField(l_('Телефон'), max_length=255)
+
+    person_login = models.CharField(l_('Login пользователя'), max_length=255)
+    person_first_name = models.CharField(l_('Имя'), max_length=255)
+    person_last_name = models.CharField(l_('Фамилия'), max_length=255)
+    person_email = models.CharField(l_('Email'), max_length=255)
 
     bank_name = models.CharField(l_('Название банка'), max_length=255)
     account_number = models.CharField(l_('Номер расчётного счёта'), max_length=255)
 
     j_code = models.CharField(l_('J-код'), max_length=255, null=True, blank=True)
     d_code = models.CharField(l_('D-код'), max_length=255, null=True, blank=True)
+    mdm_id = models.CharField(l_('MDM ID'), max_length=255)
 
     is_needs_bibserve_account = models.BooleanField(l_('Is client needs to have a BibServe account?'), default=False)
     bibserve_login = models.CharField(l_('BibServe Login'), max_length=255, null=True, blank=True)

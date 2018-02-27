@@ -2,6 +2,8 @@
 from django.utils.translation import ugettext_lazy as l_, ugettext as _
 from django.utils.decorators import method_decorator
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
 from viewflow import flow
 from viewflow.base import this, Flow
@@ -14,12 +16,14 @@ from michelin_bpm.main.nodes import (
 )
 from michelin_bpm.main.views import (
     CreateProposalProcessView, ApproveView, FixMistakesView, UnblockClientView, CreateBibServerAccountView,
-    ActivateBibServeAccountView, AddJCodeView, SeeDataView, AddDataView
+    ActivateBibServeAccountView, AddJCodeView, SeeDataView, AddDataView, ClientAddDataView
 )
 from michelin_bpm.main.forms import (
     FixMistakesForm, ApproveForm, LogistForm, CreateBibServerAccountForm, ActivateBibserveAccountForm,
-    AddJCodeADVForm, AddDCodeLogistForm, SetCreditLimitForm, UnblockClientForm, AddACSForm
+    AddJCodeADVForm, AddDCodeLogistForm, SetCreditLimitForm, UnblockClientForm, AddACSForm, SendLinkForm,
+    ClientAddDataForm
 )
+
 from michelin_bpm.main.signals import client_unblocked
 
 
@@ -81,14 +85,55 @@ class ProposalConfirmationFlow(Flow):
         StartNodeView(
             CreateProposalProcessView,
             fields=[
-                'country', 'city', 'company_name', 'inn',
-                'bank_name', 'account_number', 'is_needs_bibserve_account'
+                'person_login', 'person_email', 'person_first_name', 'person_last_name',
+                'inn', 'mdm_id', 'phone'
             ],
             task_description=_('Start of proposal approval process')
         ).Permission(
             auto_create=True
+        ).Next(this.create_user)
+    )
+
+    create_user = flow.Handler(
+        this.perform_create_user
+    ).Next(this.add_data_by_client)
+
+    def perform_create_user(self, activation, **kwargs):
+        User = get_user_model()
+        new_user = User(**{
+            'username': activation.process.person_login,
+            'email': activation.process.person_email,
+            'first_name': activation.process.person_first_name,
+            'last_name': activation.process.person_last_name,
+        })
+        new_user.save()
+
+        clients = Group.objects.get(id=settings.CLIENTS_GROUP_ID)
+        clients.user_set.add(new_user)
+
+        activation.process.client = new_user
+        activation.process.save()
+
+        password_reset_form = SendLinkForm({'email': new_user.email})
+        password_reset_form.is_valid()
+        password_reset_form.save()
+
+    add_data_by_client = (
+        ViewNode(
+            ClientAddDataView,
+            form_class=ClientAddDataForm,
+            task_description=_('Client adds data'),
+            task_title=_('Client adds data'),
+            done_btn_title='Все данные добавлены',
+        ).Permission(
+            auto_create=True
+        ).Assign(
+            lambda activation: activation.process.client
         ).Next(this.split_to_sales_admin)
     )
+
+    # TODO MBPM-3:
+    # Тут ещё будет шаг с выгрузкой договора
 
     split_to_sales_admin = (
         SplitNode(task_description=_('Split to Sales Admin'))

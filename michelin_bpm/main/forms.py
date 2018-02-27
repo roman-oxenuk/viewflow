@@ -1,13 +1,95 @@
 # -*- coding: utf-8 -*-
 from django import forms
+from django.conf import settings
 from django.forms import ModelForm, ValidationError
 from django.utils.translation import ugettext_lazy as l_
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.translation import ugettext as _
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.contrib.sites.models import Site
+from django.urls import reverse
 
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from reversion.models import Version
 from viewflow.fields import get_task_ref
 
 from michelin_bpm.main.models import ProposalProcess
+from michelin_bpm.main.utils import AgoraMailerClient
+
+
+User = get_user_model()
+
+
+class SendLinkForm(PasswordResetForm):
+
+    def get_users(self, email):
+        active_users = User._default_manager.filter(**{
+            '%s__iexact' % User.get_email_field_name(): email,
+            'is_active': True,
+        })
+        return active_users
+
+    def send_mail_using_agora_mailer(self, to_email, from_email, context):
+        mailer = AgoraMailerClient()
+        mailer.send('michelin_bpm_invite_link', to_email, from_email, context)
+
+    def save(self, domain_override=None,
+             subject_template_name='main/registration/password_reset_subject.txt',
+             email_template_name='main/registration/password_reset_email.html',
+             use_https=False, token_generator=default_token_generator,
+             from_email=None, request=None, html_email_template_name=None,
+             extra_email_context=None):
+
+        to_email = self.cleaned_data["email"]
+        for user in self.get_users(to_email):
+            if not settings.DEBUG:
+                current_site = Site.objects.get_current()
+                site_name = current_site.name
+                domain = current_site.domain
+            else:
+                site_name = 'localhost'
+                domain = 'localhost:8000'
+
+            link = reverse(
+                'client_set_password',
+                kwargs={
+                    'uidb64': urlsafe_base64_encode(force_bytes(user.pk)).decode('utf-8'),
+                    'token': token_generator.make_token(user)
+                }
+            )
+            context = {
+                'email': to_email,
+                'domain': domain,
+                'site_name': site_name,
+                'link': link,
+                'username': user.username,
+                'protocol': 'https' if use_https else 'http',
+            }
+            if extra_email_context is not None:
+                context.update(extra_email_context)
+
+            if not from_email:
+                from_email = settings.DEFAULT_FROM_EMAIL
+
+            if settings.DEBUG:
+                self.send_mail(
+                    subject_template_name, email_template_name, context, from_email,
+                    to_email, html_email_template_name=html_email_template_name,
+                )
+            else:
+                self.send_mail_using_agora_mailer(to_email, from_email, context)
+
+
+class ClientSetPasswordForm(SetPasswordForm):
+    """
+    Форма, на которой пользователь, созданный аккаунта-менеджером, устанавливает свой пароль.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['new_password1'].label = _('Password')
+        self.fields['new_password2'].label = _('Password confirmation')
 
 
 class VersionFormMixin(ModelForm):
@@ -161,6 +243,17 @@ class AddDataFormMixin:
             else:
                 field.widget.attrs['placeholder'] = 'Кликните для редактирования'
                 field.required = True
+
+
+class ClientAddDataForm(AddDataFormMixin, VersionFormMixin, ModelForm):
+
+    class Meta:
+        model = ProposalProcess
+        fields = [
+            'country', 'city', 'company_name', 'account_number',
+            'inn', 'phone',
+        ]
+        can_edit = ['country', 'city', 'company_name', 'account_number']
 
 
 class AddJCodeADVForm(AddDataFormMixin, VersionFormMixin, ModelForm):
