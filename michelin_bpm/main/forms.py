@@ -253,7 +253,7 @@ class ClientAddDataForm(AddDataFormMixin, VersionFormMixin, ModelForm):
             'country', 'city', 'company_name', 'account_number',
             'inn', 'phone',
         ]
-        can_edit = ['country', 'city', 'company_name', 'account_number']
+        can_edit = ['country', 'city', 'company_name', 'bank_name', 'account_number']
 
 
 class AddJCodeADVForm(AddDataFormMixin, VersionFormMixin, ModelForm):
