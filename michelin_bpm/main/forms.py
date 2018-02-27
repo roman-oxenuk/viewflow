@@ -253,6 +253,15 @@ class ClientAddDataForm(AddDataFormMixin, VersionFormMixin, ModelForm):
         can_edit = ['country', 'city', 'company_name', 'bank_name', 'account_number']
 
 
+class ClientAcceptMistakesForm(AddDataFormMixin, VersionFormMixin, ModelForm):
+
+    class Meta:
+        model = ProposalProcess
+        fields = [
+            'country', 'city', 'company_name', 'bank_name', 'account_number', 'inn', 'phone'
+        ]
+
+
 class AddJCodeADVForm(AddDataFormMixin, VersionFormMixin, ModelForm):
     # TODO MBPM-3:
     # Добавить валидацию поле J-Code.

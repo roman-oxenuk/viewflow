@@ -21,7 +21,7 @@ from michelin_bpm.main.views import (
 from michelin_bpm.main.forms import (
     FixMistakesForm, ApproveForm, LogistForm, CreateBibServerAccountForm, ActivateBibserveAccountForm,
     AddJCodeADVForm, AddDCodeLogistForm, SetCreditLimitForm, UnblockClientForm, AddACSForm, SendLinkForm,
-    ClientAddDataForm
+    ClientAddDataForm, ClientAcceptMistakesForm
 )
 
 from michelin_bpm.main.signals import client_unblocked
@@ -232,11 +232,16 @@ class ProposalConfirmationFlow(Flow):
     )
 
     fix_mistakes_after_account_manager = (
-        ApproveViewNode(
-            FixMistakesView,
-            form_class=FixMistakesForm,
+        # В текущей версии Клиент не может исправлять данные в заявке
+        # ApproveViewNode(
+            # FixMistakesView,
+            # form_class=FixMistakesForm,
+        ViewNode(
+            SeeDataView,
+            form_class=ClientAcceptMistakesForm,
             task_description=_('Fix mistakes after account manager'),
-            done_btn_title='Сохранить',
+            task_title=_('Fix mistakes after account manager'),
+            done_btn_title='ОК',
         ).Permission(
             auto_create=True
         ).Assign(

@@ -2,6 +2,11 @@
 
 {% block task_form %}
 {% csrf_token %}
+
+{% if is_stopped %}
+    <span class="stopped-warning red-text text-lighten-1">Заявка заблокирована</span>
+{% endif %}
+
 {% if '__all__' in fields_corrections %}
     <span class="all-corrections-title">Корректировки для заявки:</span>
     <ul class="all-corrections">

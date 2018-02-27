@@ -68,6 +68,33 @@ class BaseView(VersionViewMixin, ActionTitleMixin):
     pass
 
 
+class StopProposalMixin:
+
+    _is_stopped = None
+
+    def is_proposal_stopped(self):
+        if self._is_stopped is None:
+            active_corr_for_client = self.activation.process.get_correction_active(
+                for_step='main/flows.ProposalConfirmationFlow.fix_mistakes_after_account_manager'
+            )
+            self._is_stopped = active_corr_for_client.exists()
+        return self._is_stopped
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        if self.is_proposal_stopped():
+            context_data['done_btn_title'] = None
+            context_data['is_stopped'] = True
+        return context_data
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if self.is_proposal_stopped():
+            if 'can_create_corrections' in kwargs:
+                kwargs['can_create_corrections'] = []
+        return kwargs
+
+
 class CreateProposalProcessView(CreateProcessView):
 
     linked_node = None
@@ -196,7 +223,7 @@ class ShowCorrectionsMixin:
         return kwargs
 
 
-class ApproveView(BaseView, ShowCorrectionsMixin, UpdateProcessView):
+class ApproveView(StopProposalMixin, BaseView, ShowCorrectionsMixin, UpdateProcessView):
     """
     Вью для согласования заявки.
     Аттрибуты вью:
@@ -289,7 +316,7 @@ class FixMistakesView(BaseView, ShowCorrectionsMixin, UpdateProcessView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class SeeDataView(BaseView, UpdateProcessView):
+class SeeDataView(StopProposalMixin, BaseView, UpdateProcessView):
     """
     Вью, просто показывающее данные в Заявке.
     Применяется, например, для случая, когда пользователь должен перенести данные из Заявки в другие системы.
