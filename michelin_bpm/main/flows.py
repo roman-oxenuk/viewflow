@@ -240,7 +240,7 @@ class ProposalConfirmationFlow(Flow):
         ).Permission(
             auto_create=True
         ).Assign(
-            lambda activation: activation.process.created_by
+            lambda activation: activation.process.client
         ).Next(this.end)
     )
 

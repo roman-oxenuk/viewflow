@@ -29,7 +29,7 @@ class ProposalProcess(Process):
     person_login = models.CharField(l_('Login пользователя'), max_length=255)
     person_first_name = models.CharField(l_('Имя'), max_length=255)
     person_last_name = models.CharField(l_('Фамилия'), max_length=255)
-    person_email = models.CharField(l_('Email'), max_length=255)
+    person_email = models.EmailField(l_('Email'), max_length=255)
 
     bank_name = models.CharField(l_('Название банка'), max_length=255)
     account_number = models.CharField(l_('Номер расчётного счёта'), max_length=255)

@@ -167,7 +167,7 @@ class ApproveForm(VersionFormMixin, ModelForm):
             self.fields['__all__' + corr_settings['action_btn_name']] = non_field_correction
 
 
-class FixMistakesForm(ModelForm):
+class FixMistakesForm(VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
