@@ -10,16 +10,16 @@ from viewflow.base import this, Flow
 from viewflow.fields import get_task_ref
 
 from michelin_bpm.main.apps import register
-from michelin_bpm.main.models import ProposalProcess, BibServeProcess, PaperDocsProcess
+from michelin_bpm.main.models import ProposalProcess, BibServeProcess
 from michelin_bpm.main.nodes import (
     StartNodeView, IfNode, SplitNode, SwitchNode, EndNode, ApproveViewNode, ViewNode, StartFunctionNode
 )
 from michelin_bpm.main.views import (
-    CreateProposalProcessView, ApproveView, FixMistakesView, UnblockClientView, CreateBibServerAccountView,
+    CreateProposalProcessView, ApproveView, UnblockClientView, CreateBibServerAccountView,
     ActivateBibServeAccountView, AddJCodeView, SeeDataView, AddDataView, ClientAddDataView
 )
 from michelin_bpm.main.forms import (
-    FixMistakesForm, ApproveForm, LogistForm, CreateBibServerAccountForm, ActivateBibserveAccountForm,
+    ApproveForm, LogistForm, CreateBibServerAccountForm, ActivateBibserveAccountForm,
     AddJCodeADVForm, AddDCodeLogistForm, SetCreditLimitForm, UnblockClientForm, AddACSForm, SendLinkForm,
     ClientAddDataForm, ClientAcceptMistakesForm
 )
@@ -520,33 +520,3 @@ class BibServeFlow(Flow):
                 flow_task=get_task_ref(flow_task),
                 process_id=proposal.bibserveprocess.id
             ).first()
-
-
-@register
-class PaperDocsApprovalFlow(Flow):
-
-    process_class = PaperDocsProcess
-    process_title = l_('Проверка бумажных докуметнов')
-    process_menu_title = 'Проверка бумажных докуметнов'
-    process_client_menu_title = 'Проверка бумажных докуметнов'
-    # TODO MBPM-3
-    # Убрать комментарии:
-    # summary_template = '"{{ process.company_name }}" {{ process.city }}, {{ process.country }}'
-
-    start = (
-        StartFunctionNode(
-            this.start_paperdocs,
-            task_description=_('Start of paper docs approval proccess')
-        )
-        .Next(this.end)
-    )
-
-    end = EndNode(
-        task_description=_('End of paper docs approval process')
-    )
-
-    @method_decorator(flow.flow_start_func)
-    def start_paperdocs(self, activation, proposal):
-        activation.prepare()
-        activation.process.proposal = proposal
-        activation.done()

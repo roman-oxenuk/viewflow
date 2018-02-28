@@ -12,7 +12,7 @@ from viewflow.models import Process, Task
 from viewflow.admin import ProcessAdmin, TaskAdmin
 from material.frontend.models import Module
 
-from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess, PaperDocsProcess
+from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
 
 
 User = get_user_model()
@@ -73,6 +73,5 @@ admin_site.register(Correction)
 admin_site.register(Module, ModuleAdmin)
 
 admin_site.register(BibServeProcess)
-admin_site.register(PaperDocsProcess)
 
 admin_site.register(Site, SiteAdmin)

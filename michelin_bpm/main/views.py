@@ -7,6 +7,9 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetConfirmView
 from django.utils.translation import ugettext_lazy as _
+from django.utils.html import mark_safe
+from django.urls import reverse
+from django.views.generic.edit import UpdateView
 import reversion
 from reversion.models import Version
 
@@ -74,7 +77,7 @@ class StopProposalMixin:
 
     def is_proposal_stopped(self):
         if self._is_stopped is None:
-            active_corr_for_client = self.activation.process.get_correction_active(
+            active_corr_for_client = self.get_object().get_correction_active(
                 for_step='main/flows.ProposalConfirmationFlow.fix_mistakes_after_account_manager'
             )
             self._is_stopped = active_corr_for_client.exists()
@@ -370,8 +373,51 @@ class ActivateBibServeAccountView(BibServerAccountMixin, AddDataView):
     pass
 
 
+class ProposalDetailView(UpdateView):
+
+    model = ProposalProcess
+    pk_url_kwarg = 'proposal_pk'
+    template_name = 'main/proposalconfirmation/show_proposal.html'
+    fields = [
+        'person_login', 'person_email', 'person_first_name', 'person_last_name',
+        'inn', 'mdm_id', 'phone'
+    ]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        is_client = self.request.user.groups.filter(id=settings.CLIENTS_GROUP_ID).exists()
+        if is_client:
+            queryset = queryset.filter(client=self.request.user)
+        return queryset
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        for field in form.fields.values():
+            field.widget.attrs['readonly'] = True
+        return form
+
+
 @method_decorator(login_required, name='dispatch')
 class MichelinProcessListView(ProcessListView):
+
+    list_display = [
+        'process_id', 'process_summary', 'proposal_link',
+        'created', 'finished', 'active_tasks'
+    ]
+
+    def process_summary(self, process):
+        return mark_safe('<a href="{}">{}</a>'.format(
+            reverse('proposal_detail', kwargs={'proposal_pk': process.pk}),
+            process.summary())
+        )
+    process_summary.short_description = _('Proposal')
+
+    def proposal_link(self, process):
+        return mark_safe('<a href="{}">{}</a>'.format(
+            self.get_process_link(process),
+            _('Process')
+        ))
+    proposal_link.short_description = _('Process')
 
     def get_queryset(self):
         queryset = super().get_queryset()
