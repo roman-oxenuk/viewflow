@@ -40,7 +40,6 @@ INTERNAL_IPS = env('INTERNAL_IPS')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -51,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    # 'django_extensions',
 
     'viewflow',
     'viewflow.frontend',

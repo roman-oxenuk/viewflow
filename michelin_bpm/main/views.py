@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
+import os
 import json
 
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetConfirmView
+# from django.contrib.staticfiles.storage import staticfiles_storage
 from django.utils.translation import ugettext_lazy as _
 from django.utils.html import mark_safe
 from django.urls import reverse
 from django.views.generic.edit import UpdateView
+from django.views import View
+
 import reversion
 from reversion.models import Version
 
@@ -96,6 +100,18 @@ class StopProposalMixin:
             if 'can_create_corrections' in kwargs:
                 kwargs['can_create_corrections'] = []
         return kwargs
+
+
+class ProposalExcelDocumentView(View):
+    def get(self, request):
+        path = '{}/static/main/proposal-info.xlsx'.format(os.path.abspath(os.path.dirname(__file__)))
+        # path = staticfiles_storage.url('main/proposal-info.xlsx')
+        with open(path, 'rb') as excel:
+            data = excel.read()
+
+            response = HttpResponse(data, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=proposal-info.xlsx'
+            return response
 
 
 class CreateProposalProcessView(CreateProcessView):
