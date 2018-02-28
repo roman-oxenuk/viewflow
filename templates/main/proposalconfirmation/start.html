@@ -3,6 +3,14 @@
 {% load material_form material_form_internal main i18n %}
 
 
+{% block extrahead %}
+    {{ block.super }}
+    <link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/css/suggestions.min.css" type="text/css" rel="stylesheet" />
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+{% endblock %}
+
 {% block breadcrumbs_items %}
 {% include 'viewflow/includes/breadcrumb_category.html' %}
 <a href="{% flowurl activation.flow_class 'index' %}{% if request.GET.category %}?category={{ request.GET.category }}{% endif %}">{{ activation.flow_class.process_title }}</a>
@@ -20,6 +28,111 @@
                 {% form form=form %} {% endform %}
                 {{ activation.management_form }}
             </div>
+
+            <select id="my_select" name="states[]" multiple="multiple">
+                <!--
+                <option value/="AL">Alabama</option>
+                <option value="WY">Wyoming</option>
+                s-->
+            </select>
+
+            {% comment %}
+            <input id="party" name="party" type="text" size="100"/>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+            {% endcomment %}
+
+            <!--[if lt IE 10]>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
+            <![endif]-->
+            <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/js/jquery.suggestions.min.js"></script>
+            <script type="text/javascript">
+                // $("#id_inn").suggestions({
+                //     token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
+                //     type: "PARTY",
+                //     count: 5,
+                //     /* Вызывается, когда пользователь выбирает одну из подсказок */
+                //     onSelect: function(suggestion) {
+                //         console.log(suggestion);
+                //     },
+                //     onSearchStart: function (query) {
+                //         console.log('query: ', query)
+                //     }
+                // });
+
+                var data = [
+                    {
+                        id: 0,
+                        text: 'enhancement'
+                    },
+                    {
+                        id: 1,
+                        text: 'bug'
+                    },
+                    {
+                        id: 2,
+                        text: 'duplicate'
+                    },
+                    {
+                        id: 3,
+                        text: 'invalid'
+                    },
+                    {
+                        id: 4,
+                        text: 'wontfix'
+                    }
+                ];
+
+                // $('#my_select').select2({
+                //     data: data
+                // })
+
+                $('#my_select').select2({
+                    templateResult: function(state) {
+                        console.log('state: ', state)
+                        return $('<span>' + state.name + '</span><br><span>' + state.inn + '</span>');
+                    },
+                    multiple: false,
+                    ajax: {
+                        url: 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party',
+                        contentType: 'application/json',
+                        headers: {
+                            'Authorization': 'Token e9dcea72f7007707ae2f073cf73e1555445c2a4c'
+                        },
+                        dataType: 'json',
+
+                        processResults: function (data, params) {
+                            console.log('data.suggestions: ', data.suggestions)
+                            console.log('params: ', params)
+
+                            let result = []
+                            $.each(data.suggestions, function(index, item) {
+                                result.push({
+                                    'id': item.data.inn,
+                                    // 'text': item.value,
+                                    'text': item.data.inn,
+                                    'inn': item.data.inn,
+                                    'name': item.value,
+                                })
+                            })
+
+                            return {
+                                results: result,
+                                // pagination: {
+                                //     more: (params.page * 30) < data.total_count
+                                // }
+                            };
+                        },
+
+                        data: function (params) {
+                            return {'query': params.term}
+                        },
+                    }
+                });
+            </script>
+
+
+
+
             <div class="card-action row">
                 <div class="col s12 right-align">
                     {% comment %}
