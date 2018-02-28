@@ -12,7 +12,8 @@ from viewflow.fields import get_task_ref
 from michelin_bpm.main.apps import register
 from michelin_bpm.main.models import ProposalProcess, BibServeProcess
 from michelin_bpm.main.nodes import (
-    StartNodeView, IfNode, SplitNode, SwitchNode, EndNode, ApproveViewNode, ViewNode, StartFunctionNode
+    StartNodeView, IfNode, SplitNode, SwitchNode, EndNode, ApproveViewNode, ViewNode, StartFunctionNode,
+    DownloadableViewNode
 )
 from michelin_bpm.main.views import (
     CreateProposalProcessView, ApproveView, UnblockClientView, CreateBibServerAccountView,
@@ -376,7 +377,7 @@ class ProposalConfirmationFlow(Flow):
     )
 
     set_credit_limit = (
-        ViewNode(
+        DownloadableViewNode(
             SeeDataView,
             form_class=SetCreditLimitForm,
             task_description=_('Set credit limit'),
