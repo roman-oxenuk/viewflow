@@ -249,8 +249,13 @@ class ClientAddDataForm(AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
-        fields = ['country', 'city', 'company_name', 'bank_name', 'account_number', 'inn', 'phone']
-        can_edit = ['country', 'city', 'company_name', 'bank_name', 'account_number']
+        fields = [
+            'country', 'city', 'company_name', 'bank_name', 'account_number',
+            'is_needs_bibserve_account', 'inn', 'phone'
+        ]
+        can_edit = [
+            'country', 'city', 'company_name', 'bank_name', 'account_number', 'is_needs_bibserve_account'
+        ]
 
 
 class ClientAcceptMistakesForm(AddDataFormMixin, VersionFormMixin, ModelForm):
