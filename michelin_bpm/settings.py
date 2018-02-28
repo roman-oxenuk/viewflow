@@ -35,10 +35,12 @@ SECRET_KEY = '5$7x$_pz3g-==zzc@n!d63o392)^(jqc^@1^sgu3v6&nzwfkko'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
+DEBUG = True
 DEBUG_SQL = env('DEBUG_SQL')
 INTERNAL_IPS = env('INTERNAL_IPS')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
+ALLOWED_HOSTS = ['*',]
 
 
 # Application definition
@@ -50,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
 
     'viewflow',
     'viewflow.frontend',
@@ -125,16 +128,24 @@ WSGI_APPLICATION = 'michelin_bpm.wsgi.application'
 #         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
 #     }
 # }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': env('DJANGO_DB_NAME'),
+#         'USER': env('DJANGO_DB_USER'),
+#         'PASSWORD': env('DJANGO_DB_PASSWORD', default=''),
+#         'HOST': 'localhost',
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': env('DJANGO_DB_NAME'),
-        'USER': env('DJANGO_DB_USER'),
-        'PASSWORD': env('DJANGO_DB_PASSWORD', default=''),
-        'HOST': 'localhost',
+        'NAME': 'bpm',
+        'USER': 'postgres',
+        'HOST': 'postgres',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators

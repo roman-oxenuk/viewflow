@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 import json
-from django.http import HttpResponseRedirect
+import os
+
+from django.http import HttpResponseRedirect, HttpResponse
 from django.conf import settings
 from django.forms.models import model_to_dict
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
+from django.contrib.staticfiles.storage import staticfiles_storage
+from django.views import View
 
 import reversion
 from reversion.models import Version
@@ -18,6 +22,18 @@ from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProces
 
 CORR_SUFFIX = settings.CORRECTION_FIELD_SUFFIX
 COMMENT_SUFFIX = settings.COMMENT_REQUEST_FIELD_SUFFIX
+
+
+class ProposalExcelDocumentView(View):
+    def get(self, request):
+        path = '{}/static/main/proposal-info.xlsx'.format(os.path.abspath(os.path.dirname(__file__)))
+        # path = staticfiles_storage.url('main/proposal-info.xlsx')
+        with open(path, 'rb') as excel:
+            data = excel.read()
+
+            response = HttpResponse(data, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=proposal-info.xlsx'
+            return response
 
 
 class CreateProposalProcessView(CreateProcessView):
