@@ -359,6 +359,13 @@ class ClientAcceptMistakesForm(AddDataFormMixin, VersionFormMixin, ModelForm):
         fields = all_fields
 
 
+class DownloadCardForm(AddDataFormMixin, VersionFormMixin, ModelForm):
+
+    class Meta:
+        model = ProposalProcess
+        fields = all_fields
+
+
 class AddJCodeADVForm(AddDataFormMixin, VersionFormMixin, ModelForm):
     # TODO MBPM-3:
     # Добавить валидацию поле J-Code.

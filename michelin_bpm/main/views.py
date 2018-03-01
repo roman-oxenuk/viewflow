@@ -104,6 +104,7 @@ class StopProposalMixin:
         return kwargs
 
 
+from viewflow.decorators import flow_view
 class ProposalExcelDocumentView(View):
     def get(self, request, proposal_id=None):
         # if not proposal_id:
@@ -207,6 +208,15 @@ class ProposalExcelDocumentView(View):
             response = HttpResponse(data, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = 'attachment; filename=proposal-info.xls'
             return response
+
+    @method_decorator(flow_view)
+    def dispatch(self, request, *args, **kwargs):
+        """Check permissions and show task detail."""
+        self.activation = request.activation
+
+        if not self.activation.flow_task.can_view(request.user, self.activation.task):
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
 
 
 class CreateProposalProcessView(ActionTitleMixin, CreateProcessView):
@@ -451,6 +461,22 @@ class AddDataView(SeeDataView):
 
 class ClientAddDataView(AddDataView):
     pass
+
+
+class ClientPrintProposalView(AddDataView):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_downloadable'] = True
+        return context
+
+
+class DownloadCardView(AddDataView):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_downloadable'] = True
+        return context
 
 
 class AddJCodeView(AddDataView):

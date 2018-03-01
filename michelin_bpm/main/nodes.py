@@ -63,9 +63,10 @@ class ViewNode(TranslatedNodeMixin, nodes.View):
     pass
 
 
+from michelin_bpm.main.views import ProposalExcelDocumentView
 class DownloadableViewNode(ViewNode):
 
-    download_view_class = generic.TemplateView
+    download_view_class = ProposalExcelDocumentView
 
     @property
     def download_view(self):

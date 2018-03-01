@@ -50,12 +50,19 @@
                             {% endif %}
                         {% endfor %}
 
+                        {% if is_downloadable %}
+                            <a class="btn btn-flat blue-grey lighten-3 black-text" href="{% flowurl activation.task 'download' %}?{{ request|query_back }}">
+                                {% trans 'Print' %}
+                            </a>
+                        {% endif %}
+
                         {% if done_btn_title %}
                             <button type="submit" id="done-btn" name="_done" class="btn primary white-text green lighten-1">
                                 {% trans 'Done' as default_done_btn_title %}
                                 {{ done_btn_title|default:default_done_btn_title }}
                             </button>
                         {% endif %}
+
                     </div>
                     {% endblock %}
                 </div>

@@ -13,16 +13,17 @@ from michelin_bpm.main.apps import register
 from michelin_bpm.main.models import ProposalProcess, BibServeProcess
 from michelin_bpm.main.nodes import (
     StartNodeView, IfNode, SplitNode, SwitchNode, EndNode, ApproveViewNode, ViewNode, StartFunctionNode,
-    DownloadableViewNode
+    DownloadableViewNode,
 )
 from michelin_bpm.main.views import (
     CreateProposalProcessView, ApproveView, UnblockClientView, CreateBibServerAccountView,
-    ActivateBibServeAccountView, AddJCodeView, SeeDataView, AddDataView, ClientAddDataView
+    ActivateBibServeAccountView, AddJCodeView, SeeDataView, AddDataView, ClientAddDataView,
+    DownloadCardView
 )
 from michelin_bpm.main.forms import (
     ApproveForm, LogistForm, CreateBibServerAccountForm, ActivateBibserveAccountForm,
     AddJCodeADVForm, AddDCodeLogistForm, SetCreditLimitForm, UnblockClientForm, AddACSForm, SendLinkForm,
-    ClientAddDataForm, ClientAcceptMistakesForm
+    ClientAddDataForm, ClientAcceptMistakesForm, DownloadCardForm
 )
 
 from michelin_bpm.main.signals import client_unblocked
@@ -351,6 +352,18 @@ class ProposalConfirmationFlow(Flow):
                 },
             ],
             show_corrections=[],
+        ).Permission(
+            auto_create=True
+        ).Next(this.create_user_in_inner_systems)
+    )
+
+    create_user_in_inner_systems = (
+        DownloadableViewNode(
+            DownloadCardView,
+            form_class=DownloadCardForm,
+            task_description=_('Create user in inner systems'),
+            task_title=_('Create user in inner systems'),
+            done_btn_title='Пользователь создан',
         ).Permission(
             auto_create=True
         ).Next(this.add_j_code_by_adv)
