@@ -86,7 +86,7 @@ class ProposalConfirmationFlow(Flow):
         StartNodeView(
             CreateProposalProcessView,
             fields=[
-                'client_login', 'inn', 'kpp', 'mdm_id', 'contact_name', 'contact_email', 'contact_tel',
+                'client_login', 'client_email', 'inn', 'kpp', 'mdm_id', 'contact_name', 'contact_tel',
                 # добавиться полсе инеграции с dadata
                 # 'company_name', и 'client_name' чем отличаются?
                 # 'kpp', 'dir_name', 'ogrn', 'okpo', 'jur_form',
@@ -108,7 +108,7 @@ class ProposalConfirmationFlow(Flow):
         User = get_user_model()
         new_user = User(**{
             'username': activation.process.client_login,
-            'email': activation.process.contact_email,
+            'email': activation.process.client_email,
             'first_name': activation.process.contact_name,
         })
         new_user.save()

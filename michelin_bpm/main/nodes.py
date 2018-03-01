@@ -5,6 +5,8 @@ from viewflow.flow import nodes
 from django.utils.translation import gettext_lazy as l_
 from django.views import generic
 from django.conf.urls import url
+from django.urls import reverse
+from viewflow.activation import STATUS
 
 
 class LinkedNodeMixin:

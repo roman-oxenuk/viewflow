@@ -31,8 +31,9 @@ class ProposalProcess(Process):
     )
 
     client_login = models.CharField(l_('Login пользователя'), max_length=255)
+    client_email = models.CharField(l_('Email пользователя'), max_length=255)
 
-    company_name = models.CharField(l_('Название компании'), max_length=255)
+    company_name = models.CharField(l_('Название компании'), max_length=255, null=True, blank=True)
     date = models.DateField(l_('Дата'), auto_now_add=True, null=True, blank=True)
     operation_type = models.IntegerField(l_('Формат ОИЗ'), choices=OPERATION_TYPES, default=OPENING)
     jur_form = models.CharField(l_('Статус компании'), max_length=50, null=True, blank=True)
