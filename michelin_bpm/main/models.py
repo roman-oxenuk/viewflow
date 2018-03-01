@@ -137,6 +137,11 @@ class ProposalProcess(Process):
         related_name='clients_proposals'
     )
 
+    @property
+    def operation_type_name(self):
+        """Возвращает название типа операции как строку."""
+        return self.OPERATION_TYPES[self.operation_type][1]
+
     def get_status_display(self):
         return dict(STATUS_CHOICES).get(self.status, self.status)
 
