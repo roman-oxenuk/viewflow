@@ -50,9 +50,9 @@
                             {% endif %}
                         {% endfor %}
 
-                        {% if is_downloadable %}
+                        {% if downloadable_btn_label %}
                             <a class="btn btn-flat blue-grey lighten-3 black-text" href="{% flowurl activation.task 'download' %}?{{ request|query_back }}">
-                                {% trans 'Print' %}
+                                {{ downloadable_btn_label }}
                             </a>
                         {% endif %}
 

@@ -475,7 +475,7 @@ class DownloadCardView(AddDataView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['is_downloadable'] = True
+        context['downloadable_btn_label'] = _('Download OIZ Card')
         return context
 
 
