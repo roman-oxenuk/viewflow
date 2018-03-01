@@ -86,10 +86,15 @@ class ProposalConfirmationFlow(Flow):
         StartNodeView(
             CreateProposalProcessView,
             fields=[
-                'person_login', 'person_email', 'person_first_name', 'person_last_name',
-                'inn', 'mdm_id', 'phone'
+                'client_login', 'inn', 'kpp', 'mdm_id', 'contact_name', 'contact_email', 'contact_tel',
+                # добавиться полсе инеграции с dadata
+                # 'company_name', и 'client_name' чем отличаются?
+                # 'kpp', 'dir_name', 'ogrn', 'okpo', 'jur_form',
+                # 'jur_address, 'jur_zip_code, 'jur_country, 'jur_region, 'jur_city, 'jur_street, 'jur_building, 'jur_block'
             ],
-            task_description=_('Start of proposal approval process')
+            task_description=_('Send the invitation'),
+            task_title=_('Send the invitation'),
+            done_btn_title=_('Send the invitation'),
         ).Permission(
             auto_create=True
         ).Next(this.create_user)
@@ -102,10 +107,9 @@ class ProposalConfirmationFlow(Flow):
     def perform_create_user(self, activation, **kwargs):
         User = get_user_model()
         new_user = User(**{
-            'username': activation.process.person_login,
-            'email': activation.process.person_email,
-            'first_name': activation.process.person_first_name,
-            'last_name': activation.process.person_last_name,
+            'username': activation.process.client_login,
+            'email': activation.process.contact_email,
+            'first_name': activation.process.contact_name,
         })
         new_user.save()
 

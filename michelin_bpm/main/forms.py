@@ -245,15 +245,102 @@ class AddDataFormMixin:
                 field.required = True
 
 
+all_fields = [
+    # rtc_fields
+    'client_login', 'inn', 'kpp', 'mdm_id', 'contact_name', 'contact_email', 'contact_tel',
+    'company_name', 'client_name', 'kpp', 'dir_name', 'ogrn', 'okpo',
+    'jur_address', 'jur_zip_code', 'jur_country', 'jur_region', 'jur_city', 'jur_street', 'jur_building', 'jur_block',
+
+    'is_needs_bibserve_account',
+
+    # Юридические данные
+    # 'jur_address', фиг знает, поле ли это?
+    'jur_zip_code', 'jur_country', 'jur_region', 'jur_city', 'jur_street', 'jur_building', 'jur_block',
+    # должны получить из дадаты
+    # 'inn', 'kpp', 'okpo', 'ogrn',
+
+    # Инфа о банке
+    # 'bank_details', фиг знает, поле ли это?
+    'bank_name', 'bik', 'corr_account_number', 'account_number',
+
+    # Фактические данные
+    # 'address', фиг знает, поле ли это?
+    'zip_code', 'country', 'region', 'city', 'street', 'building', 'block',
+
+    # Контактные лица
+    'dir_name', 'dir_tel', 'dir_email', 'dir_fax',
+    'buh_name', 'buh_tel', 'buh_email', 'buh_fax',
+    'contact_name', 'contact_tel', 'contact_email', 'contact_fax',
+
+    # Поля специфичные для Мишлена
+    'j_code', 'd_code', 'mdm_id',
+
+    # BibServe
+    'is_needs_bibserve_account',
+    # сделать эти поля обязательными, если is_needs_bibserve_account = True
+    # Тут фиг знает, что должно происходить с этими полями???
+    # 'bibserve_login', 'bibserve_password', 'bibserve_email', 'bibserve_tel',
+
+    # Данные по доставке
+    # 'delivery_address', фиг знает, поле ли это?
+    'delivery_client_name', 'delivery_zip_code', 'delivery_country', 'delivery_region',
+    'delivery_city', 'delivery_street', 'delivery_building', 'delivery_block',
+    'delivery_contact_name', 'delivery_tel', 'delivery_email', 'delivery_fax',
+
+    # Данные о работе склада
+    'warehouse_working_days', 'warehouse_working_hours_from', 'warehouse_working_hours_to',
+    'warehouse_break_from', 'warehouse_break_to', 'warehouse_comment',
+    'warehouse_consignee_code', 'warehouse_station_code',
+
+    'warehouse_tc', 'warehouse_pl', 'warehouse_gc', 'warehouse_ag', 'warehouse_2r',
+]
+
+
 class ClientAddDataForm(AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
-        fields = [
-            'is_needs_bibserve_account', 'inn',
-        ]
+        fields = all_fields
         can_edit = [
             'is_needs_bibserve_account',
+
+            # Юридические данные
+            # 'jur_address', фиг знает, поле ли это?
+            'jur_zip_code', 'jur_country', 'jur_region', 'jur_city', 'jur_street', 'jur_building', 'jur_block',
+            # должны получить из дадаты
+            # 'inn', 'kpp', 'okpo', 'ogrn',
+
+            # Инфа о банке
+            # 'bank_details', фиг знает, поле ли это?
+            'bank_name', 'bik', 'corr_account_number', 'account_number',
+
+            # Фактические данные
+            # 'address', фиг знает, поле ли это?
+            'zip_code', 'country', 'region', 'city', 'street', 'building', 'block',
+
+            # Контактные лица
+            'dir_name', 'dir_tel', 'dir_email', 'dir_fax',
+            'buh_name', 'buh_tel', 'buh_email', 'buh_fax',
+            'contact_name', 'contact_tel', 'contact_email', 'contact_fax',
+
+            # BibServe
+            'is_needs_bibserve_account',
+            # сделать эти поля обязательными, если is_needs_bibserve_account = True
+            # Тут фиг знает, что должно происходить с этими полями???
+            # 'bibserve_login', 'bibserve_password', 'bibserve_email', 'bibserve_tel',
+
+            # Данные по доставке
+            # 'delivery_address', фиг знает, поле ли это?
+            'delivery_client_name', 'delivery_zip_code', 'delivery_country', 'delivery_region',
+            'delivery_city', 'delivery_street', 'delivery_building', 'delivery_block',
+            'delivery_contact_name', 'delivery_tel', 'delivery_email', 'delivery_fax'
+
+            # Данные о работе склада
+            'warehouse_working_days', 'warehouse_working_hours_from', 'warehouse_working_hours_to',
+            'warehouse_break_from', 'warehouse_break_to', 'warehouse_comment',
+            'warehouse_consignee_code', 'warehouse_station_code',
+
+            'warehouse_tc', 'warehouse_pl', 'warehouse_gc', 'warehouse_ag', 'warehouse_2r',
         ]
 
 
@@ -261,9 +348,7 @@ class ClientAcceptMistakesForm(AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
-        fields = [
-            'inn',
-        ]
+        fields = all_fields
 
 
 class AddJCodeADVForm(AddDataFormMixin, VersionFormMixin, ModelForm):
@@ -272,10 +357,7 @@ class AddJCodeADVForm(AddDataFormMixin, VersionFormMixin, ModelForm):
     # Проверять по шаблону или хотя бы по кол-ву символов.
     class Meta:
         model = ProposalProcess
-        fields = [
-            'country', 'city', 'company_name', 'inn',
-            'bank_name', 'account_number', 'j_code'
-        ]
+        fields = all_fields
         can_edit = ['j_code']
 
 

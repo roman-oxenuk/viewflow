@@ -61,6 +61,7 @@ class ProposalProcess(Process):
     contract_number = models.CharField(l_('Номер договора'), max_length=255, null=True, blank=True)
     contract_date = models.DateField(l_('Дата договора'), max_length=255, null=True, blank=True)
 
+    # TODO MBPM-26: кажется, этого поля нету в Карточке ОИЗ?
     address = models.CharField(l_('Факт. Адрес'), max_length=255, null=True, blank=True)
     zip_code = models.CharField(l_('Факт. Индекс'), max_length=50, null=True, blank=True)
     country = models.CharField(l_('Факт. Страна'), max_length=255, null=True, blank=True)
@@ -96,6 +97,7 @@ class ProposalProcess(Process):
     bibserve_tel = models.CharField(l_('BibServe tel'), max_length=255, null=True, blank=True)
 
     delivery_client_name = models.CharField(l_('Доставка, Название клиента'), max_length=255, null=True, blank=True)
+    # TODO MBPM-26: кажется, этого поля нету в Карточке ОИЗ?
     delivery_address = models.CharField(l_('Доставка, Адрес'), max_length=255, null=True, blank=True)
     delivery_zip_code = models.CharField(l_('Доставка, Индекс'), max_length=50, null=True, blank=True)
     delivery_country = models.CharField(l_('Доставка, Страна'), max_length=255, null=True, blank=True)

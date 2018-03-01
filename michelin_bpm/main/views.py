@@ -114,7 +114,7 @@ class ProposalExcelDocumentView(View):
             return response
 
 
-class CreateProposalProcessView(CreateProcessView):
+class CreateProposalProcessView(ActionTitleMixin, CreateProcessView):
 
     linked_node = None
 
