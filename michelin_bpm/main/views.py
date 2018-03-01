@@ -2,13 +2,12 @@
 import json
 import os
 
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.conf import settings
-from django.forms.models import model_to_dict
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views import View
+from django.utils.translation import ugettext_lazy as l_
 
 import reversion
 from reversion.models import Version
@@ -18,6 +17,7 @@ from viewflow.fields import get_task_ref
 from viewflow.frontend.views import ProcessListView
 
 from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
+from michelin_bpm.main.utils import render_excel_template
 
 
 CORR_SUFFIX = settings.CORRECTION_FIELD_SUFFIX
@@ -25,14 +25,107 @@ COMMENT_SUFFIX = settings.COMMENT_REQUEST_FIELD_SUFFIX
 
 
 class ProposalExcelDocumentView(View):
-    def get(self, request):
-        path = '{}/static/main/proposal-info.xlsx'.format(os.path.abspath(os.path.dirname(__file__)))
-        # path = staticfiles_storage.url('main/proposal-info.xlsx')
+    def get(self, request, proposal_id=None):
+        # if not proposal_id:
+        #     return HttpResponseBadRequest()
+
+        p = ProposalProcess.objects.get(pk=proposal_id) if proposal_id else ProposalProcess.objects.first()  # for testing
+        template_path = '{}/static/main/proposal-info.xls'.format(os.path.abspath(os.path.dirname(__file__)))
+        context = {
+            (1, 0): p.company_name,
+            (1, 8): p.date.strftime('%d/%m/%Y'),
+            (3, 0): p.operation_type_name,
+            (10, 1): p.jur_form,
+            (10, 5): p.client_name,
+
+            (17, 4): p.jur_zip_code,
+            (17, 7): p.jur_country,
+            (18, 3): p.jur_region,
+            (18, 7): p.jur_city,
+            (19, 1): p.jur_street,
+            (19, 5): p.jur_building,
+            (19, 7): p.jur_block,
+            (20, 1): p.inn,
+            (20, 3): p.kpp,
+            (20, 5): p.okpo,
+            (20, 7): p.ogrn,
+
+            (23, 2): p.bank_details,
+            (24, 1): p.bik,
+            (24, 3): p.corr_account_number,
+            (25, 2): p.account_number,
+
+            (27, 3): p.contract_number,
+            (27, 6): p.contract_date.strftime('%d/%m/%Y') if p.contract_date else '',
+
+            (29, 4): p.zip_code,
+            (29, 7): p.country,
+            (30, 3): p.region,
+            (30, 7): p.city,
+            (31, 1): p.street,
+            (31, 5): p.building,
+            (31, 7): p.block,
+
+            (32, 3): p.dir_name,
+            (32, 7): p.dir_tel,
+            (33, 1): p.dir_email,
+            (33, 7): p.dir_fax,
+
+            (34, 2): p.buh_name,
+            (34, 7): p.buh_tel,
+            (35, 1): p.buh_email,
+            (35, 7): p.buh_fax,
+
+            (36, 2): p.contact_name,
+            (36, 7): p.contact_tel,
+            (37, 1): p.contact_email,
+            (37, 7): p.contact_fax,
+
+            (39, 8): l_('Да') if p.is_needs_bibserve_account else l_('Нет'),
+            (40, 2): p.bibserve_login,
+            (41, 1): p.bibserve_email,
+            (41, 7): p.bibserve_tel,
+
+            (43, 5): p.delivery_client_name,
+            (44, 4): p.delivery_zip_code,
+            (44, 7): p.delivery_country,
+            (45, 3): p.delivery_region,
+            (45, 7): p.delivery_city,
+            (46, 1): p.delivery_street,
+            (46, 5): p.delivery_building,
+            (46, 7): p.delivery_block,
+            (47, 3): p.delivery_contact_name,
+            (47, 7): p.delivery_tel,
+            (48, 7): p.delivery_fax,
+            (49, 5): p.delivery_email,
+
+            (53, 4): p.warehouse_working_hours_from,
+            (53, 6): p.warehouse_working_hours_to,
+            (54, 4): p.warehouse_break_from,
+            (54, 6): p.warehouse_break_to,
+            (56, 2): p.warehouse_comment,
+            (59, 2): p.warehouse_consignee_code,
+            (60, 2): p.warehouse_station_code,
+            (58, 7): p.warehouse_tc,
+            (59, 7): p.warehouse_pl,
+            (60, 7): p.warehouse_gc,
+            (61, 7): p.warehouse_ag,
+            (62, 7): p.warehouse_2r,
+
+            (65, 0): p.company_name,
+        }
+
+        path = '{}proposal-info/'.format(settings.MEDIA_ROOT)
+        os.makedirs(path, exist_ok=True)
+        path = '{}proposal-{}.xls'.format(path, p.pk)
+
+        render_excel_template(template_path, context, path)
+
         with open(path, 'rb') as excel:
             data = excel.read()
 
             response = HttpResponse(data, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = 'attachment; filename=proposal-info.xlsx'
+            response['Content-Disposition'] = 'attachment; filename=proposal-info.xls'
             return response
 
 
