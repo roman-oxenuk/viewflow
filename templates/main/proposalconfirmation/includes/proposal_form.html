@@ -65,52 +65,86 @@
         {{ form.current_version }}
         {% for field in form %}
             {% if activation.process|has_attr:field.name %}
-                <tr>
-                    <td></td>   <!-- Плейсхолдер для кнопки фолдинга полей -->
-                    <td>{{ field.label }}</td>
-                    <td>
-                        {{ field }}
-                        {% if field.errors %}
-                            <ul>
-                                {% for error in field.errors %}
-                                    <li class="red-text">{{error}}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </td>
-                    <td class="field-history-folding">
-                        {% if field.name in fields_corrections %}
-                            <a href="#">
-                                <i class="fas fa-history"></i>
-                            </a>
-                        {% endif %}
-                    </td>
-                </tr>
 
-                {% if field.name in fields_corrections %}
-                    {% for correction in fields_corrections|get_attr:field.name %}
-                        <tr class="field-history-row"></tr>
-                        <tr class="field-history-row">
-                            <td></td>
-                            <td></td>
-                            <td>
-                                <div class="field-history-data">
-                                    {% if correction.version_value %}
-                                        {{ correction.version_value }}
-                                    {% endif %}
+                {% get_prev_field_by_index form.fields.keys forloop.counter0 as prev_field_name %}
 
-                                    {% if correction.is_active %}<span class="red-text text-lighten-1">{% endif %}
-                                        <span class="correction-step">
-                                        ({{ correction.msg }})
-                                        </span>
-                                    {% if correction.is_active %}</span>{% endif %}
-                                </div>
-                            </td>
-                            <td></td>
-                        </tr>
-                    {% endfor %}
+                {% if prev_field_name in form.field_groups.keys %}
+                    <tr>
+                        <td></td>   <!-- Плейсхолдер для кнопки фолдинга полей -->
+                        <td colspan="3">
+                            {% for grouped_field_name in form.field_groups|get_item:prev_field_name %}
+                                {% get_field_by_name form grouped_field_name as grouped_field %}
+                                {{ grouped_field }}
+
+                                {% if grouped_field.errors %}
+                                    <ul>
+                                        {% for error in field.errors %}
+                                            <li class="red-text">{{error}}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <!--
+                        <td class="field-history-folding">
+                            {% if field.name in fields_corrections %}
+                                <a href="#">
+                                    <i class="fas fa-history"></i>
+                                </a>
+                            {% endif %}
+                        </td>
+                        -->
+                    </tr>
                 {% endif %}
 
+                {% if field.name not in form.grouped_fields %}
+                    <tr>
+                        <td></td>   <!-- Плейсхолдер для кнопки фолдинга полей -->
+                        <td>{{ field.label }}</td>
+                        <td>
+                            {{ field }}
+                            {% if field.errors %}
+                                <ul>
+                                    {% for error in field.errors %}
+                                        <li class="red-text">{{error}}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </td>
+                        <td class="field-history-folding">
+                            {% if field.name in fields_corrections %}
+                                <a href="#">
+                                    <i class="fas fa-history"></i>
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% if field.name in fields_corrections %}
+                        {% for correction in fields_corrections|get_attr:field.name %}
+                            <tr class="field-history-row"></tr>
+                            <tr class="field-history-row">
+                                <td></td>
+                                <td></td>
+                                <td>
+                                    <div class="field-history-data">
+                                        {% if correction.version_value %}
+                                            {{ correction.version_value }}
+                                        {% endif %}
+
+                                        {% if correction.is_active %}<span class="red-text text-lighten-1">{% endif %}
+                                            <span class="correction-step">
+                                            ({{ correction.msg }})
+                                            </span>
+                                        {% if correction.is_active %}</span>{% endif %}
+                                    </div>
+                                </td>
+                                <td></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+
+                {% endif %}
             {% endif %}
         {% endfor %}
     </tbody>

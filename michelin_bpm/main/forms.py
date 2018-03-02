@@ -26,7 +26,8 @@ all_fields = [
     # rtc_fields
     'client_login', 'inn', 'kpp', 'mdm_id', 'contact_name', 'contact_email', 'contact_tel',
     'company_name', 'client_name', 'kpp', 'dir_name', 'ogrn', 'okpo',
-    'jur_address', 'jur_zip_code', 'jur_country', 'jur_region', 'jur_city', 'jur_street', 'jur_building', 'jur_block',
+    'jur_address',
+    'jur_zip_code', 'jur_country', 'jur_region', 'jur_city', 'jur_street', 'jur_building', 'jur_block',
 
     'is_needs_bibserve_account',
 
@@ -42,7 +43,7 @@ all_fields = [
 
     # Фактические данные
     # 'address', фиг знает, поле ли это?
-    'zip_code', 'country', 'region', 'city', 'street', 'building', 'block',
+    'address', 'zip_code', 'country', 'region', 'city', 'street', 'building', 'block',
 
     # Контактные лица
     'dir_name', 'dir_tel', 'dir_email', 'dir_fax',
@@ -291,8 +292,6 @@ class AddDataFormMixin:
             # делаем поле неактивным
             if field_name not in self.Meta.can_edit:
                 field.widget.attrs['readonly'] = True
-            else:
-                field.widget.attrs['placeholder'] = 'Кликните для редактирования'
 
             if field_name in self.Meta.required:
                 field.required = True
@@ -300,56 +299,36 @@ class AddDataFormMixin:
 
 class ClientAddDataForm(AddDataFormMixin, VersionFormMixin, ModelForm):
 
+    field_groups_settings = {
+        'jur_address_group': {
+            'goes_after': 'jur_address',
+            'fields': [
+                'jur_zip_code', 'jur_country', 'jur_region', 'jur_city', 'jur_street', 'jur_building', 'jur_block',
+            ]
+        },
+        'fact_address_group': {
+            'goes_after': 'address',
+            'fields': [
+                'zip_code', 'country', 'region', 'city', 'street', 'building', 'block',
+            ]
+        }
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.field_groups = {}
+        self.grouped_fields = []
+        for group_settings in self.field_groups_settings.values():
+            self.field_groups[group_settings['goes_after']] = group_settings['fields']
+            self.grouped_fields += group_settings['fields']
+            for grouped_field_name in group_settings['fields']:
+                self.fields[grouped_field_name].widget.attrs['placeholder'] = self.fields[grouped_field_name].label
+                self.fields[grouped_field_name].widget.attrs['class'] = 'inline-field'
+
     class Meta:
         model = ProposalProcess
         fields = all_fields
         can_edit = all_fields
-        # can_edit = [
-        #     'is_needs_bibserve_account',
-
-        #     # Поля, которые должны подставлятся из дадаты
-        #     'client_login', 'inn', 'kpp', 'mdm_id', 'contact_name', 'contact_email', 'contact_tel',
-        #     'company_name', 'client_name', 'kpp', 'dir_name', 'ogrn', 'okpo',
-        #     'jur_address', 'jur_zip_code', 'jur_country', 'jur_region', 'jur_city', 'jur_street', 'jur_building', 'jur_block',
-
-        #     # Юридические данные
-        #     # 'jur_address', фиг знает, поле ли это?
-        #     'jur_zip_code', 'jur_country', 'jur_region', 'jur_city', 'jur_street', 'jur_building', 'jur_block',
-        #     # должны получить из дадаты
-        #     # 'inn', 'kpp', 'okpo', 'ogrn',
-
-        #     # Инфа о банке
-        #     # 'bank_details', фиг знает, поле ли это?
-        #     'bank_name', 'bik', 'corr_account_number', 'account_number',
-
-        #     # Фактические данные
-        #     # 'address', фиг знает, поле ли это?
-        #     'zip_code', 'country', 'region', 'city', 'street', 'building', 'block',
-
-        #     # Контактные лица
-        #     'dir_name', 'dir_tel', 'dir_email', 'dir_fax',
-        #     'buh_name', 'buh_tel', 'buh_email', 'buh_fax',
-        #     'contact_name', 'contact_tel', 'contact_email', 'contact_fax',
-
-        #     # BibServe
-        #     'is_needs_bibserve_account',
-        #     # сделать эти поля обязательными, если is_needs_bibserve_account = True
-        #     # Тут фиг знает, что должно происходить с этими полями???
-        #     # 'bibserve_login', 'bibserve_password', 'bibserve_email', 'bibserve_tel',
-
-        #     # Данные по доставке
-        #     # 'delivery_address', фиг знает, поле ли это?
-        #     'delivery_client_name', 'delivery_zip_code', 'delivery_country', 'delivery_region',
-        #     'delivery_city', 'delivery_street', 'delivery_building', 'delivery_block',
-        #     'delivery_contact_name', 'delivery_tel', 'delivery_email', 'delivery_fax'
-
-        #     # Данные о работе склада
-        #     'warehouse_working_days', 'warehouse_working_hours_from', 'warehouse_working_hours_to',
-        #     'warehouse_break_from', 'warehouse_break_to', 'warehouse_comment',
-        #     'warehouse_consignee_code', 'warehouse_station_code',
-
-        #     'warehouse_tc', 'warehouse_pl', 'warehouse_gc', 'warehouse_ag', 'warehouse_2r',
-        # ]
 
 
 class ClientAcceptMistakesForm(AddDataFormMixin, VersionFormMixin, ModelForm):

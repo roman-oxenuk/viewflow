@@ -20,10 +20,17 @@ table.proposal-data input[type] {
     margin: 0px;
     padding: 3px;
     background-color: #ffffff;
-    border: none;
+    border: 1px solid #eee;
 }
 table.proposal-data input[readonly] {
     background-color: inherit;
+}
+table.proposal-data input.inline-field {
+    width: auto;
+    display: inline-block;
+    float: left;
+    margin: 3px;
+    border: 1px solid #eee;
 }
 ul.errors-list {
     padding: 0px;

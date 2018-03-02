@@ -110,6 +110,9 @@ class ProposalExcelDocumentView(View):
         # if not proposal_id:
         #     return HttpResponseBadRequest()
 
+        # TODO MBPM-3:
+        # Добавить тут валидацию на существующую Заявку и на то, что задача по ней пренадлежит этому пользователю.
+        # И вообще заявка должна браться из activation
         p = ProposalProcess.objects.get(pk=proposal_id) if proposal_id else ProposalProcess.objects.first()  # for testing
         template_path = '{}/static/main/proposal-info.xls'.format(os.path.abspath(os.path.dirname(__file__)))
         context = {
