@@ -27,6 +27,15 @@ def has_attr(obj, key):
 
 
 @register.assignment_tag
+def get_field_by_name(form, field_name):
+    return form[field_name]
+
+
+@register.assignment_tag
+def get_prev_field_by_index(obj, key):
+    return list(obj)[key-1]
+
+@register.assignment_tag
 def check_is_client(user):
     return user.groups.filter(name='Клиенты').exists()
 

@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
+import os
 import json
 
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetConfirmView
+# from django.contrib.staticfiles.storage import staticfiles_storage
 from django.utils.translation import ugettext_lazy as _
+from django.utils.html import mark_safe
+from django.urls import reverse
+from django.views.generic.edit import UpdateView
+from django.views import View
+from django.utils.translation import ugettext_lazy as l_
+
 import reversion
 from reversion.models import Version
 
@@ -16,6 +24,7 @@ from viewflow.fields import get_task_ref
 from viewflow.frontend.views import ProcessListView
 from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
 from michelin_bpm.main.forms import ClientSetPasswordForm
+from michelin_bpm.main.utils import render_excel_template
 
 
 class EnterClientPasswordView(PasswordResetConfirmView):
@@ -74,7 +83,7 @@ class StopProposalMixin:
 
     def is_proposal_stopped(self):
         if self._is_stopped is None:
-            active_corr_for_client = self.activation.process.get_correction_active(
+            active_corr_for_client = self.get_object().get_correction_active(
                 for_step='main/flows.ProposalConfirmationFlow.fix_mistakes_after_account_manager'
             )
             self._is_stopped = active_corr_for_client.exists()
@@ -95,7 +104,125 @@ class StopProposalMixin:
         return kwargs
 
 
-class CreateProposalProcessView(CreateProcessView):
+from viewflow.decorators import flow_view
+class ProposalExcelDocumentView(View):
+    def get(self, request, proposal_id=None):
+        # if not proposal_id:
+        #     return HttpResponseBadRequest()
+
+        # TODO MBPM-3:
+        # Добавить тут валидацию на существующую Заявку и на то, что задача по ней пренадлежит этому пользователю.
+        # И вообще заявка должна браться из activation
+        p = ProposalProcess.objects.get(pk=proposal_id) if proposal_id else ProposalProcess.objects.first()  # for testing
+        template_path = '{}/static/main/proposal-info.xls'.format(os.path.abspath(os.path.dirname(__file__)))
+        context = {
+            (1, 0): p.company_name,
+            (1, 8): p.date.strftime('%d/%m/%Y'),
+            (3, 0): p.operation_type_name,
+            (10, 1): p.jur_form,
+            (10, 5): p.client_name,
+
+            (17, 4): p.jur_zip_code,
+            (17, 7): p.jur_country,
+            (18, 3): p.jur_region,
+            (18, 7): p.jur_city,
+            (19, 1): p.jur_street,
+            (19, 5): p.jur_building,
+            (19, 7): p.jur_block,
+            (20, 1): p.inn,
+            (20, 3): p.kpp,
+            (20, 5): p.okpo,
+            (20, 7): p.ogrn,
+
+            (23, 2): p.bank_details,
+            (24, 1): p.bik,
+            (24, 3): p.corr_account_number,
+            (25, 2): p.account_number,
+
+            (27, 3): p.contract_number,
+            (27, 6): p.contract_date.strftime('%d/%m/%Y') if p.contract_date else '',
+
+            (29, 4): p.zip_code,
+            (29, 7): p.country,
+            (30, 3): p.region,
+            (30, 7): p.city,
+            (31, 1): p.street,
+            (31, 5): p.building,
+            (31, 7): p.block,
+
+            (32, 3): p.dir_name,
+            (32, 7): p.dir_tel,
+            (33, 1): p.dir_email,
+            (33, 7): p.dir_fax,
+
+            (34, 2): p.buh_name,
+            (34, 7): p.buh_tel,
+            (35, 1): p.buh_email,
+            (35, 7): p.buh_fax,
+
+            (36, 2): p.contact_name,
+            (36, 7): p.contact_tel,
+            (37, 1): p.contact_email,
+            (37, 7): p.contact_fax,
+
+            (39, 8): l_('Да') if p.is_needs_bibserve_account else l_('Нет'),
+            (40, 2): p.bibserve_login,
+            (41, 1): p.bibserve_email,
+            (41, 7): p.bibserve_tel,
+
+            (43, 5): p.delivery_client_name,
+            (44, 4): p.delivery_zip_code,
+            (44, 7): p.delivery_country,
+            (45, 3): p.delivery_region,
+            (45, 7): p.delivery_city,
+            (46, 1): p.delivery_street,
+            (46, 5): p.delivery_building,
+            (46, 7): p.delivery_block,
+            (47, 3): p.delivery_contact_name,
+            (47, 7): p.delivery_tel,
+            (48, 7): p.delivery_fax,
+            (49, 5): p.delivery_email,
+
+            (53, 4): p.warehouse_working_hours_from,
+            (53, 6): p.warehouse_working_hours_to,
+            (54, 4): p.warehouse_break_from,
+            (54, 6): p.warehouse_break_to,
+            (56, 2): p.warehouse_comment,
+            (59, 2): p.warehouse_consignee_code,
+            (60, 2): p.warehouse_station_code,
+            (58, 7): p.warehouse_tc,
+            (59, 7): p.warehouse_pl,
+            (60, 7): p.warehouse_gc,
+            (61, 7): p.warehouse_ag,
+            (62, 7): p.warehouse_2r,
+
+            (65, 0): p.company_name,
+        }
+
+        path = '{}proposal-info/'.format(settings.MEDIA_ROOT)
+        os.makedirs(path, exist_ok=True)
+        path = '{}proposal-{}.xls'.format(path, p.pk)
+
+        render_excel_template(template_path, context, path)
+
+        with open(path, 'rb') as excel:
+            data = excel.read()
+
+            response = HttpResponse(data, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=proposal-info.xls'
+            return response
+
+    @method_decorator(flow_view)
+    def dispatch(self, request, *args, **kwargs):
+        """Check permissions and show task detail."""
+        self.activation = request.activation
+
+        if not self.activation.flow_task.can_view(request.user, self.activation.task):
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+
+class CreateProposalProcessView(ActionTitleMixin, CreateProcessView):
 
     linked_node = None
 
@@ -336,7 +463,27 @@ class AddDataView(SeeDataView):
 
 
 class ClientAddDataView(AddDataView):
-    pass
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_show_approving_data_checkbox'] = True
+        return context
+
+
+class ClientPrintProposalView(AddDataView):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_downloadable'] = True
+        return context
+
+
+class DownloadCardView(AddDataView):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['downloadable_btn_label'] = _('Download OIZ Card')
+        return context
 
 
 class AddJCodeView(AddDataView):
@@ -370,8 +517,51 @@ class ActivateBibServeAccountView(BibServerAccountMixin, AddDataView):
     pass
 
 
+class ProposalDetailView(UpdateView):
+
+    model = ProposalProcess
+    pk_url_kwarg = 'proposal_pk'
+    template_name = 'main/proposalconfirmation/show_proposal.html'
+    fields = [
+        'person_login', 'person_email', 'person_first_name', 'person_last_name',
+        'inn', 'mdm_id', 'phone'
+    ]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        is_client = self.request.user.groups.filter(id=settings.CLIENTS_GROUP_ID).exists()
+        if is_client:
+            queryset = queryset.filter(client=self.request.user)
+        return queryset
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        for field in form.fields.values():
+            field.widget.attrs['readonly'] = True
+        return form
+
+
 @method_decorator(login_required, name='dispatch')
 class MichelinProcessListView(ProcessListView):
+
+    list_display = [
+        'process_id', 'process_summary', 'proposal_link',
+        'created', 'finished', 'active_tasks'
+    ]
+
+    def process_summary(self, process):
+        return mark_safe('<a href="{}">{}</a>'.format(
+            reverse('proposal_detail', kwargs={'proposal_pk': process.pk}),
+            process.summary())
+        )
+    process_summary.short_description = _('Proposal')
+
+    def proposal_link(self, process):
+        return mark_safe('<a href="{}">{}</a>'.format(
+            self.get_process_link(process),
+            _('Process')
+        ))
+    proposal_link.short_description = _('Process')
 
     def get_queryset(self):
         queryset = super().get_queryset()

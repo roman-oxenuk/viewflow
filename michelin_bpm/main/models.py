@@ -20,19 +20,72 @@ class ProposalProcess(Process):
         verbose_name = l_('Заявка')
         verbose_name_plural = l_('Заявки')
 
-    country = models.CharField(l_('Страна'), max_length=255)
-    city = models.CharField(l_('Город'), max_length=255)
-    company_name = models.CharField(l_('Название компании'), max_length=255)
-    inn = models.CharField(l_('ИНН'), max_length=255)
-    phone = models.CharField(l_('Телефон'), max_length=255)
+    OPENING = 0
+    CHANGING = 1
+    CLOSING = 2
 
-    person_login = models.CharField(l_('Login пользователя'), max_length=255)
-    person_first_name = models.CharField(l_('Имя'), max_length=255)
-    person_last_name = models.CharField(l_('Фамилия'), max_length=255)
-    person_email = models.EmailField(l_('Email'), max_length=255)
+    OPERATION_TYPES = (
+        (OPENING, l_('Открытие')),
+        (CHANGING, l_('Изменение')),
+        (CLOSING, l_('Закрытие')),
+    )
 
-    bank_name = models.CharField(l_('Название банка'), max_length=255)
-    account_number = models.CharField(l_('Номер расчётного счёта'), max_length=255)
+    client_login = models.CharField(l_('Login пользователя'), max_length=255)
+    client_email = models.CharField(l_('Email пользователя'), max_length=255)
+
+    company_name = models.CharField(l_('Название компании'), max_length=255, null=True, blank=True)
+    date = models.DateField(l_('Дата'), auto_now_add=True, null=True, blank=True)
+    operation_type = models.IntegerField(l_('Формат ОИЗ'), choices=OPERATION_TYPES, default=OPENING)
+    jur_form = models.CharField(l_('Статус компании'), max_length=50, null=True, blank=True)
+    client_name = models.CharField(l_('Название клиента'), max_length=255, null=True, blank=True)
+
+    jur_address = models.CharField(l_('Юр. Адрес'), max_length=255, null=True, blank=True)
+    jur_zip_code = models.CharField(l_('Юр. Индекс'), max_length=50, null=True, blank=True)
+    jur_country = models.CharField(l_('Юр. Страна'), max_length=255, null=True, blank=True)
+    jur_region = models.CharField(l_('Юр. Регион'), max_length=255, null=True, blank=True)
+    jur_city = models.CharField(l_('Юр. Город'), max_length=255, null=True, blank=True)
+    jur_street = models.CharField(l_('Юр. Улица'), max_length=255, null=True, blank=True)
+    jur_building = models.CharField(l_('Юр. Строение'), max_length=255, null=True, blank=True)
+    jur_block = models.CharField(l_('Юр. Корпус'), max_length=255, null=True, blank=True)
+
+    inn = models.CharField(l_('ИНН'), max_length=255, null=True, blank=True)
+    kpp = models.CharField(l_('КПП'), max_length=255, null=True, blank=True)
+    okpo = models.CharField(l_('ОКПО'), max_length=255, null=True, blank=True)
+    ogrn = models.CharField(l_('ОГРН'), max_length=255, null=True, blank=True)
+
+    bank_name = models.CharField(l_('Название банка'), max_length=255, null=True, blank=True)
+    bank_details = models.CharField(l_('Информация о банке'), max_length=255, null=True, blank=True)
+    account_number = models.CharField(l_('Номер расчётного счёта'), max_length=255, null=True, blank=True)
+    bik = models.CharField(l_('Bank identifier code'), max_length=255, null=True, blank=True)
+    corr_account_number = models.CharField(l_('Номер корр. счёта'), max_length=255, null=True, blank=True)
+
+    contract_number = models.CharField(l_('Номер договора'), max_length=255, null=True, blank=True)
+    contract_date = models.DateField(l_('Дата договора'), max_length=255, null=True, blank=True)
+
+    # TODO MBPM-26: кажется, этого поля нету в Карточке ОИЗ?
+    address = models.CharField(l_('Факт. Адрес'), max_length=255, null=True, blank=True)
+    zip_code = models.CharField(l_('Факт. Индекс'), max_length=50, null=True, blank=True)
+    country = models.CharField(l_('Факт. Страна'), max_length=255, null=True, blank=True)
+    region = models.CharField(l_('Факт. Регион'), max_length=255, null=True, blank=True)
+    city = models.CharField(l_('Факт. Город'), max_length=255, null=True, blank=True)
+    street = models.CharField(l_('Факт. Улица'), max_length=255, null=True, blank=True)
+    building = models.CharField(l_('Факт. Строение'), max_length=255, null=True, blank=True)
+    block = models.CharField(l_('Факт. Корпус'), max_length=255, null=True, blank=True)
+
+    dir_name = models.CharField(l_('Директор ФИО'), max_length=255, null=True, blank=True)
+    dir_tel = models.CharField(l_('Директор телефон'), max_length=255, null=True, blank=True)
+    dir_email = models.CharField(l_('Директор e-mail'), max_length=255, null=True, blank=True)
+    dir_fax = models.CharField(l_('Директор fax'), max_length=255, null=True, blank=True)
+
+    buh_name = models.CharField(l_('Бухгалтер ФИО'), max_length=255, null=True, blank=True)
+    buh_tel = models.CharField(l_('Бухгалтер телефон'), max_length=255, null=True, blank=True)
+    buh_email = models.CharField(l_('Бухгалтер e-mail'), max_length=255, null=True, blank=True)
+    buh_fax = models.CharField(l_('Бухгалтер fax'), max_length=255, null=True, blank=True)
+
+    contact_name = models.CharField(l_('Контакт ФИО'), max_length=255, null=True, blank=True)
+    contact_tel = models.CharField(l_('Контакт телефон'), max_length=255, null=True, blank=True)
+    contact_email = models.CharField(l_('Контакт e-mail'), max_length=255, null=True, blank=True)
+    contact_fax = models.CharField(l_('Контакт fax'), max_length=255, null=True, blank=True)
 
     j_code = models.CharField(l_('J-код'), max_length=255, null=True, blank=True)
     d_code = models.CharField(l_('D-код'), max_length=255, null=True, blank=True)
@@ -41,6 +94,37 @@ class ProposalProcess(Process):
     is_needs_bibserve_account = models.BooleanField(l_('Is client needs to have a BibServe account?'), default=False)
     bibserve_login = models.CharField(l_('BibServe Login'), max_length=255, null=True, blank=True)
     bibserve_password = models.CharField(l_('BibServe Password'), max_length=255, null=True, blank=True)
+    bibserve_email = models.CharField(l_('BibServe email'), max_length=255, null=True, blank=True)
+    bibserve_tel = models.CharField(l_('BibServe tel'), max_length=255, null=True, blank=True)
+
+    delivery_client_name = models.CharField(l_('Доставка, Название клиента'), max_length=255, null=True, blank=True)
+    # TODO MBPM-26: кажется, этого поля нету в Карточке ОИЗ?
+    delivery_address = models.CharField(l_('Доставка, Адрес'), max_length=255, null=True, blank=True)
+    delivery_zip_code = models.CharField(l_('Доставка, Индекс'), max_length=50, null=True, blank=True)
+    delivery_country = models.CharField(l_('Доставка, Страна'), max_length=255, null=True, blank=True)
+    delivery_region = models.CharField(l_('Доставка, Регион'), max_length=255, null=True, blank=True)
+    delivery_city = models.CharField(l_('Доставка, Город'), max_length=255, null=True, blank=True)
+    delivery_street = models.CharField(l_('Доставка, Улица'), max_length=255, null=True, blank=True)
+    delivery_building = models.CharField(l_('Доставка, Строение'), max_length=255, null=True, blank=True)
+    delivery_block = models.CharField(l_('Доставка, Корпус'), max_length=255, null=True, blank=True)
+    delivery_contact_name = models.CharField(l_('Доставка, Контактное лицо'), max_length=255, null=True, blank=True)
+    delivery_tel = models.CharField(l_('Доставка, телефон'), max_length=255, null=True, blank=True)
+    delivery_email = models.CharField(l_('Доставка, e-mail'), max_length=255, null=True, blank=True)
+    delivery_fax = models.CharField(l_('Доставка, fax'), max_length=255, null=True, blank=True)
+
+    warehouse_working_days = models.CharField(l_('Дни работы склада'), max_length=255, null=True, blank=True)
+    warehouse_working_hours_from = models.CharField(l_('Часы работы склада с'), max_length=255, null=True, blank=True)
+    warehouse_working_hours_to = models.CharField(l_('Часы работы склада до'), max_length=255, null=True, blank=True)
+    warehouse_break_from = models.CharField(l_('Перерыв c'), max_length=255, null=True, blank=True)
+    warehouse_break_to = models.CharField(l_('Перерыв до'), max_length=255, null=True, blank=True)
+    warehouse_comment = models.CharField(l_('Комментарии к работе склада'), max_length=255, null=True, blank=True)
+    warehouse_consignee_code = models.CharField(l_('Код грузополучателя'), max_length=255, null=True, blank=True)
+    warehouse_station_code = models.CharField(l_('Код станции'), max_length=255, null=True, blank=True)
+    warehouse_tc = models.IntegerField(l_('TC'), default=0)
+    warehouse_pl = models.IntegerField(l_('PL'), default=0)
+    warehouse_gc = models.IntegerField(l_('GC'), default=0)
+    warehouse_ag = models.IntegerField(l_('GC'), default=0)
+    warehouse_2r = models.IntegerField(l_('2R'), default=0)
 
     acs = models.ForeignKey(
         settings.AUTH_USER_MODEL, blank=True, null=True,
@@ -52,6 +136,11 @@ class ProposalProcess(Process):
         on_delete=models.CASCADE, verbose_name=l_('Регистрируемый клиент'),
         related_name='clients_proposals'
     )
+
+    @property
+    def operation_type_name(self):
+        """Возвращает название типа операции как строку."""
+        return self.OPERATION_TYPES[self.operation_type][1]
 
     def get_status_display(self):
         return dict(STATUS_CHOICES).get(self.status, self.status)
@@ -175,16 +264,6 @@ class BibServeProcess(Process):
     login = models.CharField(l_('Login'), max_length=255, null=True, blank=True)
     password = models.CharField(l_('Password'), max_length=255, null=True, blank=True)
     is_allowed_to_activate = models.BooleanField(l_('Is allowed to activate'), default=False)
-
-
-@reversion.register()
-class PaperDocsProcess(Process):
-
-    class Meta:
-        verbose_name = l_('Бумажные документы')
-        verbose_name_plural = l_('Бумажные документы')
-
-    proposal = models.OneToOneField(ProposalProcess, verbose_name=l_('Заявка'))
 
 
 class Correction(models.Model):

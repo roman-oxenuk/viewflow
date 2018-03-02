@@ -138,7 +138,10 @@
                     {% comment %}
                     <button type="submit" name="_continue" class="btn btn-flat hide-on-small-only">{% trans 'Start and continue on this process' %}</button>
                     {% endcomment %}
-                    <button type="submit" name="_start" class="btn primary white-text">{% trans 'Start' %}</button>
+                    <button type="submit" name="_start" class="btn primary white-text">
+                        {% trans 'Done' as default_done_btn_title %}
+                        {{ done_btn_title|default:default_done_btn_title }}
+                    </button>
                 </div>
             </div>
         </form>

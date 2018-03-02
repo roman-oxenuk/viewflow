@@ -10,18 +10,20 @@ from viewflow.base import this, Flow
 from viewflow.fields import get_task_ref
 
 from michelin_bpm.main.apps import register
-from michelin_bpm.main.models import ProposalProcess, BibServeProcess, PaperDocsProcess
+from michelin_bpm.main.models import ProposalProcess, BibServeProcess
 from michelin_bpm.main.nodes import (
-    StartNodeView, IfNode, SplitNode, SwitchNode, EndNode, ApproveViewNode, ViewNode, StartFunctionNode
+    StartNodeView, IfNode, SplitNode, SwitchNode, EndNode, ApproveViewNode, ViewNode, StartFunctionNode,
+    DownloadableViewNode,
 )
 from michelin_bpm.main.views import (
-    CreateProposalProcessView, ApproveView, FixMistakesView, UnblockClientView, CreateBibServerAccountView,
-    ActivateBibServeAccountView, AddJCodeView, SeeDataView, AddDataView, ClientAddDataView
+    CreateProposalProcessView, ApproveView, UnblockClientView, CreateBibServerAccountView,
+    ActivateBibServeAccountView, AddJCodeView, SeeDataView, AddDataView, ClientAddDataView,
+    DownloadCardView
 )
 from michelin_bpm.main.forms import (
-    FixMistakesForm, ApproveForm, LogistForm, CreateBibServerAccountForm, ActivateBibserveAccountForm,
+    ApproveForm, LogistForm, CreateBibServerAccountForm, ActivateBibserveAccountForm,
     AddJCodeADVForm, AddDCodeLogistForm, SetCreditLimitForm, UnblockClientForm, AddACSForm, SendLinkForm,
-    ClientAddDataForm, ClientAcceptMistakesForm
+    ClientAddDataForm, ClientAcceptMistakesForm, DownloadCardForm
 )
 
 from michelin_bpm.main.signals import client_unblocked
@@ -85,10 +87,15 @@ class ProposalConfirmationFlow(Flow):
         StartNodeView(
             CreateProposalProcessView,
             fields=[
-                'person_login', 'person_email', 'person_first_name', 'person_last_name',
-                'inn', 'mdm_id', 'phone'
+                'client_login', 'client_email', 'inn', 'kpp', 'mdm_id', 'contact_name', 'contact_tel',
+                # добавиться полсе инеграции с dadata
+                # 'company_name', и 'client_name' чем отличаются?
+                # 'kpp', 'dir_name', 'ogrn', 'okpo', 'jur_form',
+                # 'jur_address, 'jur_zip_code, 'jur_country, 'jur_region, 'jur_city, 'jur_street, 'jur_building, 'jur_block'
             ],
-            task_description=_('Start of proposal approval process')
+            task_description=_('Send the invitation'),
+            task_title=_('Send the invitation'),
+            done_btn_title=_('Send the invitation'),
         ).Permission(
             auto_create=True
         ).Next(this.create_user)
@@ -101,10 +108,9 @@ class ProposalConfirmationFlow(Flow):
     def perform_create_user(self, activation, **kwargs):
         User = get_user_model()
         new_user = User(**{
-            'username': activation.process.person_login,
-            'email': activation.process.person_email,
-            'first_name': activation.process.person_first_name,
-            'last_name': activation.process.person_last_name,
+            'username': activation.process.client_login,
+            'email': activation.process.client_email,
+            'first_name': activation.process.contact_name,
         })
         new_user.save()
 
@@ -348,6 +354,18 @@ class ProposalConfirmationFlow(Flow):
             show_corrections=[],
         ).Permission(
             auto_create=True
+        ).Next(this.create_user_in_inner_systems)
+    )
+
+    create_user_in_inner_systems = (
+        DownloadableViewNode(
+            DownloadCardView,
+            form_class=DownloadCardForm,
+            task_description=_('Create user in inner systems'),
+            task_title=_('Create user in inner systems'),
+            done_btn_title='Пользователь создан',
+        ).Permission(
+            auto_create=True
         ).Next(this.add_j_code_by_adv)
     )
 
@@ -376,7 +394,7 @@ class ProposalConfirmationFlow(Flow):
     )
 
     set_credit_limit = (
-        ViewNode(
+        DownloadableViewNode(
             SeeDataView,
             form_class=SetCreditLimitForm,
             task_description=_('Set credit limit'),
@@ -520,33 +538,3 @@ class BibServeFlow(Flow):
                 flow_task=get_task_ref(flow_task),
                 process_id=proposal.bibserveprocess.id
             ).first()
-
-
-@register
-class PaperDocsApprovalFlow(Flow):
-
-    process_class = PaperDocsProcess
-    process_title = l_('Проверка бумажных докуметнов')
-    process_menu_title = 'Проверка бумажных докуметнов'
-    process_client_menu_title = 'Проверка бумажных докуметнов'
-    # TODO MBPM-3
-    # Убрать комментарии:
-    # summary_template = '"{{ process.company_name }}" {{ process.city }}, {{ process.country }}'
-
-    start = (
-        StartFunctionNode(
-            this.start_paperdocs,
-            task_description=_('Start of paper docs approval proccess')
-        )
-        .Next(this.end)
-    )
-
-    end = EndNode(
-        task_description=_('End of paper docs approval process')
-    )
-
-    @method_decorator(flow.flow_start_func)
-    def start_paperdocs(self, activation, proposal):
-        activation.prepare()
-        activation.process.proposal = proposal
-        activation.done()

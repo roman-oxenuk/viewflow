@@ -5,28 +5,35 @@ table.proposal-data th {
 /*table.proposal-data tr>td:nth-child(2) {*/
 table.proposal-data tr>td:first-child,
 table.proposal-data tr>td:nth-child(2) {
-	white-space: nowrap;
+    white-space: nowrap;
     width: 1%;
     padding-right: 15px;
 }
 table.proposal-data ul {
-	margin: 0px;
+    margin: 0px;
 }
 table.proposal-data td.field-history {
-	text-align: right;
+    text-align: right;
 }
 table.proposal-data input[type] {
-	height: 1em;
-	margin: 0px;
-	padding: 3px;
-	background-color: #ffffff;
-	border: none;
+    height: 1em;
+    margin: 0px;
+    padding: 3px;
+    background-color: #ffffff;
+    border: 1px solid #eee;
 }
 table.proposal-data input[readonly] {
-	background-color: inherit;
+    background-color: inherit;
+}
+table.proposal-data input.inline-field {
+    width: auto;
+    display: inline-block;
+    float: left;
+    margin: 3px;
+    border: 1px solid #eee;
 }
 ul.errors-list {
-	padding: 0px;
+    padding: 0px;
     margin: 0px;
     margin-left: 10px;
 }
@@ -41,22 +48,36 @@ ul.errors-list {
     margin-right: 10px;
 }
 .field-history-folding {
-	cursor: pointer;
+    cursor: pointer;
+}
+#approving_data_checkbox_block{
+    text-align: right;
+}
+#approving_data_checkbox_block label{
+    color: #000;
 }
 table.proposal-data tr.field-history-row td{
-	padding: 0px;
+    padding: 0px;
+}
+table.proposal-data input[type="checkbox"]{
+    background-color: inherit;
+    border: inherit;
+    position: relative;
+    opacity: 1;
+    pointer-events: auto;
+    width: 15px;
 }
 .field-history-data{
-	padding: 5px;
-	display: none;
+    padding: 5px;
+    display: none;
 }
 .all-history-folding {
-	cursor: pointer;
+    cursor: pointer;
     color: #039be5;
 }
 .all-history-data {
-	display: none;
-	padding-right: 20px;
+    display: none;
+    padding-right: 20px;
     padding-left: 20px;
     padding-top: 5px;
     margin-bottom: 20px;
@@ -65,15 +86,15 @@ table.proposal-data tr.field-history-row td{
     font-weight: bolder;
 }
 ul.all-corrections>li {
-	margin-top: 0px;
-	list-style-type: initial;
-	margin-bottom: 10px;
+    margin-top: 0px;
+    list-style-type: initial;
+    margin-bottom: 10px;
 }
 .all-corrections li {
-	margin-left: 20px;
+    margin-left: 20px;
 }
 .correction-step {
-	font-size: smaller;
+    font-size: smaller;
 }
 .corr-field{
     margin-top: 30px;
