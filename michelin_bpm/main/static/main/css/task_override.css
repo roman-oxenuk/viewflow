@@ -43,6 +43,12 @@ ul.errors-list {
 .field-history-folding {
     cursor: pointer;
 }
+#approving_data_checkbox_block{
+    text-align: right;
+}
+#approving_data_checkbox_block label{
+    color: #000;
+}
 table.proposal-data tr.field-history-row td{
     padding: 0px;
 }

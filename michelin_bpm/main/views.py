@@ -460,7 +460,11 @@ class AddDataView(SeeDataView):
 
 
 class ClientAddDataView(AddDataView):
-    pass
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_show_approving_data_checkbox'] = True
+        return context
 
 
 class ClientPrintProposalView(AddDataView):

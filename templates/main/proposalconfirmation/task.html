@@ -25,6 +25,33 @@
 
                 {% include 'main/proposalconfirmation/includes/proposal_form.html' %}
 
+                {% if is_show_approving_data_checkbox %}
+                    <script type="text/javascript">
+                        $(document).ready(function(){
+                            $doneBtn = $('#done-btn')
+                            $doneBtn.attr('disabled', 'disabled')
+
+                            $('#approving_data_checkbox').on('change', function(){
+
+                                if($(this).is(':checked')) {
+                                    $doneBtn.attr('disabled', false)
+                                } else {
+                                    $doneBtn.attr('disabled', 'disabled')
+                                }
+                            })
+                        })
+                    </script>
+                    <div id="approving_data_checkbox_block">
+                        <input type="checkbox" id="approving_data_checkbox" />
+                        <label for="approving_data_checkbox">
+                            {% trans "I confirm entered data" %}
+                            {% comment %}
+                            "Я подтверждаю введенные данные"
+                            {% endcomment %}
+                        </label>
+                    </div>
+                {% endif %}
+
             </div>
 
             <div class="card-action">
