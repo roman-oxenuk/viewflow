@@ -31,7 +31,7 @@ class ProposalProcess(Process):
     )
 
     client_login = models.CharField(l_('Login пользователя'), max_length=255)
-    client_email = models.CharField(l_('Email пользователя'), max_length=255)
+    client_email = models.EmailField(l_('Email пользователя'), max_length=255)
 
     company_name = models.CharField(l_('Название компании'), max_length=255, null=True, blank=True)
     date = models.DateField(l_('Дата'), auto_now_add=True, null=True, blank=True)
@@ -74,17 +74,17 @@ class ProposalProcess(Process):
 
     dir_name = models.CharField(l_('Директор ФИО'), max_length=255, null=True, blank=True)
     dir_tel = models.CharField(l_('Директор телефон'), max_length=255, null=True, blank=True)
-    dir_email = models.CharField(l_('Директор e-mail'), max_length=255, null=True, blank=True)
+    dir_email = models.EmailField(l_('Директор e-mail'), max_length=255, null=True, blank=True)
     dir_fax = models.CharField(l_('Директор fax'), max_length=255, null=True, blank=True)
 
     buh_name = models.CharField(l_('Бухгалтер ФИО'), max_length=255, null=True, blank=True)
     buh_tel = models.CharField(l_('Бухгалтер телефон'), max_length=255, null=True, blank=True)
-    buh_email = models.CharField(l_('Бухгалтер e-mail'), max_length=255, null=True, blank=True)
+    buh_email = models.EmailField(l_('Бухгалтер e-mail'), max_length=255, null=True, blank=True)
     buh_fax = models.CharField(l_('Бухгалтер fax'), max_length=255, null=True, blank=True)
 
     contact_name = models.CharField(l_('Контакт ФИО'), max_length=255, null=True, blank=True)
     contact_tel = models.CharField(l_('Контакт телефон'), max_length=255, null=True, blank=True)
-    contact_email = models.CharField(l_('Контакт e-mail'), max_length=255, null=True, blank=True)
+    contact_email = models.EmailField(l_('Контакт e-mail'), max_length=255, null=True, blank=True)
     contact_fax = models.CharField(l_('Контакт fax'), max_length=255, null=True, blank=True)
 
     j_code = models.CharField(l_('J-код'), max_length=255, null=True, blank=True)
@@ -94,7 +94,7 @@ class ProposalProcess(Process):
     is_needs_bibserve_account = models.BooleanField(l_('Is client needs to have a BibServe account?'), default=False)
     bibserve_login = models.CharField(l_('BibServe Login'), max_length=255, null=True, blank=True)
     bibserve_password = models.CharField(l_('BibServe Password'), max_length=255, null=True, blank=True)
-    bibserve_email = models.CharField(l_('BibServe email'), max_length=255, null=True, blank=True)
+    bibserve_email = models.EmailField(l_('BibServe email'), max_length=255, null=True, blank=True)
     bibserve_tel = models.CharField(l_('BibServe tel'), max_length=255, null=True, blank=True)
 
     delivery_client_name = models.CharField(l_('Доставка, Название клиента'), max_length=255, null=True, blank=True)
@@ -109,7 +109,7 @@ class ProposalProcess(Process):
     delivery_block = models.CharField(l_('Доставка, Корпус'), max_length=255, null=True, blank=True)
     delivery_contact_name = models.CharField(l_('Доставка, Контактное лицо'), max_length=255, null=True, blank=True)
     delivery_tel = models.CharField(l_('Доставка, телефон'), max_length=255, null=True, blank=True)
-    delivery_email = models.CharField(l_('Доставка, e-mail'), max_length=255, null=True, blank=True)
+    delivery_email = models.EmailField(l_('Доставка, e-mail'), max_length=255, null=True, blank=True)
     delivery_fax = models.CharField(l_('Доставка, fax'), max_length=255, null=True, blank=True)
 
     warehouse_working_days = models.CharField(l_('Дни работы склада'), max_length=255, null=True, blank=True)

@@ -23,7 +23,7 @@ from michelin_bpm.main.views import (
 from michelin_bpm.main.forms import (
     ApproveForm, LogistForm, CreateBibServerAccountForm, ActivateBibserveAccountForm,
     AddJCodeADVForm, AddDCodeLogistForm, SetCreditLimitForm, UnblockClientForm, AddACSForm, SendLinkForm,
-    ClientAddDataForm, ClientAcceptMistakesForm, DownloadCardForm
+    ClientAddDataForm, ClientAcceptMistakesForm, DownloadCardForm, CreateProposalProcessForm
 )
 
 from michelin_bpm.main.signals import client_unblocked
@@ -86,13 +86,7 @@ class ProposalConfirmationFlow(Flow):
     start = (
         StartNodeView(
             CreateProposalProcessView,
-            fields=[
-                'client_login', 'client_email', 'inn', 'kpp', 'mdm_id', 'contact_name', 'contact_tel',
-                # добавиться полсе инеграции с dadata
-                # 'company_name', и 'client_name' чем отличаются?
-                # 'kpp', 'dir_name', 'ogrn', 'okpo', 'jur_form',
-                # 'jur_address, 'jur_zip_code, 'jur_country, 'jur_region, 'jur_city, 'jur_street, 'jur_building, 'jur_block'
-            ],
+            form_class=CreateProposalProcessForm,
             task_description=_('Send the invitation'),
             task_title=_('Send the invitation'),
             done_btn_title=_('Send the invitation'),

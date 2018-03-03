@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
+
 from django import forms
 from django.conf import settings
 from django.forms import ModelForm, ValidationError
@@ -295,6 +297,57 @@ class AddDataFormMixin:
 
             if field_name in self.Meta.required:
                 field.required = True
+
+
+class CreateProposalProcessForm(AddDataFormMixin, ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        new_fields = OrderedDict([])
+        for field_name, field in self.fields.items():
+            new_fields[field_name] = field
+            if field_name == 'contact_tel':
+                new_fields['search'] = forms.CharField(
+                    max_length=255,
+                    label=_('Search for organization'),
+                    # Поиск огранизации
+                    required=False,
+                    widget=forms.TextInput(
+                        attrs={
+                            'placeholder': _('Enter organization name, address, INN or OGRN')
+                            # Введите название, адрес, ИНН или ОГРН
+                        }
+                    )
+                )
+        self.fields = new_fields
+
+    def clean_client_login(self):
+        client_login = self.cleaned_data['client_login']
+        if User._default_manager.filter(username=client_login).exists():
+            raise forms.ValidationError(_('User with this login already exists. Enter another login.'))
+            # Пользователь с таким логином уже существует. Введите другой логин.
+        return client_login
+
+    def clean_client_email(self):
+        client_email = self.cleaned_data['client_email']
+        if User._default_manager.filter(email=client_email).exists():
+            raise forms.ValidationError(_('User with this email already exists. Enter another email.'))
+            # Пользователь с таким емейлом уже существует. Введите другой емейл.
+        return client_email
+
+    class Meta:
+        model = ProposalProcess
+        fields = [
+            'client_login', 'client_email', 'mdm_id', 'contact_name', 'contact_tel',
+            'company_name', 'inn', 'jur_address', 'jur_zip_code', 'jur_country', 'jur_region', 'jur_city', 'jur_street',
+            'jur_building', 'jur_block', 'inn', 'kpp', 'okpo', 'ogrn'
+        ]
+        can_edit = [
+            'client_login', 'client_email', 'mdm_id', 'contact_name', 'contact_tel',
+        ]
+        required = [
+            'client_login', 'client_email', 'mdm_id', 'contact_name', 'contact_tel', 'inn'
+        ]
 
 
 class ClientAddDataForm(AddDataFormMixin, VersionFormMixin, ModelForm):

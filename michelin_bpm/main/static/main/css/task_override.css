@@ -24,6 +24,7 @@ table.proposal-data input[type] {
 }
 table.proposal-data input[readonly] {
     background-color: inherit;
+    border: none;
 }
 table.proposal-data input.inline-field {
     width: auto;
@@ -31,6 +32,9 @@ table.proposal-data input.inline-field {
     float: left;
     margin: 3px;
     border: 1px solid #eee;
+}
+table.proposal-data input[type="text"].suggestions-input {
+    height: 23px;
 }
 ul.errors-list {
     padding: 0px;

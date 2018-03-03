@@ -5,10 +5,14 @@
 
 {% block extrahead %}
     {{ block.super }}
+    <!-- Dadata jquery.suggestions -->
     <link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/css/suggestions.min.css" type="text/css" rel="stylesheet" />
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <!--[if lt IE 10]>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
+    <![endif]-->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/js/jquery.suggestions.min.js"></script>
+    <!-- / Dadata jquery.suggestions -->
 {% endblock %}
 
 {% block breadcrumbs_items %}
@@ -25,113 +29,97 @@
             <div class="card-content">
                 <div class="card-title black-text">{{ activation.flow_class.process_title }} - {{ activation.flow_task.task_description|default:activation.task.flow_task.name|title }}</div>
                 {% csrf_token %}
-                {% form form=form %} {% endform %}
                 {{ activation.management_form }}
-            </div>
+                <table class="striped proposal-data">
+                    <thead>
+                      <tr>
+                          <th></th>     <!-- Плейсхолдер для кнопки фолдинга полей -->
+                          <th>Поле</th>
+                          <th>Значение</th>
+                          <th></th>  <!-- Плейсхолдер для кнопки истории изменения полей -->
+                      </tr>
+                    </thead>
 
-            <select id="my_select" name="states[]" multiple="multiple">
-                <!--
-                <option value/="AL">Alabama</option>
-                <option value="WY">Wyoming</option>
-                s-->
-            </select>
+                    <tbody>
+                        {{ form.current_version }}
+                        {% for field in form %}
+
+                            <tr>
+                                <td></td>   <!-- Плейсхолдер для кнопки фолдинга полей -->
+                                <td>{{ field.label }}</td>
+                                <td>
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <ul>
+                                            {% for error in field.errors %}
+                                                <li class="red-text">{{error}}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </td>
+                                <td class="field-history-folding">
+                                    {% if field.name in fields_corrections %}
+                                        <a href="#">
+                                            <i class="fas fa-history"></i>
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
 
             {% comment %}
             <input id="party" name="party" type="text" size="100"/>
             <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
             {% endcomment %}
 
-            <!--[if lt IE 10]>
-            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
-            <![endif]-->
-            <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/js/jquery.suggestions.min.js"></script>
+
             <script type="text/javascript">
-                // $("#id_inn").suggestions({
-                //     token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
-                //     type: "PARTY",
-                //     count: 5,
-                //     /* Вызывается, когда пользователь выбирает одну из подсказок */
-                //     onSelect: function(suggestion) {
-                //         console.log(suggestion);
-                //     },
-                //     onSearchStart: function (query) {
-                //         console.log('query: ', query)
-                //     }
-                // });
+                $('input[name="search"]').suggestions({
+                    token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
+                    type: "PARTY",
+                    count: 20,
+                    /* Вызывается, когда пользователь выбирает одну из подсказок */
+                    onSelect: function(suggestion) {
+                        $('input[name="inn"]').val(suggestion.data.inn).trigger('change')
+                        $('input[name="company_name"]').val(suggestion.value).trigger('change')
+                        $('input[name="jur_address"]').val(suggestion.data.address.value).trigger('change')
 
-                var data = [
-                    {
-                        id: 0,
-                        text: 'enhancement'
-                    },
-                    {
-                        id: 1,
-                        text: 'bug'
-                    },
-                    {
-                        id: 2,
-                        text: 'duplicate'
-                    },
-                    {
-                        id: 3,
-                        text: 'invalid'
-                    },
-                    {
-                        id: 4,
-                        text: 'wontfix'
-                    }
-                ];
+                        $('input[name="kpp"]').val(suggestion.data.kpp).trigger('change')
+                        $('input[name="okpo"]').val(suggestion.data.okpo).trigger('change')
+                        $('input[name="ogrn"]').val(suggestion.data.ogrn).trigger('change')
 
-                // $('#my_select').select2({
-                //     data: data
-                // })
+                        $('input[name="jur_country"]').val(null).trigger('change')
+                        $('input[name="jur_city"]').val(null).trigger('change')
+                        $('input[name="jur_zip_code"]').val(null).trigger('change')
+                        $('input[name="jur_region"]').val(null).trigger('change')
+                        $('input[name="jur_street"]').val(null).trigger('change')
+                        $('input[name="jur_building"]').val(null).trigger('change')
+                        $('input[name="jur_block"]').val(null).trigger('change')
 
-                $('#my_select').select2({
-                    templateResult: function(state) {
-                        console.log('state: ', state)
-                        return $('<span>' + state.name + '</span><br><span>' + state.inn + '</span>');
-                    },
-                    multiple: false,
-                    ajax: {
-                        url: 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party',
-                        contentType: 'application/json',
-                        headers: {
-                            'Authorization': 'Token e9dcea72f7007707ae2f073cf73e1555445c2a4c'
-                        },
-                        dataType: 'json',
+                        if(suggestion.data.address.data) {
+                            let adr = suggestion.data.address.data
+                            $('input[name="jur_country"]').val(adr.country).trigger('change')
+                            $('input[name="jur_city"]').val(adr.city).trigger('change')
+                            $('input[name="jur_zip_code"]').val(adr.postal_code).trigger('change')
+                            $('input[name="jur_region"]').val(adr.region_with_type).trigger('change')
+                            $('input[name="jur_street"]').val(adr.street_with_type).trigger('change')
 
-                        processResults: function (data, params) {
-                            console.log('data.suggestions: ', data.suggestions)
-                            console.log('params: ', params)
+                            jur_building = adr.house_type_full ? adr.house_type_full + ' ' : ''
+                            jur_building += adr.house ? adr.house : ''
+                            $('input[name="jur_building"]').val(jur_building).trigger('change')
 
-                            let result = []
-                            $.each(data.suggestions, function(index, item) {
-                                result.push({
-                                    'id': item.data.inn,
-                                    // 'text': item.value,
-                                    'text': item.data.inn,
-                                    'inn': item.data.inn,
-                                    'name': item.value,
-                                })
-                            })
-
-                            return {
-                                results: result,
-                                // pagination: {
-                                //     more: (params.page * 30) < data.total_count
-                                // }
-                            };
-                        },
-
-                        data: function (params) {
-                            return {'query': params.term}
-                        },
+                            jur_block = adr.block_type_full ? adr.block_type_full + ' ' : ''
+                            jur_block += adr.block ? adr.block : ''
+                            $('input[name="jur_block"]').val(jur_block).trigger('change')
+                        }
                     }
                 });
             </script>
-
-
-
 
             <div class="card-action row">
                 <div class="col s12 right-align">
