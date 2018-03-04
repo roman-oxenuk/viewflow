@@ -40,17 +40,23 @@
                             })
                         })
                     </script>
-                    <div id="approving_data_checkbox_block">
-                        <input type="checkbox" id="approving_data_checkbox" />
-                        <label for="approving_data_checkbox">
-                            {% trans "I confirm entered data" %}
-                            {% comment %}
-                            "Я подтверждаю введенные данные"
-                            {% endcomment %}
-                        </label>
+                    <div class="row" id="approving_data_checkbox_block">
+
+                        <div class="col offset-s6 s6">
+
+                            <br>
+                            <input type="checkbox" id="approving_data_checkbox" />
+                            <label for="approving_data_checkbox">
+                                {% trans "I confirm entered data" %}
+                                {% comment %}
+                                "Я подтверждаю введенные данные"
+                                {% endcomment %}
+                            </label>
+
+                        </div>
+
                     </div>
                 {% endif %}
-
             </div>
 
             <div class="card-action">

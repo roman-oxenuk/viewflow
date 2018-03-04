@@ -233,3 +233,4 @@ DEFAULT_FROM_EMAIL = 'info@centrobit.ru'
 
 # id группы Клиентов
 CLIENTS_GROUP_ID = os.environ.get('CLIENTS_GROUP_ID', 1)
+RTC_GROUP_ID = os.environ.get('RTC_GROUP_ID', 4)

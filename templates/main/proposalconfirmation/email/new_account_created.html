@@ -1,0 +1,15 @@
+{% load i18n %}{% autoescape off %}
+
+{% blocktrans %}
+Создан новый аккаунт для заявки: {{ proposal_name }}<br>
+{% endblocktrans %}
+
+{% blocktrans %}
+Время завершения процесса согласования и регистрации: {{ process_finished }}<br>
+{% endblocktrans %}
+
+{% blocktrans %}
+Перейти к заявке: <a href="{{ protocol }}://{{ domain }}{{ task_link }}">{{ protocol }}://{{ domain }}{{ task_link }}</a><br>
+{% endblocktrans %}
+
+{% endautoescape %}

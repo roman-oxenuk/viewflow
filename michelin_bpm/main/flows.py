@@ -81,7 +81,7 @@ class ProposalConfirmationFlow(Flow):
     process_title = l_('Обработка заявки')
     process_menu_title = 'Все заявки'
     process_client_menu_title = 'Мои заявки'
-    summary_template = '"{{ process.company_name }}" {{ process.city }}, {{ process.country }}'
+    summary_template = '{{ process.company_name }} {{ process.city }}'
 
     start = (
         StartNodeView(

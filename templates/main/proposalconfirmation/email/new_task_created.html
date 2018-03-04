@@ -1,0 +1,19 @@
+{% load i18n %}{% autoescape off %}
+
+{% blocktrans %}
+Для заявки: {{ proposal_name }}<br>
+{% endblocktrans %}
+
+{% blocktrans %}
+Создана новая задача: {{ task_title }}<br>
+{% endblocktrans %}
+
+{% blocktrans %}
+Время создания: {{ task_created }}
+{% endblocktrans %}
+
+{% block reset_link %}
+Перейти к задаче: <a href="{{ protocol }}://{{ domain }}{{ task_link }}">{{ protocol }}://{{ domain }}{{ task_link }}</a><br>
+{% endblock %}
+
+{% endautoescape %}

@@ -517,15 +517,13 @@ class ActivateBibServeAccountView(BibServerAccountMixin, AddDataView):
     pass
 
 
+from michelin_bpm.main.forms import all_fields
 class ProposalDetailView(UpdateView):
 
     model = ProposalProcess
     pk_url_kwarg = 'proposal_pk'
     template_name = 'main/proposalconfirmation/show_proposal.html'
-    fields = [
-        'person_login', 'person_email', 'person_first_name', 'person_last_name',
-        'inn', 'mdm_id', 'phone'
-    ]
+    fields = all_fields
 
     def get_queryset(self):
         queryset = super().get_queryset()

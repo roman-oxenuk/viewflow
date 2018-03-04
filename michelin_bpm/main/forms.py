@@ -76,6 +76,37 @@ all_fields = [
 ]
 
 
+class GroupedFieldsMixin:
+
+    field_groups_settings = {
+        'jur_address_group': {
+            'goes_after': 'jur_address',
+            'fields': [
+                'jur_zip_code', 'jur_country', 'jur_region', 'jur_city', 'jur_street', 'jur_building', 'jur_block',
+            ]
+        },
+        'fact_address_group': {
+            'goes_after': 'address',
+            'fields': [
+                'zip_code', 'country', 'region', 'city', 'street', 'building', 'block',
+            ]
+        }
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not hasattr(self, 'field_groups_settings'):
+            self.field_groups_settings = {}
+        self.field_groups = {}
+        self.grouped_fields = []
+        for group_settings in self.field_groups_settings.values():
+            self.field_groups[group_settings['goes_after']] = group_settings['fields']
+            self.grouped_fields += group_settings['fields']
+            for grouped_field_name in group_settings['fields']:
+                self.fields[grouped_field_name].widget.attrs['placeholder'] = self.fields[grouped_field_name].label
+                self.fields[grouped_field_name].widget.attrs['class'] = 'inline-field'
+
+
 class SendLinkForm(PasswordResetForm):
 
     def get_users(self, email):
@@ -120,6 +151,7 @@ class SendLinkForm(PasswordResetForm):
                 'link': link,
                 'username': user.username,
                 'protocol': 'https' if use_https else 'http',
+                'project_name': 'michelin_bpm'
             }
             if extra_email_context is not None:
                 context.update(extra_email_context)
@@ -170,7 +202,7 @@ class VersionFormMixin(ModelForm):
         return self.cleaned_data
 
 
-class ApproveForm(VersionFormMixin, ModelForm):
+class ApproveForm(GroupedFieldsMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
@@ -350,33 +382,7 @@ class CreateProposalProcessForm(AddDataFormMixin, ModelForm):
         ]
 
 
-class ClientAddDataForm(AddDataFormMixin, VersionFormMixin, ModelForm):
-
-    field_groups_settings = {
-        'jur_address_group': {
-            'goes_after': 'jur_address',
-            'fields': [
-                'jur_zip_code', 'jur_country', 'jur_region', 'jur_city', 'jur_street', 'jur_building', 'jur_block',
-            ]
-        },
-        'fact_address_group': {
-            'goes_after': 'address',
-            'fields': [
-                'zip_code', 'country', 'region', 'city', 'street', 'building', 'block',
-            ]
-        }
-    }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.field_groups = {}
-        self.grouped_fields = []
-        for group_settings in self.field_groups_settings.values():
-            self.field_groups[group_settings['goes_after']] = group_settings['fields']
-            self.grouped_fields += group_settings['fields']
-            for grouped_field_name in group_settings['fields']:
-                self.fields[grouped_field_name].widget.attrs['placeholder'] = self.fields[grouped_field_name].label
-                self.fields[grouped_field_name].widget.attrs['class'] = 'inline-field'
+class ClientAddDataForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
@@ -391,14 +397,14 @@ class ClientAcceptMistakesForm(AddDataFormMixin, VersionFormMixin, ModelForm):
         fields = all_fields
 
 
-class DownloadCardForm(AddDataFormMixin, VersionFormMixin, ModelForm):
+class DownloadCardForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
         fields = all_fields
 
 
-class AddJCodeADVForm(AddDataFormMixin, VersionFormMixin, ModelForm):
+class AddJCodeADVForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, ModelForm):
     # TODO MBPM-3:
     # Добавить валидацию поле J-Code.
     # Проверять по шаблону или хотя бы по кол-ву символов.
@@ -409,7 +415,7 @@ class AddJCodeADVForm(AddDataFormMixin, VersionFormMixin, ModelForm):
         required = ['j_code']
 
 
-class AddDCodeLogistForm(AddDataFormMixin, VersionFormMixin, ModelForm):
+class AddDCodeLogistForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, ModelForm):
     # TODO MBPM-3:
     # Добавить валидацию поле D-Code.
     # Проверять по шаблону или хотя бы по кол-ву символов.
@@ -428,21 +434,21 @@ class CreateBibServerAccountForm(AddDataFormMixin, VersionFormMixin, ModelForm):
         can_edit = []
 
 
-class SetCreditLimitForm(AddDataFormMixin, VersionFormMixin, ModelForm):
+class SetCreditLimitForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
         fields = all_fields
 
 
-class UnblockClientForm(AddDataFormMixin, VersionFormMixin, ModelForm):
+class UnblockClientForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess
         fields = all_fields
 
 
-class AddACSForm(AddDataFormMixin, VersionFormMixin, ModelForm):
+class AddACSForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, ModelForm):
 
     class Meta:
         model = ProposalProcess

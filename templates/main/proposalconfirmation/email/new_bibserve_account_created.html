@@ -1,0 +1,20 @@
+{% load i18n %}{% autoescape off %}
+
+{% blocktrans %}
+Создан BibServe-аккаунт для заявки: {{ proposal_name }}<br>
+{% endblocktrans %}
+
+{% blocktrans %}
+Логин: {{ bibserve_login }}<br>
+Пароль: {{ bibserve_password }}<br>
+{% endblocktrans %}
+
+{% blocktrans %}
+Время завершения процесса создания BibServe-аккаунта: {{ process_finished }}<br>
+{% endblocktrans %}
+
+{% blocktrans %}
+Перейти к заявке: <a href="{{ protocol }}://{{ domain }}{{ task_link }}">{{ protocol }}://{{ domain }}{{ task_link }}</a><br>
+{% endblocktrans %}
+
+{% endautoescape %}

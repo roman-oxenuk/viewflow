@@ -39,25 +39,28 @@
                 </div>
 
                 <div class="row">
-                    <div class="input-field col s4">
+                    <div class="input-field col s6">
                         <i class="material-icons prefix">description</i>
-                        <input type="text" disabled value="{{ activation.process.company_name }}" />
+                        <input type="text" disabled value="{{ activation.process.summary }}" />
                         <label class="active">{% trans 'Company name' %}</label>
                     </div>
-                    <div class="input-field col s4">
-                        {% comment %}
+                    <div class="input-field col s6">
+                        <i class="material-icons prefix">account_circle</i>
+                        <input type="text" disabled value="{{ activation.task.owner|default:'----------' }}" />
+                        <label class="active">{% trans 'Assigned to' %}</label>
+                    </div>
+                    {% comment %}
+                    <div class="input-field col s6">
                         <i class="material-icons prefix">description</i>
-                        {% endcomment %}
                         <input type="text" disabled value="{{ activation.process.city }}" />
                         <label class="active">{% trans 'City' %}</label>
                     </div>
                     <div class="input-field col s4">
-                        {% comment %}
                         <i class="material-icons prefix">description</i>
-                        {% endcomment %}
                         <input type="text" disabled value="{{ activation.process.country }}" />
                         <label class="active">{% trans 'Country' %}</label>
                     </div>
+                    {% endcomment %}
                 </div>
 
                 {% comment %}
