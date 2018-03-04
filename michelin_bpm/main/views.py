@@ -462,11 +462,18 @@ class AddDataView(SeeDataView):
         return HttpResponseRedirect(self.get_success_url())
 
 
+from django.forms import formset_factory
+from michelin_bpm.main.forms import DeliveryAddressForm
 class ClientAddDataView(AddDataView):
+
+    # get_context_data
+    # post
+    # is_valid
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_show_approving_data_checkbox'] = True
+        context['formset'] = formset_factory(DeliveryAddressForm, extra=2)
         return context
 
 

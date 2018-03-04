@@ -122,6 +122,7 @@ class ProposalConfirmationFlow(Flow):
         ViewNode(
             ClientAddDataView,
             form_class=ClientAddDataForm,
+            #
             task_description=_('Client adds data'),
             task_title=_('Client adds data'),
             done_btn_title='Все данные добавлены',

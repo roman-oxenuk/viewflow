@@ -1,3 +1,10 @@
+.delivery_addresses_title{
+    display: block;
+    line-height: 24px;
+    margin-bottom: 6px;
+    font-size: 18px;
+    margin-top: 24px;
+}
 table.proposal-data td,
 table.proposal-data th {
     padding: 5px 5px;
@@ -35,6 +42,9 @@ table.proposal-data input.inline-field {
 }
 table.proposal-data input[type="text"].suggestions-input {
     height: 23px;
+}
+table.proposal-data.formset-table:nth-child(n+2) {
+    border-top: 1px solid black;
 }
 ul.errors-list {
     padding: 0px;
