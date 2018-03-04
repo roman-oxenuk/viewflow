@@ -28,3 +28,4 @@ wcwidth==0.1.7
 xlrd==1.1.0
 xlutils==2.0.0
 xlwt==1.3.0
+templated-docs==0.3.1
