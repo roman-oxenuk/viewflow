@@ -1,14 +1,16 @@
 {% load material_frontend %}
 
-<div class="fixed-action-btn">
-    <a class="btn-floating btn-large waves-effect waves-light red z-depth-2 modal-trigger" href="#start_actions">
-        <i class="large material-icons">add</i>
-    </a>
-</div>
+{% if perms.main.add_proposalprocess %}
+    <div class="fixed-action-btn">
+        <a class="btn-floating btn-large waves-effect waves-light red z-depth-2 modal-trigger" href="#start_actions">
+            <i class="large material-icons">add</i>
+        </a>
+    </div>
 
-<div class="fixed-action-btn">
-    <a class="btn-floating btn-large red" href="/workflow/main/proposalconfirmation/start/?{{ request|query_back:'here' }}">
-        <i class="large material-icons">add</i>
-    </a>
-</div>
+    <div class="fixed-action-btn">
+        <a class="btn-floating btn-large red" href="/workflow/main/proposalconfirmation/start/?{{ request|query_back:'here' }}">
+            <i class="large material-icons">add</i>
+        </a>
+    </div>
+{% endif %}
 

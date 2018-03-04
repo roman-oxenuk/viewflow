@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from viewflow import ThisObject
 from viewflow.flow import nodes
-from viewflow.fields import get_task_ref
-from viewflow.activation import STATUS
 
-from django.urls import reverse
 from django.utils.translation import gettext_lazy as l_
 from django.views import generic
 from django.conf.urls import url
+from django.urls import reverse
+from viewflow.activation import STATUS
 
 
 class LinkedNodeMixin:
@@ -60,13 +59,14 @@ class EndNode(TranslatedNodeMixin, nodes.End):
     pass
 
 
-class ViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):
+class ViewNode(TranslatedNodeMixin, nodes.View):
     pass
 
 
+from michelin_bpm.main.views import ProposalExcelDocumentView
 class DownloadableViewNode(ViewNode):
 
-    download_view_class = generic.TemplateView
+    download_view_class = ProposalExcelDocumentView
 
     @property
     def download_view(self):

@@ -1,4 +1,101 @@
+table.proposal-data td,
+table.proposal-data th {
+    padding: 5px 5px;
+}
+/*table.proposal-data tr>td:nth-child(2) {*/
+table.proposal-data tr>td:first-child,
+table.proposal-data tr>td:nth-child(2) {
+    white-space: nowrap;
+    width: 1%;
+    padding-right: 15px;
+}
+table.proposal-data ul {
+    margin: 0px;
+}
+table.proposal-data td.field-history {
+    text-align: right;
+}
+table.proposal-data input[type] {
+    height: 1em;
+    margin: 0px;
+    padding: 3px;
+    background-color: #ffffff;
+    border: 1px solid #eee;
+}
+table.proposal-data input[readonly] {
+    background-color: inherit;
+}
+table.proposal-data input.inline-field {
+    width: auto;
+    display: inline-block;
+    float: left;
+    margin: 3px;
+    border: 1px solid #eee;
+}
+ul.errors-list {
+    padding: 0px;
+    margin: 0px;
+    margin-left: 10px;
+}
 .left-panel {
     flex-basis: 100%;
     margin-right: 0.375rem;
+}
+.side-nav.fixed .collapsible-body li a {
+    padding-left: 31px;
+}
+#block-btn{
+    margin-right: 10px;
+}
+.field-history-folding {
+    cursor: pointer;
+}
+#approving_data_checkbox_block{
+    text-align: right;
+}
+#approving_data_checkbox_block label{
+    color: #000;
+}
+table.proposal-data tr.field-history-row td{
+    padding: 0px;
+}
+table.proposal-data input[type="checkbox"]{
+    background-color: inherit;
+    border: inherit;
+    position: relative;
+    opacity: 1;
+    pointer-events: auto;
+    width: 15px;
+}
+.field-history-data{
+    padding: 5px;
+    display: none;
+}
+.all-history-folding {
+    cursor: pointer;
+    color: #039be5;
+}
+.all-history-data {
+    display: none;
+    padding-right: 20px;
+    padding-left: 20px;
+    padding-top: 5px;
+    margin-bottom: 20px;
+}
+.all-corrections-title {
+    font-weight: bolder;
+}
+ul.all-corrections>li {
+    margin-top: 0px;
+    list-style-type: initial;
+    margin-bottom: 10px;
+}
+.all-corrections li {
+    margin-left: 20px;
+}
+.correction-step {
+    font-size: smaller;
+}
+.corr-field{
+    margin-top: 30px;
 }

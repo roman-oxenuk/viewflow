@@ -13,63 +13,88 @@
 <div class="left-panel">
     <div class="card">
         <form role="form" method="POST" enctype="multipart/form-data">
-            <div class="card-content">
+            {{ activation.management_form }}
 
+            <div class="card-content">
                 <div class="card-title">
                     {{ activation.task.summary|default:activation.task.flow_task }}
                     {% comment %}
                     <h6>{{ activation.process.summary }}</h6>
                     {% endcomment %}
                 </div>
-                {% block task_form %}
-                {% csrf_token %}
 
-                {% comment %}
-                <table class="striped">
-                    <thead>
-                      <tr>
-                          <th>Поле</th>
-                          <th>Значение</th>
-                      </tr>
-                    </thead>
+                {% include 'main/proposalconfirmation/includes/proposal_form.html' %}
 
-                    <tbody>
-                        {% for field in form %}
-                            {% if activation.process|get_attr:field.name %}
-                                <tr>
-                                    <td>{{ field.label }}</td>
-                                    <td>{{ activation.process|get_attr:field.name }}</td>
-                                </tr>
-                            {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% endcomment %}
+                {% if is_show_approving_data_checkbox %}
+                    <script type="text/javascript">
+                        $(document).ready(function(){
+                            $doneBtn = $('#done-btn')
+                            $doneBtn.attr('disabled', 'disabled')
 
-                {% form template='material/form.html' form=form %}{% endform %}
-                {{ activation.management_form }}
-                {% endblock %}
+                            $('#approving_data_checkbox').on('change', function(){
+
+                                if($(this).is(':checked')) {
+                                    $doneBtn.attr('disabled', false)
+                                } else {
+                                    $doneBtn.attr('disabled', 'disabled')
+                                }
+                            })
+                        })
+                    </script>
+                    <div id="approving_data_checkbox_block">
+                        <input type="checkbox" id="approving_data_checkbox" />
+                        <label for="approving_data_checkbox">
+                            {% trans "I confirm entered data" %}
+                            {% comment %}
+                            "Я подтверждаю введенные данные"
+                            {% endcomment %}
+                        </label>
+                    </div>
+                {% endif %}
+
             </div>
+
             <div class="card-action">
                 <div class="row">
                     {% block task_actions %}
-                    {% check_is_client user as is_client %}
-                    {% if not is_client %}
-                        <div class="col s3">
+
+                    <div class="col s3">
+                        {% check_is_client user as is_client %}
+                        {% if not is_client %}
                             <a class="btn btn-flat black-text" href="{% flowurl activation.task 'detail' %}?{{ request|query_back }}">
                                 {% trans 'Detail' %}
                             </a>
-                        </div>
-                    {% endif %}
-                    <div class="col {% if is_client %}s12{% else %}s9{% endif %} right-align">
-                        <button type="submit" name="_done" class="btn primary white-text">
-                            {% trans 'Done' as default_action_title %}
-                            {{ action_title|default:default_action_title }}
-                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div id="michelin-actions" class="col s9 right-align">
+
+                        {% for corr_field in form %}
+                            {% if 'data-correction-field' in corr_field.field.widget.attrs %}
+                                <button type="submit" id="block-btn" name="{{ corr_field.field.widget.attrs.action_btn_name }}" class="btn primary {{ corr_field.field.widget.attrs.action_btn_class }}">
+                                    {{ corr_field.field.widget.attrs.action_btn_label }}
+                                </button>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if downloadable_btn_label %}
+                            <a class="btn btn-flat blue-grey lighten-3 black-text" href="{% flowurl activation.task 'download' %}?{{ request|query_back }}">
+                                {{ downloadable_btn_label }}
+                            </a>
+                        {% endif %}
+
+                        {% if done_btn_title %}
+                            <button type="submit" id="done-btn" name="_done" class="btn primary white-text green lighten-1">
+                                {% trans 'Done' as default_done_btn_title %}
+                                {{ done_btn_title|default:default_done_btn_title }}
+                            </button>
+                        {% endif %}
+
                     </div>
                     {% endblock %}
                 </div>
             </div>
+
         </form>
     </div>
 </div>

@@ -2,34 +2,31 @@
 from django.utils.translation import ugettext_lazy as l_, ugettext as _
 from django.utils.decorators import method_decorator
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
 from viewflow import flow
 from viewflow.base import this, Flow
 from viewflow.fields import get_task_ref
-# from viewflow.activation import STATUS
-# from viewflow.flow.views import
 
 from michelin_bpm.main.apps import register
 from michelin_bpm.main.models import ProposalProcess, BibServeProcess
 from michelin_bpm.main.nodes import (
     StartNodeView, IfNode, SplitNode, SwitchNode, EndNode, ApproveViewNode, ViewNode, StartFunctionNode,
-    DownloadableViewNode
+    DownloadableViewNode,
 )
 from michelin_bpm.main.views import (
-    CreateProposalProcessView, ApproveView, FixMistakesView, AddDataView, SeeDataView, AddJCodeView,
-    UnblockClientView, CreateBibServerAccountView, ActivateBibServeAccountView
+    CreateProposalProcessView, ApproveView, UnblockClientView, CreateBibServerAccountView,
+    ActivateBibServeAccountView, AddJCodeView, SeeDataView, AddDataView, ClientAddDataView,
+    DownloadCardView
 )
 from michelin_bpm.main.forms import (
-    FixMistakesForm, ApproveForm, LogistForm, AddJCodeADVForm, CreateBibServerAccountForm, SetCreditLimitForm,
-    UnblockClientForm, AddACSForm, ActivateBibserveAccountForm, AddDCodeLogistForm
+    ApproveForm, LogistForm, CreateBibServerAccountForm, ActivateBibserveAccountForm,
+    AddJCodeADVForm, AddDCodeLogistForm, SetCreditLimitForm, UnblockClientForm, AddACSForm, SendLinkForm,
+    ClientAddDataForm, ClientAcceptMistakesForm, DownloadCardForm
 )
+
 from michelin_bpm.main.signals import client_unblocked
-
-
-CORR_SUFFIX = settings.CORRECTION_FIELD_SUFFIX
-COMMENT_SUFFIX = settings.COMMENT_REQUEST_FIELD_SUFFIX
-CORR_SUFFIX_2 = settings.CORRECTION_FIELD_SUFFIX_2
-CORR_SUFFIX_3 = settings.CORRECTION_FIELD_SUFFIX_3
 
 
 def has_active_correction(activation, for_step=None):
@@ -67,6 +64,16 @@ def is_already_has_task(activation, task):
     ).exists()
 
 
+def is_already_done(activation, task):
+    if not hasattr(task, 'flow_class'):
+        setattr(task, 'flow_class', ProposalConfirmationFlow)
+
+    return activation.process.task_set.filter(
+        flow_task=get_task_ref(task),
+        status='DONE'
+    ).exists()
+
+
 @register
 class ProposalConfirmationFlow(Flow):
 
@@ -80,10 +87,307 @@ class ProposalConfirmationFlow(Flow):
         StartNodeView(
             CreateProposalProcessView,
             fields=[
-                'country', 'city', 'company_name', 'inn',
-                'bank_name', 'account_number', 'is_needs_bibserve_account'
+                'client_login', 'client_email', 'inn', 'kpp', 'mdm_id', 'contact_name', 'contact_tel',
+                # добавиться полсе инеграции с dadata
+                # 'company_name', и 'client_name' чем отличаются?
+                # 'kpp', 'dir_name', 'ogrn', 'okpo', 'jur_form',
+                # 'jur_address, 'jur_zip_code, 'jur_country, 'jur_region, 'jur_city, 'jur_street, 'jur_building, 'jur_block'
             ],
-            task_description=_('Start of proposal approval process')
+            task_description=_('Send the invitation'),
+            task_title=_('Send the invitation'),
+            done_btn_title=_('Send the invitation'),
+        ).Permission(
+            auto_create=True
+        ).Next(this.create_user)
+    )
+
+    create_user = flow.Handler(
+        this.perform_create_user
+    ).Next(this.add_data_by_client)
+
+    def perform_create_user(self, activation, **kwargs):
+        User = get_user_model()
+        new_user = User(**{
+            'username': activation.process.client_login,
+            'email': activation.process.client_email,
+            'first_name': activation.process.contact_name,
+        })
+        new_user.save()
+
+        clients = Group.objects.get(id=settings.CLIENTS_GROUP_ID)
+        clients.user_set.add(new_user)
+
+        activation.process.client = new_user
+        activation.process.save()
+
+        password_reset_form = SendLinkForm({'email': new_user.email})
+        password_reset_form.is_valid()
+        password_reset_form.save()
+
+    add_data_by_client = (
+        ViewNode(
+            ClientAddDataView,
+            form_class=ClientAddDataForm,
+            task_description=_('Client adds data'),
+            task_title=_('Client adds data'),
+            done_btn_title='Все данные добавлены',
+        ).Permission(
+            auto_create=True
+        ).Assign(
+            lambda activation: activation.process.client
+        ).Next(this.split_to_sales_admin)
+    )
+
+    # TODO MBPM-3:
+    # Тут ещё будет шаг с выгрузкой договора
+
+    split_to_sales_admin = (
+        SplitNode(task_description=_('Split to Sales Admin'))
+        .Next(this.approve_paper_docs)
+        .Next(this.split_for_credit_and_account_manager)
+    )
+
+    split_for_credit_and_account_manager = (
+        SplitNode(task_description=_('Split for credit and Account Manager'))
+        .Next(this.approve_by_account_manager)
+        .Next(this.approve_by_credit_manager)
+    )
+
+    approve_by_account_manager = (
+        ApproveViewNode(
+            ApproveView,
+            form_class=ApproveForm,
+            task_description=_('Approve by account manager'),
+            task_title=_('Approve by account manager'),
+            task_comments='Аккаунт-менеджер проверяет заявку',
+            done_btn_title='Согласовано',
+            # block_btn_title=_('Block proposal'),
+            # TODO MBPM-3:
+            # Переименовать can_create_corrections в can_create_messages ?
+            can_create_corrections=[
+                {
+                    'for_step': this.fix_mistakes_after_account_manager,
+                    'field_label_prefix': l_('Клиенту корректировка для поля '),
+                    'non_field_corr_label': l_('Клиенту корректировка для всей заявки.'),
+                    'action_btn_label': 'Заблокировать заявку',
+                    'action_btn_name': '_block',    # Это же используется как суффикс для имён корректировочных полей
+                    'action_btn_class': 'white-text red lighten-1',
+                }
+            ],
+            show_corrections=[
+                {'for_step': this.fix_mistakes_after_account_manager},
+                {'for_step': this.approve_by_credit_manager},
+                {'for_step': this.approve_by_region_chief},
+                {'for_step': this.approve_paper_docs},
+            ],
+        ).Permission(
+            auto_create=True
+        ).Next(this.choose_the_path)
+    )
+
+    choose_the_path = (
+        SwitchNode(task_description=_('Choose the path'))
+        .Case(
+            this.fix_mistakes_after_account_manager,
+            lambda a: (
+                is_already_done(a, task=this.join_credit_and_account_manager) and
+                has_active_correction(a, for_step=this.fix_mistakes_after_account_manager)
+            )
+        )
+        .Default(this.join_credit_and_account_manager)
+    )
+
+    approve_by_credit_manager = (
+        ApproveViewNode(
+            ApproveView,
+            form_class=ApproveForm,
+            task_description=_('Approve by credit manager'),
+            task_title=_('Approve by credit manager'),
+            done_btn_title='Согласовано',
+            can_create_corrections=[
+                {
+                    'for_step': this.approve_by_account_manager,
+                    'field_label_prefix': l_('Заблокировать заявку из-за этого поля'),
+                    'non_field_corr_label': l_('Заблокировать заявку'),
+                    'action_btn_label': 'Заблокировать заявку',
+                    'action_btn_name': '_block',    # Это же используется как суффикс для имён корректировочных полей
+                    'action_btn_class': 'white-text red lighten-1',
+                }
+            ],
+            show_corrections=[],
+        ).Permission(
+            auto_create=True
+        ).Next(this.join_credit_and_account_manager)
+    )
+
+    join_credit_and_account_manager = flow.Join(
+        task_description=_('Join credit and account manager')
+    ).Next(this.check_approve_by_credit_and_account_manager)
+
+    check_approve_by_credit_and_account_manager = (
+        SwitchNode(task_description=_('Check approve by credit and account manager'))
+        .Case(
+            this.approve_by_account_manager,
+            lambda a: has_active_correction(a, for_step=this.approve_by_account_manager)
+        )
+        .Case(
+            this.fix_mistakes_after_account_manager,
+            lambda a: has_active_correction(a, for_step=this.fix_mistakes_after_account_manager)
+        )
+        .Default(this.approve_by_region_chief)
+    )
+
+    fix_mistakes_after_account_manager = (
+        # В текущей версии Клиент не может исправлять данные в заявке
+        # ApproveViewNode(
+            # FixMistakesView,
+            # form_class=FixMistakesForm,
+        ViewNode(
+            SeeDataView,
+            form_class=ClientAcceptMistakesForm,
+            task_description=_('Fix mistakes after account manager'),
+            task_title=_('Fix mistakes after account manager'),
+            done_btn_title='ОК',
+        ).Permission(
+            auto_create=True
+        ).Assign(
+            lambda activation: activation.process.client
+        ).Next(this.end)
+    )
+
+    approve_by_region_chief = (
+        ApproveViewNode(
+            ApproveView,
+            form_class=ApproveForm,
+            task_description=_('Approve by region chief'),
+            task_title=_('Approve by region chief'),
+            task_comments='Шеф региона проверяет заявку',
+            done_btn_title='Согласовано',
+            can_create_corrections=[
+                {
+                    'for_step': this.approve_by_account_manager,
+                    'field_label_prefix': l_('Корректировка для поля '),
+                    'non_field_corr_label': l_('Корректировка для всей заявки.'),
+                    'action_btn_label': 'Заблокировать заявку',
+                    'action_btn_name': '_block',    # Это же используется как суффикс для имё корректировочных полей
+                    'action_btn_class': 'white-text red lighten-1',
+                },
+                {
+                    'for_step': this.get_comments_from_logist,
+                    'field_label_prefix': l_('Запросить комментарий у логиста для поля '),
+                    'non_field_corr_label': l_('Запрос комментария для всей заявки.'),
+                    'action_btn_label': 'Запросить комментарий логиста',
+                    'action_btn_name': '_get_comments',
+                    'action_btn_class': 'white-text grey darken-1',
+                }
+            ],
+            show_corrections=[
+                {'for_step': this.get_comments_from_logist},
+                {'for_step': this.approve_by_account_manager, 'made_on_step': this.approve_by_region_chief},
+                {'for_step': this.fix_mistakes_after_account_manager}
+            ],
+        )
+        .Permission(
+            auto_create=True
+        )
+        .Next(this.check_approve_by_region_chief)
+    )
+
+    check_approve_by_region_chief = (
+        SwitchNode(task_description=_('Check approve by region chief'))
+        .Case(
+            this.get_comments_from_logist,
+            lambda a: has_active_correction(a, for_step=this.get_comments_from_logist)
+        )
+        .Case(
+            this.approve_by_account_manager,
+            lambda a: has_active_correction(a, for_step=this.approve_by_account_manager)
+        )
+        .Default(this.approve_by_adv)
+    )
+
+    get_comments_from_logist = (
+        ApproveViewNode(
+            ApproveView,
+            form_class=LogistForm,
+            task_description=_('Get comments from logist'),
+            task_title=_('Get comments from logist'),
+            can_create_corrections=[
+                {
+                    'for_step': this.approve_by_region_chief,
+                    'field_label_prefix': l_('Пояснение шефу региона для поля '),
+                    'non_field_corr_label': l_('Пояснение шефу региона для всей заявки.'),
+                    'action_btn_label': 'Добавить комментарий',
+                    'action_btn_name': '_set_comments',
+                    'action_btn_class': 'white-text grey darken-1',
+                }
+            ],
+            # TODO MBPM-3: переименовать на
+            # additionaly_show_corrections -- дополнительно показываем корректировки с каких шагов
+            # И наверное лучше сделать просто списком.
+            show_corrections=[
+                {'for_step': this.approve_by_region_chief}
+            ]
+        ).Permission(
+            auto_create=True
+        ).Next(this.approve_by_region_chief)
+    )
+
+    approve_by_adv = (
+        ApproveViewNode(
+            ApproveView,
+            form_class=ApproveForm,
+            task_description=_('Approve by ADV'),
+            task_title=_('Approve by ADV'),
+            task_comments='ADV согласовывает заявку',
+            done_btn_title='Согласовано',
+            can_create_corrections=[
+                {
+                    'for_step': this.approve_by_account_manager,
+                    'field_label_prefix': l_('Корректировка для поля '),
+                    'non_field_corr_label': l_('Корректировка для всей заявки.'),
+                    'action_btn_label': 'Заблокировать заявку',
+                    'action_btn_name': '_block',    # Это же используется как суффикс для имё корректировочных полей
+                    'action_btn_class': 'white-text red lighten-1',
+                },
+            ],
+            show_corrections=[],
+        ).Permission(
+            auto_create=True
+        ).Next(this.create_user_in_inner_systems)
+    )
+
+    create_user_in_inner_systems = (
+        DownloadableViewNode(
+            DownloadCardView,
+            form_class=DownloadCardForm,
+            task_description=_('Create user in inner systems'),
+            task_title=_('Create user in inner systems'),
+            done_btn_title='Пользователь создан',
+        ).Permission(
+            auto_create=True
+        ).Next(this.add_j_code_by_adv)
+    )
+
+    add_j_code_by_adv = (
+        ViewNode(
+            AddJCodeView,
+            form_class=AddJCodeADVForm,
+            task_description=_('Add J-code by ADV'),
+            task_title=_('Add J-code by ADV'),
+            done_btn_title='J-код добавлен',
+        ).Permission(
+            auto_create=True
+        ).Next(this.add_d_code_by_logist)
+    )
+
+    add_d_code_by_logist = (
+        ViewNode(
+            AddDataView,
+            form_class=AddDCodeLogistForm,
+            task_description=_('Add D-code by Logist'),
+            task_title=_('Add D-code by Logist'),
+            done_btn_title='D-код добавлен',
         ).Permission(
             auto_create=True
         ).Next(this.set_credit_limit)
@@ -94,7 +398,53 @@ class ProposalConfirmationFlow(Flow):
             SeeDataView,
             form_class=SetCreditLimitForm,
             task_description=_('Set credit limit'),
-            action_title='Кредитный лимит установлен',
+            task_title=_('Set credit limit'),
+            done_btn_title='Кредитный лимит установлен',
+        ).Permission(
+            auto_create=True
+        ).Next(this.join_from_sales_admin)
+    )
+
+    approve_paper_docs = (
+        ApproveViewNode(
+            ApproveView,
+            form_class=ApproveForm,
+            task_description=_('Approve paper docs'),
+            task_title=_('Approve paper docs'),
+            done_btn_title='Данные в документах совпадают с данными в системе',
+            can_create_corrections=[],
+            show_corrections=[],
+        )
+        .Permission(
+            auto_create=True
+        )
+        .Next(this.join_from_sales_admin)
+    )
+
+    join_from_sales_admin = (
+        flow.Join(task_description=_('Join from sales admin'))
+        .Next(this.unblock_client)
+    )
+
+    unblock_client = (
+        ViewNode(
+            UnblockClientView,
+            form_class=UnblockClientForm,
+            task_description=_('Unblock client by ADV'),
+            task_title=_('Unblock client by ADV'),
+            done_btn_title='Клиент разблокирован',
+        ).Permission(
+            auto_create=True
+        ).Next(this.add_acs)
+    )
+
+    add_acs = (
+        ViewNode(
+            AddDataView,
+            form_class=AddACSForm,
+            task_description=_('Adding ACS'),
+            task_title=_('Adding ACS'),
+            done_btn_title='ACS прикреплён',
         ).Permission(
             auto_create=True
         ).Next(this.end)
@@ -129,7 +479,7 @@ class BibServeFlow(Flow):
             CreateBibServerAccountView,
             form_class=CreateBibServerAccountForm,
             task_description=_('Create BibServe account'),
-            action_title='BibServe-аккаунт создан',
+            done_btn_title='BibServe-аккаунт создан',
         ).Permission(
             auto_create=True
         ).Next(this.check_is_allowed_to_activate)
@@ -158,7 +508,7 @@ class BibServeFlow(Flow):
             ActivateBibServeAccountView,
             form_class=ActivateBibserveAccountForm,
             task_description=_('Activating BibServe account'),
-            action_title='BibServe аккаунт активирован',
+            done_btn_title='BibServe аккаунт активирован',
         ).Permission(
             auto_create=True
         ).Next(this.end)

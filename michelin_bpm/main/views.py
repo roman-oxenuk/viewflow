@@ -1,33 +1,115 @@
 # -*- coding: utf-8 -*-
-import json
 import os
 import locale
 import calendar
 import logging
+import json
 
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import PasswordResetConfirmView
+# from django.contrib.staticfiles.storage import staticfiles_storage
+from django.utils.translation import ugettext_lazy as _
+from django.utils.html import mark_safe
+from django.urls import reverse
+from django.views.generic.edit import UpdateView
 from django.views import View
 from django.utils.translation import ugettext_lazy as l_
 
 import reversion
 from reversion.models import Version
+
+from viewflow.decorators import flow_view
 from viewflow.flow.views.task import UpdateProcessView
 from viewflow.flow.views import CreateProcessView
 from viewflow.fields import get_task_ref
 from viewflow.frontend.views import ProcessListView
-
 from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
+from michelin_bpm.main.forms import ClientSetPasswordForm
 from michelin_bpm.main.utils import render_excel_template
 from templated_docs import fill_template
 
-
-CORR_SUFFIX = settings.CORRECTION_FIELD_SUFFIX
-COMMENT_SUFFIX = settings.COMMENT_REQUEST_FIELD_SUFFIX
-
 logger = logging.getLogger(__name__)
+
+
+class EnterClientPasswordView(PasswordResetConfirmView):
+
+    template_name = 'main/registration/password_reset_confirm.html'
+    title = _('Enter password')
+    form_class = ClientSetPasswordForm
+    post_reset_login = True
+    success_url = '/'
+
+    def dispatch(self, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            return HttpResponseRedirect('/')
+        return super().dispatch(*args, **kwargs)
+
+
+class ActionTitleMixin:
+    """
+    Миксин, передающий done_btn_title в форму.
+    done_btn_title -- надпись на той кнопке, которая переводит заявку на следующий шаг.
+    """
+    done_btn_title = None
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data['done_btn_title'] = self.done_btn_title
+        return context_data
+
+
+class VersionViewMixin:
+    """
+    Миксин, передающий в форму текущую версию заявки.
+    Версия нужна для того, чтобы понимать,
+    к какой версии Заявки был добавлен комментарий (или какая версия Заявки была согласована).
+    """
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+
+        current_version = Version.objects.get_for_object(
+            kwargs['instance']
+        ).order_by(
+            '-revision__date_created'
+        ).first()
+
+        kwargs.update({'current_version': current_version})
+        return kwargs
+
+
+class BaseView(VersionViewMixin, ActionTitleMixin):
+    pass
+
+
+class StopProposalMixin:
+
+    _is_stopped = None
+
+    def is_proposal_stopped(self):
+        if self._is_stopped is None:
+            active_corr_for_client = self.get_object().get_correction_active(
+                for_step='main/flows.ProposalConfirmationFlow.fix_mistakes_after_account_manager'
+            )
+            self._is_stopped = active_corr_for_client.exists()
+        return self._is_stopped
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        if self.is_proposal_stopped():
+            context_data['done_btn_title'] = None
+            context_data['is_stopped'] = True
+        return context_data
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if self.is_proposal_stopped():
+            if 'can_create_corrections' in kwargs:
+                kwargs['can_create_corrections'] = []
+        return kwargs
 
 
 class ProposalPdfContractView(View):
@@ -49,11 +131,11 @@ class ProposalPdfContractView(View):
             locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
         except locale.Error as err:
             logger.error('Can\'t set russian locale (get month name)!')
+        contract_month_name = calendar.month_name[p.contract_date.month] if p.contract_date else ''
 
         def get_full_address(list_of_parts):
             return ', '.join(filter(bool, list_of_parts))
 
-        contract_month_name = calendar.month_name[p.contract_date.month] if p.contract_date else ''
         context = vars(p)
         context = {k: (v if v else '') for k, v in context.items()}
         more = {
@@ -85,6 +167,9 @@ class ProposalExcelDocumentView(View):
         # if not proposal_id:
         #     return HttpResponseBadRequest()
 
+        # TODO MBPM-3:
+        # Добавить тут валидацию на существующую Заявку и на то, что задача по ней пренадлежит этому пользователю.
+        # И вообще заявка должна браться из activation
         p = ProposalProcess.objects.get(pk=proposal_id) if proposal_id else ProposalProcess.objects.first()  # for testing
         template_path = '{}/static/main/proposal-info.xls'.format(os.path.abspath(os.path.dirname(__file__)))
         context = {
@@ -184,22 +269,30 @@ class ProposalExcelDocumentView(View):
             response['Content-Disposition'] = 'attachment; filename=proposal-info.xls'
             return response
 
+    @method_decorator(flow_view)
+    def dispatch(self, request, *args, **kwargs):
+        """Check permissions and show task detail."""
+        self.activation = request.activation
 
-class CreateProposalProcessView(CreateProcessView):
+        if not self.activation.flow_task.can_view(request.user, self.activation.task):
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+
+class CreateProposalProcessView(ActionTitleMixin, CreateProcessView):
 
     linked_node = None
 
     def form_valid(self, *args, **kwargs):
-        self.activation.process.client = self.request.user
-
         with reversion.create_revision():
             super().form_valid(*args, **kwargs)
             reversion.set_user(self.request.user)
-
         return HttpResponseRedirect(self.get_success_url())
 
 
 class ShowCorrectionsMixin:
+
+    linked_node = None
 
     def get_fields_corrections(self, instance):
         """
@@ -308,47 +401,57 @@ class ShowCorrectionsMixin:
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs.update({
-            'fields_corrections': self.get_fields_corrections(self.get_object())
+            'fields_corrections': self.get_fields_corrections(self.get_object()),
+            'linked_node': self.linked_node
         })
         return kwargs
 
 
-class ActionTitleMixin:
+class ApproveView(StopProposalMixin, BaseView, ShowCorrectionsMixin, UpdateProcessView):
+    """
+    Вью для согласования заявки.
+    Аттрибуты вью:
+    linked_node -- инстанс viewflow.Node, к которому прикреплён текущий ApproveView.
+                    При создании Корректировки в поле Correction.for_step сохраняется linked_node,
+                    закодированный через viewflow.fields.get_task_ref().
+                    Поэтому в дальнейшем по полю Correction.for_step мы можем фильтровать Корректировки.
+                    Например чтобы показывать только те, которые определены в ApproveView.show_corrections.
+    can_create_corrections -- Корректировки для каких шагов могут быть созданный в рамках этого ApproveView.
+    show_corrections -- какие дополнительные Корректировки могут быть показаны.
+                        Кроме тех, что созданны для текущего шага, опередённого в self.linked_node.
+    """
+    linked_node = None
+    can_create_corrections = []
+    show_corrections = []
 
-    action_title = None
+    def get_available_actions(self):
+        return [corr_settings['action_btn_name'] for corr_settings in self.can_create_corrections]
 
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
-        context_data['action_title'] = self.action_title
-        return context_data
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
 
+        # Если форма отправлена по нажатию какой-то кнопки, кроме "done",
+        # то это предполагает, что пользователь оставил комментарий к заявке.
+        # Поэтому поле для с соответствующим комментарием должно быть обязательно заполнено.
+        actions = self.get_available_actions()
+        applied_actions = set(actions) & set(request.POST)
+        if applied_actions:
+            for act in applied_actions:
+                for field_name, field in form.fields.items():
+                    if field_name.endswith(act):
+                        field.required = True
 
-class ApproveView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
-
-    linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
-    can_create_corrections = []   # Корректировки для каких шагов могут быть созданный в рамках этого View
-    show_corrections = []   # Какие дополнительные Корректировки могут быть показаны кроме тех,
-                            # что созданны для текущего шага self.linked_node
-
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
-        context_data['action_title'] = self.action_title
-        return context_data
+        if form.is_valid():
+            return self.form_valid(form)
+        return self.form_invalid(form)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-
-        current_version = Version.objects.get_for_object(
-            kwargs['instance']
-        ).order_by(
-            '-revision__date_created'
-        ).first()
-
         kwargs.update({
-            'current_version': current_version,
-            'linked_node': self.linked_node,
             'can_create_corrections': self.can_create_corrections,
             'show_corrections': self.show_corrections,
+            'linked_node': self.linked_node,
         })
         return kwargs
 
@@ -363,9 +466,9 @@ class ApproveView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
         # TODO MBPM-3: Вынести запрос к БД из цикла
         for corr_settings in self.can_create_corrections:
             correction_data = dict([
-                (name.replace(corr_settings['field_suffix'], ''), value)
+                (name.replace(corr_settings['action_btn_name'], ''), value)
                 for name, value in form.cleaned_data.items()
-                if name.endswith(corr_settings['field_suffix']) and value
+                if name.endswith(corr_settings['action_btn_name']) and value
             ])
             if correction_data:
                 Correction.objects.create(
@@ -382,19 +485,13 @@ class ApproveView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class FixMistakesView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView):
+class FixMistakesView(BaseView, ShowCorrectionsMixin, UpdateProcessView):
 
-    linked_node = None
     show_corrections = []
 
     def get_queryset(self):
         proposal_qs = super().get_queryset()
         return proposal_qs.filter(client=self.request.user)
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update({'linked_node': self.linked_node})
-        return kwargs
 
     def form_valid(self, form, **kwargs):
         with reversion.create_revision():
@@ -403,30 +500,47 @@ class FixMistakesView(ActionTitleMixin, ShowCorrectionsMixin, UpdateProcessView)
         return HttpResponseRedirect(self.get_success_url())
 
 
-class AddDataView(ActionTitleMixin, UpdateProcessView):
+class SeeDataView(StopProposalMixin, BaseView, UpdateProcessView):
+    """
+    Вью, просто показывающее данные в Заявке.
+    Применяется, например, для случая, когда пользователь должен перенести данные из Заявки в другие системы.
+    """
+    pass
 
-    linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-
-        current_version = Version.objects.get_for_object(
-            kwargs['instance']
-        ).order_by(
-            '-revision__date_created'
-        ).first()
-
-        kwargs.update({
-            'current_version': current_version,
-            'linked_node': self.linked_node,
-        })
-        return kwargs
-
+class AddDataView(SeeDataView):
+    """
+    Вью, в котором пользователь добавляет какие-то данные к заявке.
+    """
     def form_valid(self, form, *args, **kwargs):
         with reversion.create_revision():
             super().form_valid(form, **kwargs)
             reversion.set_user(self.request.user)
         return HttpResponseRedirect(self.get_success_url())
+
+
+class ClientAddDataView(AddDataView):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_show_approving_data_checkbox'] = True
+        return context
+
+
+class ClientPrintProposalView(AddDataView):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_downloadable'] = True
+        return context
+
+
+class DownloadCardView(AddDataView):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['downloadable_btn_label'] = _('Download OIZ Card')
+        return context
 
 
 class AddJCodeView(AddDataView):
@@ -438,26 +552,12 @@ class AddJCodeView(AddDataView):
         return super().form_valid(form, *args, **kwargs)
 
 
-class SeeDataView(ActionTitleMixin, UpdateProcessView):
+class UnblockClientView(SeeDataView):
 
-    linked_node = None      # инстанс viewflow.Node, к которому прикреплён текущий View
-
-    template_name = 'main/proposalconfirmation/task_downloadable.html'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-
-        current_version = Version.objects.get_for_object(
-            kwargs['instance']
-        ).order_by(
-            '-revision__date_created'
-        ).first()
-
-        kwargs.update({
-            'current_version': current_version,
-            'linked_node': self.linked_node,
-        })
-        return kwargs
+    def form_valid(self, form, *args, **kwargs):
+        from michelin_bpm.main.signals import client_unblocked
+        client_unblocked.send(sender=self.__class__, proposal=form.instance)
+        return super().form_valid(form, *args, **kwargs)
 
 
 class BibServerAccountMixin:
@@ -474,16 +574,51 @@ class ActivateBibServeAccountView(BibServerAccountMixin, AddDataView):
     pass
 
 
-class UnblockClientView(SeeDataView):
+class ProposalDetailView(UpdateView):
 
-    def form_valid(self, form, *args, **kwargs):
-        from michelin_bpm.main.signals import client_unblocked
-        client_unblocked.send(sender=self.__class__, proposal=form.instance)
-        return super().form_valid(form, *args, **kwargs)
+    model = ProposalProcess
+    pk_url_kwarg = 'proposal_pk'
+    template_name = 'main/proposalconfirmation/show_proposal.html'
+    fields = [
+        'person_login', 'person_email', 'person_first_name', 'person_last_name',
+        'inn', 'mdm_id', 'phone'
+    ]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        is_client = self.request.user.groups.filter(id=settings.CLIENTS_GROUP_ID).exists()
+        if is_client:
+            queryset = queryset.filter(client=self.request.user)
+        return queryset
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        for field in form.fields.values():
+            field.widget.attrs['readonly'] = True
+        return form
 
 
 @method_decorator(login_required, name='dispatch')
 class MichelinProcessListView(ProcessListView):
+
+    list_display = [
+        'process_id', 'process_summary', 'proposal_link',
+        'created', 'finished', 'active_tasks'
+    ]
+
+    def process_summary(self, process):
+        return mark_safe('<a href="{}">{}</a>'.format(
+            reverse('proposal_detail', kwargs={'proposal_pk': process.pk}),
+            process.summary())
+        )
+    process_summary.short_description = _('Proposal')
+
+    def proposal_link(self, process):
+        return mark_safe('<a href="{}">{}</a>'.format(
+            self.get_process_link(process),
+            _('Process')
+        ))
+    proposal_link.short_description = _('Process')
 
     def get_queryset(self):
         queryset = super().get_queryset()

@@ -35,13 +35,10 @@ SECRET_KEY = '5$7x$_pz3g-==zzc@n!d63o392)^(jqc^@1^sgu3v6&nzwfkko'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
-DEBUG = True
 DEBUG_SQL = env('DEBUG_SQL')
 INTERNAL_IPS = env('INTERNAL_IPS')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
-ALLOWED_HOSTS = ['*',]
-
 
 # Application definition
 
@@ -52,7 +49,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_extensions',
+    'django.contrib.sites',
+    # 'django_extensions',
 
     'viewflow',
     'viewflow.frontend',
@@ -129,24 +127,18 @@ WSGI_APPLICATION = 'michelin_bpm.wsgi.application'
 #         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
 #     }
 # }
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': env('DJANGO_DB_NAME'),
-#         'USER': env('DJANGO_DB_USER'),
-#         'PASSWORD': env('DJANGO_DB_PASSWORD', default=''),
-#         'HOST': 'localhost',
-#     }
-# }
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'bpm',
-        'USER': 'postgres',
-        'HOST': 'postgres',
+        'NAME': env('DJANGO_DB_NAME'),
+        'USER': env('DJANGO_DB_USER'),
+        'PASSWORD': env('DJANGO_DB_PASSWORD', default=''),
+        'HOST': 'localhost',
     }
 }
+
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -190,6 +182,15 @@ if DEBUG_SQL:
     }
 
 
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    'django.contrib.auth.hashers.BCryptPasswordHasher',
+]
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
@@ -201,6 +202,10 @@ LANGUAGES = [
 ]
 LOCALE_PATHS = (os.path.join(os.path.dirname(__file__), '..', 'locale'),)
 
+FORMAT_MODULE_PATH = [
+    'michelin_bpm.main.formats',
+]
+
 
 TIME_ZONE = 'UTC'
 
@@ -210,6 +215,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+SITE_ID = 1
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
@@ -220,10 +226,13 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/mnt/resource/michelin-bpm/static')
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/mnt/resource/michelin-bpm/')
 
-# Префикс для названия поле, в которые вводят корректировки.
-CORRECTION_FIELD_SUFFIX = '_correction'
-COMMENT_REQUEST_FIELD_SUFFIX = '_get_comment'
-CORRECTION_FIELD_SUFFIX_2 = '_correction_2'
-CORRECTION_FIELD_SUFFIX_3 = '_correction_3'
-
 TEMPLATED_DOCS_LIBREOFFICE_PATH = '/usr/lib/libreoffice/program'
+
+# Данные для мейлера
+# http://confluence.centrobit.ru/pages/viewpage.action?pageId=8816460
+DB_MAILER_API_KEY = 'd84f32d0-6351-4f5a-b771-b074d5d4'
+DB_MAILER_ROOT_URL = 'http://mail1.centrobit.ru'
+DEFAULT_FROM_EMAIL = 'info@centrobit.ru'
+
+# id группы Клиентов
+CLIENTS_GROUP_ID = os.environ.get('CLIENTS_GROUP_ID', 1)

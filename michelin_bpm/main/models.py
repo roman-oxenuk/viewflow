@@ -30,7 +30,10 @@ class ProposalProcess(Process):
         (CLOSING, l_('Закрытие')),
     )
 
-    company_name = models.CharField(l_('Название компании'), max_length=255)
+    client_login = models.CharField(l_('Login пользователя'), max_length=255)
+    client_email = models.CharField(l_('Email пользователя'), max_length=255)
+
+    company_name = models.CharField(l_('Название компании'), max_length=255, null=True, blank=True)
     date = models.DateField(l_('Дата'), auto_now_add=True, null=True, blank=True)
     operation_type = models.IntegerField(l_('Формат ОИЗ'), choices=OPERATION_TYPES, default=OPENING)
     jur_form = models.CharField(l_('Статус компании'), max_length=50, null=True, blank=True)
@@ -59,6 +62,7 @@ class ProposalProcess(Process):
     contract_number = models.CharField(l_('Номер договора'), max_length=255, null=True, blank=True)
     contract_date = models.DateField(l_('Дата договора'), max_length=255, null=True, blank=True)
 
+    # TODO MBPM-26: кажется, этого поля нету в Карточке ОИЗ?
     address = models.CharField(l_('Факт. Адрес'), max_length=255, null=True, blank=True)
     zip_code = models.CharField(l_('Факт. Индекс'), max_length=50, null=True, blank=True)
     country = models.CharField(l_('Факт. Страна'), max_length=255, null=True, blank=True)
@@ -85,6 +89,7 @@ class ProposalProcess(Process):
 
     j_code = models.CharField(l_('J-код'), max_length=255, null=True, blank=True)
     d_code = models.CharField(l_('D-код'), max_length=255, null=True, blank=True)
+    mdm_id = models.CharField(l_('MDM ID'), max_length=255)
 
     is_needs_bibserve_account = models.BooleanField(l_('Is client needs to have a BibServe account?'), default=False)
     bibserve_login = models.CharField(l_('BibServe Login'), max_length=255, null=True, blank=True)
@@ -93,6 +98,7 @@ class ProposalProcess(Process):
     bibserve_tel = models.CharField(l_('BibServe tel'), max_length=255, null=True, blank=True)
 
     delivery_client_name = models.CharField(l_('Доставка, Название клиента'), max_length=255, null=True, blank=True)
+    # TODO MBPM-26: кажется, этого поля нету в Карточке ОИЗ?
     delivery_address = models.CharField(l_('Доставка, Адрес'), max_length=255, null=True, blank=True)
     delivery_zip_code = models.CharField(l_('Доставка, Индекс'), max_length=50, null=True, blank=True)
     delivery_country = models.CharField(l_('Доставка, Страна'), max_length=255, null=True, blank=True)
