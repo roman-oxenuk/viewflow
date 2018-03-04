@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django import template
+from django.conf import settings
 
 
 register = template.Library()
@@ -37,7 +38,7 @@ def get_prev_field_by_index(obj, key):
 
 @register.assignment_tag
 def check_is_client(user):
-    return user.groups.filter(name='Клиенты').exists()
+    return user.groups.filter(pk=settings.CLIENTS_GROUP_ID).exists()
 
 
 @register.assignment_tag

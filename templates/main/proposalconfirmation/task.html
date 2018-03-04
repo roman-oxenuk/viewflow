@@ -1,6 +1,103 @@
 {% extends 'main/base_module.html' %}
 {% load i18n viewflow viewflow_frontend material_form material_frontend main %}
 
+{% block extrahead %}
+    {{ block.super }}
+    {% comment %}
+    Если страницу открывает Клиент, то подгружаем статику для dadata suggestions, чтобы валидировать введёные адреса.
+    {% endcomment %}
+    {% check_is_client user as is_client %}
+    {% if is_client %}
+        <!-- Dadata jquery.suggestions -->
+        <link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/css/suggestions.min.css" type="text/css" rel="stylesheet" />
+        <!--
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        -->
+        <!--[if lt IE 10]>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
+        <![endif]-->
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/js/jquery.suggestions.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function(){
+
+                // доставочные адреса
+                $('input[name="address"]').suggestions({
+                    token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
+                    type: "ADDRESS",
+                    count: 10,
+                    geoLocation: false,
+                    onSelect: function(suggestion) {
+                        let adr = suggestion.data
+                        $('input[name="zip_code"]').val(adr.postal_code)
+                        $('input[name="country"]').val(adr.country)
+                        $('input[name="region"]').val(adr.region_with_type)
+                        $('input[name="city"]').val(adr.city)
+                        $('input[name="street"]').val(adr.street_with_type)
+                        $('input[name="building"]').val(adr.house)
+                        let block = null
+                        if(adr.block_type_full){ block = adr.block_type_full + ' ' + adr.block }
+                        $('input[name="block"]').val(block)
+                    }
+                })
+
+                $('input[name="jur_address"]').suggestions({
+                    token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
+                    type: "ADDRESS",
+                    count: 10,
+                    geoLocation: false,
+                    onSelect: function(suggestion) {
+                        let adr = suggestion.data
+                        $('input[name="jur_zip_code"]').val(adr.postal_code)
+                        $('input[name="jur_country"]').val(adr.country)
+                        $('input[name="jur_region"]').val(adr.region_with_type)
+                        $('input[name="jur_city"]').val(adr.city)
+                        $('input[name="jur_street"]').val(adr.street_with_type)
+                        $('input[name="jur_building"]').val(adr.house)
+                        let block = null
+                        if(adr.block_type_full){ block = adr.block_type_full + ' ' + adr.block }
+                        $('input[name="jur_block"]').val(block)
+                    }
+                })
+
+                {% comment %}
+                // TODO MBPM-16
+                // Удаляем строку, если внесено изменение в какой-то поле адреса?
+                // $(document).on('change',
+                    // 'input[name="jur_zip_code"], '+
+                    // 'input[name="jur_country"], '+
+                    // 'input[name="jur_region"], '+
+                    // 'input[name="jur_city"], '+
+                    // 'input[name="jur_street"], '+
+                    // 'input[name="jur_building"], '+
+                    // 'input[name="jur_block"]', function(){
+                    //     $('input[name="jur_address"]').val(null)
+                // })
+                {% endcomment %}
+
+                $('input[name="delivery_address"]').suggestions({
+                    token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
+                    type: "ADDRESS",
+                    count: 10,
+                    geoLocation: false,
+                    onSelect: function(suggestion) {
+                        let adr = suggestion.data
+                        $('input[name="delivery_zip_code"]').val(adr.postal_code)
+                        $('input[name="delivery_country"]').val(adr.country)
+                        $('input[name="delivery_region"]').val(adr.region_with_type)
+                        $('input[name="delivery_city"]').val(adr.city)
+                        $('input[name="delivery_street"]').val(adr.street_with_type)
+                        $('input[name="delivery_building"]').val(adr.house)
+                        let block = null
+                        if(adr.block_type_full){ block = adr.block_type_full + ' ' + adr.block }
+                        $('input[name="delivery_block"]').val(block)
+                    }
+                })
+            })
+        </script>
+        <!-- / Dadata jquery.suggestions -->
+    {% endif %}
+{% endblock %}
+
 {% block breadcrumbs_items %}
 {% include 'viewflow/includes/breadcrumb_category.html' %}
 <a href="{% flowurl activation.flow_class 'index' %}?{{ request|query_back }}">{{ activation.flow_class.process_title }}</a>

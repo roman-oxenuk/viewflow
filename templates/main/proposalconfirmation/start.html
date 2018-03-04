@@ -83,6 +83,7 @@
                     token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
                     type: "PARTY",
                     count: 20,
+                    geoLocation: false,
                     /* Вызывается, когда пользователь выбирает одну из подсказок */
                     onSelect: function(suggestion) {
                         $('input[name="inn"]').val(suggestion.data.inn).trigger('change')

@@ -63,7 +63,9 @@ all_fields = [
 
     # Данные по доставке
     # 'delivery_address', фиг знает, поле ли это?
-    'delivery_client_name', 'delivery_zip_code', 'delivery_country', 'delivery_region',
+    'delivery_client_name',
+    'delivery_address',
+    'delivery_zip_code', 'delivery_country', 'delivery_region',
     'delivery_city', 'delivery_street', 'delivery_building', 'delivery_block',
     'delivery_contact_name', 'delivery_tel', 'delivery_email', 'delivery_fax',
 
@@ -89,6 +91,13 @@ class GroupedFieldsMixin:
             'goes_after': 'address',
             'fields': [
                 'zip_code', 'country', 'region', 'city', 'street', 'building', 'block',
+            ]
+        },
+        'delivery_address_group': {
+            'goes_after': 'delivery_address',
+            'fields': [
+                'delivery_zip_code', 'delivery_country', 'delivery_region',
+                'delivery_city', 'delivery_street', 'delivery_building', 'delivery_block',
             ]
         }
     }

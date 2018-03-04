@@ -107,6 +107,8 @@ class ProposalProcess(Process):
     delivery_street = models.CharField(l_('Доставка, Улица'), max_length=255, null=True, blank=True)
     delivery_building = models.CharField(l_('Доставка, Строение'), max_length=255, null=True, blank=True)
     delivery_block = models.CharField(l_('Доставка, Корпус'), max_length=255, null=True, blank=True)
+    delivery_address_comment = models.CharField(l_('Доставка, Комментарии к адресу'), max_length=255, null=True, blank=True)
+
     delivery_contact_name = models.CharField(l_('Доставка, Контактное лицо'), max_length=255, null=True, blank=True)
     delivery_tel = models.CharField(l_('Доставка, телефон'), max_length=255, null=True, blank=True)
     delivery_email = models.EmailField(l_('Доставка, e-mail'), max_length=255, null=True, blank=True)
@@ -120,11 +122,11 @@ class ProposalProcess(Process):
     warehouse_comment = models.CharField(l_('Комментарии к работе склада'), max_length=255, null=True, blank=True)
     warehouse_consignee_code = models.CharField(l_('Код грузополучателя'), max_length=255, null=True, blank=True)
     warehouse_station_code = models.CharField(l_('Код станции'), max_length=255, null=True, blank=True)
-    warehouse_tc = models.IntegerField(l_('TC'), default=0)
-    warehouse_pl = models.IntegerField(l_('PL'), default=0)
-    warehouse_gc = models.IntegerField(l_('GC'), default=0)
-    warehouse_ag = models.IntegerField(l_('GC'), default=0)
-    warehouse_2r = models.IntegerField(l_('2R'), default=0)
+    warehouse_tc = models.IntegerField(l_('TC'), null=True, blank=True)
+    warehouse_pl = models.IntegerField(l_('PL'), null=True, blank=True)
+    warehouse_gc = models.IntegerField(l_('GC'), null=True, blank=True)
+    warehouse_ag = models.IntegerField(l_('GC'), null=True, blank=True)
+    warehouse_2r = models.IntegerField(l_('2R'), null=True, blank=True)
 
     acs = models.ForeignKey(
         settings.AUTH_USER_MODEL, blank=True, null=True,
