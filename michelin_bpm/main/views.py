@@ -626,8 +626,14 @@ class MichelinProcessListView(ProcessListView):
     ]
 
     def process_summary(self, process):
+        if type(process) == ProposalProcess:
+            proposal_pk = process.pk
+
+        if type(process) == BibServeProcess:
+            proposal_pk = process.proposal.pk
+
         return mark_safe('<a href="{}">{}</a>'.format(
-            reverse('proposal_detail', kwargs={'proposal_pk': process.pk}),
+            reverse('proposal_detail', kwargs={'proposal_pk': proposal_pk}),
             process.summary())
         )
     process_summary.short_description = _('Proposal')

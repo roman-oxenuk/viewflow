@@ -176,7 +176,7 @@ class ProposalConfirmationFlow(Flow):
                     'field_label_prefix': l_('Клиенту корректировка для поля '),
                     'non_field_corr_label': l_('Клиенту корректировка для всей заявки.'),
                     'action_btn_label': 'Заблокировать заявку',
-                    'action_btn_name': '_block',    # Это же используется как суффикс для имён корректировочных полей
+                    'action_btn_name': '__block',    # Это же используется как суффикс для имён корректировочных полей
                     'action_btn_class': 'white-text red lighten-1',
                 }
             ],
@@ -216,7 +216,7 @@ class ProposalConfirmationFlow(Flow):
                     'field_label_prefix': l_('Заблокировать заявку из-за этого поля'),
                     'non_field_corr_label': l_('Заблокировать заявку'),
                     'action_btn_label': 'Заблокировать заявку',
-                    'action_btn_name': '_block',    # Это же используется как суффикс для имён корректировочных полей
+                    'action_btn_name': '__block',    # Это же используется как суффикс для имён корректировочных полей
                     'action_btn_class': 'white-text red lighten-1',
                 }
             ],
@@ -275,7 +275,7 @@ class ProposalConfirmationFlow(Flow):
                     'field_label_prefix': l_('Корректировка для поля '),
                     'non_field_corr_label': l_('Корректировка для всей заявки.'),
                     'action_btn_label': 'Заблокировать заявку',
-                    'action_btn_name': '_block',    # Это же используется как суффикс для имё корректировочных полей
+                    'action_btn_name': '__block',    # Это же используется как суффикс для имё корректировочных полей
                     'action_btn_class': 'white-text red lighten-1',
                 },
                 {
@@ -353,7 +353,7 @@ class ProposalConfirmationFlow(Flow):
                     'field_label_prefix': l_('Корректировка для поля '),
                     'non_field_corr_label': l_('Корректировка для всей заявки.'),
                     'action_btn_label': 'Заблокировать заявку',
-                    'action_btn_name': '_block',    # Это же используется как суффикс для имё корректировочных полей
+                    'action_btn_name': '__block',    # Это же используется как суффикс для имё корректировочных полей
                     'action_btn_class': 'white-text red lighten-1',
                 },
             ],
@@ -468,9 +468,7 @@ class BibServeFlow(Flow):
     process_title = l_('Регистрация BibServe аккаунта')
     process_menu_title = 'Создание BibServe аккаунта'
     process_client_menu_title = 'Создание BibServe аккаунта'
-    # TODO MBPM-3
-    # Убрать комментарии:
-    # summary_template = '"{{ process.company_name }}" {{ process.city }}, {{ process.country }}'
+    summary_template = '{{ process.proposal.company_name }} {{ process.proposal.city }}'
 
     start = (
         StartFunctionNode(
