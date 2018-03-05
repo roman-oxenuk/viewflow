@@ -12,6 +12,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.contrib.sites.models import Site
 from django.urls import reverse
+from django.forms.widgets import CheckboxInput, Select, RadioSelect
 
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from reversion.models import Version
@@ -227,7 +228,10 @@ class ApproveForm(GroupedFieldsMixin, VersionFormMixin, ModelForm):
 
         # Делаем каждое поле неактивным
         for field in self.fields.values():
-            field.widget.attrs['readonly'] = True
+            if isinstance(field.widget, (CheckboxInput, Select, RadioSelect)):
+                field.widget.attrs['disabled'] = 'disabled'
+            else:
+                field.widget.attrs['readonly'] = True
 
         # Добавляем поля для корректировки и комментариев согласно настройкам в self.can_create_corrections
         for corr_settings in self.can_create_corrections:
@@ -334,7 +338,10 @@ class AddDataFormMixin:
         for field_name, field in self.fields.items():
             # делаем поле неактивным
             if field_name not in self.Meta.can_edit:
-                field.widget.attrs['readonly'] = True
+                if isinstance(field.widget, (CheckboxInput, Select, RadioSelect)):
+                    field.widget.attrs['disabled'] = 'disabled'
+                else:
+                    field.widget.attrs['readonly'] = True
 
             if field_name in self.Meta.required:
                 field.required = True
