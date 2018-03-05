@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'viewflow.frontend',
     'reversion',
     'reversion_compare',
+    'templated_docs',
 ]
 
 # Project apps
@@ -224,6 +225,8 @@ STATIC_URL = '/static/'
 
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/mnt/resource/michelin-bpm/static')
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/mnt/resource/michelin-bpm/')
+
+TEMPLATED_DOCS_LIBREOFFICE_PATH = '/usr/lib/libreoffice/program'
 
 # Данные для мейлера
 # http://confluence.centrobit.ru/pages/viewpage.action?pageId=8816460

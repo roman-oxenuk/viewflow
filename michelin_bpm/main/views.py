@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
+import locale
+import calendar
+import logging
 import json
 
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetConfirmView
@@ -18,6 +22,7 @@ from django.utils.translation import ugettext_lazy as l_
 import reversion
 from reversion.models import Version
 
+from viewflow.decorators import flow_view
 from viewflow.flow.views.task import UpdateProcessView
 from viewflow.flow.views import CreateProcessView
 from viewflow.fields import get_task_ref
@@ -25,6 +30,9 @@ from viewflow.frontend.views import ProcessListView
 from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
 from michelin_bpm.main.forms import ClientSetPasswordForm
 from michelin_bpm.main.utils import render_excel_template
+from templated_docs import fill_template
+
+logger = logging.getLogger(__name__)
 
 
 class EnterClientPasswordView(PasswordResetConfirmView):
@@ -104,8 +112,57 @@ class StopProposalMixin:
         return kwargs
 
 
-from viewflow.decorators import flow_view
+class ProposalPdfContractView(View):
+    """Договор в формате pdf.
+    apt-get install libffi-dev
+    apt-get install libreoffice (version >= 5)
+    apt-get install locales
+    Uncomment ru_RU.UTF-8 in /etc/locale.gen,
+    then run 'locale-gen' for generating russian locale (need for month name).
+    Add templated_docs to INSTALLED_APPS
+    """
+    def get(self, request, proposal_id=None):
+        # if not proposal_id:
+        #     return HttpResponseBadRequest()
+
+        p = ProposalProcess.objects.get(pk=proposal_id) if proposal_id else ProposalProcess.objects.first()  # for testing
+
+        try:
+            locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+        except locale.Error as err:
+            logger.error('Can\'t set russian locale (get month name)!')
+        contract_month_name = calendar.month_name[p.contract_date.month] if p.contract_date else ''
+
+        def get_full_address(list_of_parts):
+            return ', '.join(filter(bool, list_of_parts))
+
+        context = vars(p)
+        context = {k: (v if v else '') for k, v in context.items()}
+        more = {
+            'p': p,
+            'pcd': p.contract_date.day if p.contract_date else '',
+            'pcm': contract_month_name,
+            'pcy': p.contract_date.year if p.contract_date else '',
+            'full_address': get_full_address([p.zip_code, p.country, p.region, p.city, p.street, p.building, p.block]),
+            'jur_full_address': get_full_address([p.jur_zip_code, p.jur_country, p.jur_region, p.jur_city,
+                                                  p.jur_street, p.jur_building, p.jur_block]),
+            'delivery_full_address': get_full_address([p.delivery_zip_code, p.delivery_country, p.delivery_region,
+                                                       p.delivery_city, p.delivery_street, p.delivery_building,
+                                                       p.delivery_block]),
+        }
+        context = {**context, **more}
+        filename = fill_template('main/contract.odt', context, output_format='pdf')
+
+        with open(filename, 'rb') as excel:
+            data = excel.read()
+
+            response = HttpResponse(data, content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename=contract.pdf'
+            return response
+
+
 class ProposalExcelDocumentView(View):
+    """Заявка в формате excel."""
     def get(self, request, proposal_id=None):
         # if not proposal_id:
         #     return HttpResponseBadRequest()
