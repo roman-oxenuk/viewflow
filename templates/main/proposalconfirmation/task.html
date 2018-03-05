@@ -180,7 +180,7 @@
                         {% endfor %}
 
                         {% if downloadable_btn_label %}
-                            <a class="btn btn-flat blue-grey lighten-3 black-text" href="{% flowurl activation.task 'download' %}?{{ request|query_back }}">
+                            <a class="btn btn-flat blue-grey lighten-3 black-text" data-turbolinks=false href="{% flowurl activation.task 'download' %}?{{ request|query_back }}">
                                 {{ downloadable_btn_label }}
                             </a>
                         {% endif %}
