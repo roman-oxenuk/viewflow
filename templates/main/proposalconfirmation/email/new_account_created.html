@@ -1,7 +1,12 @@
 {% load i18n %}{% autoescape off %}
 
 {% blocktrans %}
-Создан новый аккаунт для заявки: {{ proposal_name }}<br>
+Ваша заявка согласована, Вы можете начать работу.<br>
+{% endblocktrans %}
+
+{% blocktrans %}
+Ваш менеджер {{ acs_first_name }} {{ acs_last_name }}.<br>
+Email менеджера: {{ acs_email }}<br>
 {% endblocktrans %}
 
 {% blocktrans %}

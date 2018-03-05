@@ -109,10 +109,14 @@ def new_account_created(sender, process, task, **kwargs):
             protocol = 'http'
 
         task_link = reverse('proposal_detail', kwargs={'proposal_pk': process.id})
+
         context = {
             'proposal_name': process.summary(),
             'process_finished': process.finished,
             'task_link': task_link,
+            'acs_first_name': process.acs.first_name,
+            'acs_last_name': process.acs.last_name,
+            'acs_email': process.acs.email,
             'domain': domain,
             'protocol': protocol,
             'project_name': 'michelin_bpm'
@@ -159,6 +163,7 @@ def new_bibserve_account_created(sender, process, task, **kwargs):
             'task_link': task_link,
             'domain': domain,
             'protocol': protocol,
+            'bibserve_link': settings.BIBSERVE_LINK,
             'bibserve_login': process.proposal.bibserve_login,
             'bibserve_password': process.proposal.bibserve_password,
             'project_name': 'michelin_bpm'
