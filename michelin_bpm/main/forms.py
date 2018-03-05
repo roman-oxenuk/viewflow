@@ -396,7 +396,13 @@ class ClientAddDataForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, 
     class Meta:
         model = ProposalProcess
         fields = all_fields
-        can_edit = all_fields
+
+
+class DownloadClientsContractForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, ModelForm):
+
+    class Meta:
+        model = ProposalProcess
+        fields = all_fields
 
 
 class ClientAcceptMistakesForm(AddDataFormMixin, VersionFormMixin, ModelForm):

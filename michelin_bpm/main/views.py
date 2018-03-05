@@ -121,11 +121,14 @@ class ProposalPdfContractView(View):
     then run 'locale-gen' for generating russian locale (need for month name).
     Add templated_docs to INSTALLED_APPS
     """
-    def get(self, request, proposal_id=None):
+    def get(self, request):
         # if not proposal_id:
         #     return HttpResponseBadRequest()
 
-        p = ProposalProcess.objects.get(pk=proposal_id) if proposal_id else ProposalProcess.objects.first()  # for testing
+        # import ipdb; ipdb.set_trace()
+
+        # p = ProposalProcess.objects.get(pk=proposal_id) if proposal_id else ProposalProcess.objects.first()  # for testing
+        p = self.activation.process
 
         try:
             locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
@@ -160,17 +163,27 @@ class ProposalPdfContractView(View):
             response['Content-Disposition'] = 'attachment; filename=contract.pdf'
             return response
 
+    @method_decorator(flow_view)
+    def dispatch(self, request, *args, **kwargs):
+        """Check permissions and show task detail."""
+        self.activation = request.activation
+
+        if not self.activation.flow_task.can_view(request.user, self.activation.task):
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
 
 class ProposalExcelDocumentView(View):
     """Заявка в формате excel."""
-    def get(self, request, proposal_id=None):
+    def get(self, request):
         # if not proposal_id:
         #     return HttpResponseBadRequest()
 
         # TODO MBPM-3:
         # Добавить тут валидацию на существующую Заявку и на то, что задача по ней пренадлежит этому пользователю.
         # И вообще заявка должна браться из activation
-        p = ProposalProcess.objects.get(pk=proposal_id) if proposal_id else ProposalProcess.objects.first()  # for testing
+        # p = ProposalProcess.objects.get(pk=proposal_id) if proposal_id else ProposalProcess.objects.first()  # for testing
+        p = self.activation.process
         template_path = '{}/static/main/proposal-info.xls'.format(os.path.abspath(os.path.dirname(__file__)))
         context = {
             (1, 0): p.company_name,
@@ -524,6 +537,14 @@ class ClientAddDataView(AddDataView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_show_approving_data_checkbox'] = True
+        return context
+
+
+class DownloadClientsContractView(AddDataView):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['downloadable_btn_label'] = _('Download contract')
         return context
 
 

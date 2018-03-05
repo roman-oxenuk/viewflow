@@ -13,17 +13,18 @@ from michelin_bpm.main.apps import register
 from michelin_bpm.main.models import ProposalProcess, BibServeProcess
 from michelin_bpm.main.nodes import (
     StartNodeView, IfNode, SplitNode, SwitchNode, EndNode, ApproveViewNode, ViewNode, StartFunctionNode,
-    DownloadableViewNode,
+    DownloadableXLSViewNode, DownloadableContractViewNode
 )
 from michelin_bpm.main.views import (
     CreateProposalProcessView, ApproveView, UnblockClientView, CreateBibServerAccountView,
     ActivateBibServeAccountView, AddJCodeView, SeeDataView, AddDataView, ClientAddDataView,
-    DownloadCardView
+    DownloadCardView, DownloadClientsContractView
 )
 from michelin_bpm.main.forms import (
     ApproveForm, LogistForm, CreateBibServerAccountForm, ActivateBibserveAccountForm,
     AddJCodeADVForm, AddDCodeLogistForm, SetCreditLimitForm, UnblockClientForm, AddACSForm, SendLinkForm,
-    ClientAddDataForm, ClientAcceptMistakesForm, DownloadCardForm, CreateProposalProcessForm
+    ClientAddDataForm, ClientAcceptMistakesForm, DownloadCardForm, CreateProposalProcessForm,
+    DownloadClientsContractForm
 )
 
 from michelin_bpm.main.signals import client_unblocked
@@ -129,11 +130,22 @@ class ProposalConfirmationFlow(Flow):
             auto_create=True
         ).Assign(
             lambda activation: activation.process.client
-        ).Next(this.split_to_sales_admin)
+        ).Next(this.download_clients_contract)
     )
 
-    # TODO MBPM-3:
-    # Тут ещё будет шаг с выгрузкой договора
+    download_clients_contract = (
+        DownloadableContractViewNode(
+            DownloadClientsContractView,
+            form_class=DownloadClientsContractForm,
+            task_description=_('Client prints the contract'),
+            task_title=_('Client prints the contract'),
+            done_btn_title='Договор распечатан и отправлен',
+        ).Permission(
+            auto_create=True
+        ).Assign(
+            lambda activation: activation.process.client
+        ).Next(this.split_to_sales_admin)
+    )
 
     split_to_sales_admin = (
         SplitNode(task_description=_('Split to Sales Admin'))
@@ -352,7 +364,7 @@ class ProposalConfirmationFlow(Flow):
     )
 
     create_user_in_inner_systems = (
-        DownloadableViewNode(
+        DownloadableXLSViewNode(
             DownloadCardView,
             form_class=DownloadCardForm,
             task_description=_('Create user in inner systems'),
@@ -388,7 +400,7 @@ class ProposalConfirmationFlow(Flow):
     )
 
     set_credit_limit = (
-        DownloadableViewNode(
+        ViewNode(
             SeeDataView,
             form_class=SetCreditLimitForm,
             task_description=_('Set credit limit'),

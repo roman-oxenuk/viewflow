@@ -20,8 +20,7 @@ from django.contrib.auth import views as auth_views
 
 from material.frontend import urls as frontend_urls
 from michelin_bpm.main.admin import admin_site
-from michelin_bpm.main.views import (
-    EnterClientPasswordView, ProposalDetailView, ProposalExcelDocumentView, ProposalPdfContractView)
+from michelin_bpm.main.views import EnterClientPasswordView, ProposalDetailView
 
 
 urlpatterns = [
@@ -35,8 +34,6 @@ urlpatterns = [
     url(r'^admin/', admin_site.urls),
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),
     url(r'', include(frontend_urls)),
-    url(r'^test_excel/?$', ProposalExcelDocumentView.as_view()),
-    url(r'^test_pdf/?$', ProposalPdfContractView.as_view()),
 ]
 
 if settings.DEBUG:

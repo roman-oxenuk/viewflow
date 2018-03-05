@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-from viewflow import ThisObject
-from viewflow.flow import nodes
-
-from django.utils.translation import gettext_lazy as l_
-from django.views import generic
+from django.utils.translation import gettext_lazy as l_, gettext as _
+from django.core.exceptions import ImproperlyConfigured
 from django.conf.urls import url
 from django.urls import reverse
+
+from viewflow import ThisObject
+from viewflow.flow import nodes
 from viewflow.activation import STATUS
+
+from michelin_bpm.main.views import ProposalExcelDocumentView, ProposalPdfContractView
 
 
 class LinkedNodeMixin:
@@ -63,13 +65,14 @@ class ViewNode(TranslatedNodeMixin, nodes.View):
     pass
 
 
-from michelin_bpm.main.views import ProposalExcelDocumentView
 class DownloadableViewNode(ViewNode):
 
-    download_view_class = ProposalExcelDocumentView
+    download_view_class = None
 
     @property
     def download_view(self):
+        if not self.download_view_class:
+            raise ImproperlyConfigured(_('You have to set "download_view_class" on DownloadableViewNode'))
         return self.download_view_class.as_view()
 
     def urls(self):
@@ -111,6 +114,16 @@ class DownloadableViewNode(ViewNode):
             return reverse(url_name, kwargs={'process_pk': task.process_id, 'task_pk': task.pk})
 
         return super().get_task_url(task, url_type, namespace=namespace, **kwargs)
+
+
+class DownloadableXLSViewNode(DownloadableViewNode):
+
+    download_view_class = ProposalExcelDocumentView
+
+
+class DownloadableContractViewNode(DownloadableViewNode):
+
+    download_view_class = ProposalPdfContractView
 
 
 class ApproveViewNode(LinkedNodeMixin, TranslatedNodeMixin, nodes.View):

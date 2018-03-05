@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    # 'django_extensions',
 
     'viewflow',
     'viewflow.frontend',
@@ -226,7 +225,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/mnt/resource/michelin-bpm/static')
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/mnt/resource/michelin-bpm/')
 
-TEMPLATED_DOCS_LIBREOFFICE_PATH = '/usr/lib/libreoffice/program'
+TEMPLATED_DOCS_LIBREOFFICE_PATH = os.environ.get('TEMPLATED_DOCS_LIBREOFFICE_PATH', '/usr/lib/libreoffice/program')
 
 # Данные для мейлера
 # http://confluence.centrobit.ru/pages/viewpage.action?pageId=8816460
