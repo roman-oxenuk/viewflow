@@ -7,7 +7,10 @@
     {{ block.super }}
     <!-- Dadata jquery.suggestions -->
     <link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@17.12.0/dist/css/suggestions.min.css" type="text/css" rel="stylesheet" />
+    {% comment %}
+    <!-- jQuery должна быть уже подгружена -->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    {% endcomment %}
     <!--[if lt IE 10]>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
     <![endif]-->
