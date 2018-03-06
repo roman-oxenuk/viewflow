@@ -1,29 +1,40 @@
 {% load i18n viewflow viewflow_frontend main %}
 
 {% check_is_client user as is_client %}
+{% check_is_acs user as is_acs %}
+
 
 <ul>
-    {% if not is_client %}
-        <li><a href="{% url 'viewflow:queue' %}">{% trans 'Unassigned' %} <span class="badge" id="id_viewflow_queue_count" data-turbolinks-update>{{ current_module.flows|queue_count:user }}</span></a></li>
-    {% endif %}
-    <li><a href="{% url 'viewflow:index' %}">{% trans 'Inbox' %} <span class="badge" id="id_viewflow_inbox_count" data-turbolinks-update>{{ current_module.flows|inbox_count:user }}</span></a></li>
-    {% if not is_client %}
-        <li><a href="{% url 'viewflow:archive' %}">{% trans 'Participated' %}</a></li>
-    {% endif %}
-
-    {% for title, flow_class in module.sites %}
-        {% if flow_class|view_permission_name in perms %}
-            <li>
-                <a href="{% flowurl flow_class 'index' ns='viewflow' ns_map=current_module.ns_map %}">
-                    {% if is_client %}
-                        {{ flow_class.process_client_menu_title }}
-                    {% else %}
-                        {{ flow_class.process_menu_title }}
-                    {% endif %}
-                </a>
-            </li>
+    {% if not is_acs %}
+        {% if not is_client %}
+            <li><a href="{% url 'viewflow:queue' %}">{% trans 'Unassigned' %} <span class="badge" id="id_viewflow_queue_count" data-turbolinks-update>{{ current_module.flows|queue_count:user }}</span></a></li>
         {% endif %}
-    {% endfor %}
+        <li><a href="{% url 'viewflow:index' %}">{% trans 'Inbox' %} <span class="badge" id="id_viewflow_inbox_count" data-turbolinks-update>{{ current_module.flows|inbox_count:user }}</span></a></li>
+        {% if not is_client %}
+            <li><a href="{% url 'viewflow:archive' %}">{% trans 'Participated' %}</a></li>
+        {% endif %}
+
+
+        {% for title, flow_class in module.sites %}
+            {% if flow_class|view_permission_name in perms %}
+                <li>
+                    <a href="{% flowurl flow_class 'index' ns='viewflow' ns_map=current_module.ns_map %}">
+                        {% if is_client %}
+                            {{ flow_class.process_client_menu_title }}
+                        {% else %}
+                            {{ flow_class.process_menu_title }}
+                        {% endif %}
+                    </a>
+                </li>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <li>
+            <a href="{% flowurl 'main/ProposalConfirmationFlow' 'index' ns='viewflow:main:proposalconfirmation' %}">
+                {% trans 'My Clients' %}
+            </a>
+        </li>
+    {% endif %}
 
     {% comment %}
     <li class="submenu">

@@ -25,10 +25,11 @@ from reversion.models import Version
 from viewflow.decorators import flow_view
 from viewflow.flow.views.task import UpdateProcessView
 from viewflow.flow.views import CreateProcessView
+from viewflow.flow.views.detail import DetailProcessView
 from viewflow.fields import get_task_ref
 from viewflow.frontend.views import ProcessListView
 from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
-from michelin_bpm.main.forms import ClientSetPasswordForm
+from michelin_bpm.main.forms import ClientSetPasswordForm, ShowProposalForm
 from michelin_bpm.main.utils import render_excel_template
 from templated_docs import fill_template
 
@@ -595,26 +596,22 @@ class ActivateBibServeAccountView(BibServerAccountMixin, AddDataView):
     pass
 
 
-from michelin_bpm.main.forms import all_fields
-class ProposalDetailView(UpdateView):
+class ShowProposalView(DetailProcessView):
 
-    model = ProposalProcess
-    pk_url_kwarg = 'proposal_pk'
     template_name = 'main/proposalconfirmation/show_proposal.html'
-    fields = all_fields
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        is_client = self.request.user.groups.filter(id=settings.CLIENTS_GROUP_ID).exists()
-        if is_client:
-            queryset = queryset.filter(client=self.request.user)
-        return queryset
+    def get_context_data(self, **kwargs):
+        context = super(DetailProcessView, self).get_context_data(**kwargs)
+        context['form'] = ShowProposalForm(instance=self.object)
+        return context
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        for field in form.fields.values():
-            field.widget.attrs['readonly'] = True
-        return form
+    # TODO MBPM-33
+    # Проверить, могут ли Клиенты и ACS просматривать не свои заявки
+    # def get_queryset(self):
+    #     """Return the `QuerySet` that will be used to look up the process."""
+    #     if self.queryset is None:
+    #         return self.flow_class.process_class._default_manager.all()
+    #     return self.queryset.all()
 
 
 @method_decorator(login_required, name='dispatch')
@@ -625,17 +622,21 @@ class MichelinProcessListView(ProcessListView):
         'created', 'finished', 'active_tasks'
     ]
 
-    def process_summary(self, process):
+    def get_show_proposal_link(self, process):
         if type(process) == ProposalProcess:
             proposal_pk = process.pk
 
         if type(process) == BibServeProcess:
             proposal_pk = process.proposal.pk
 
+        url_name = '{}:show_proposal'.format(self.request.resolver_match.namespace)
+        return reverse(url_name, args=[proposal_pk])
+
+    def process_summary(self, process):
         return mark_safe('<a href="{}">{}</a>'.format(
-            reverse('proposal_detail', kwargs={'proposal_pk': proposal_pk}),
-            process.summary())
-        )
+            self.get_show_proposal_link(process),
+            process.summary()
+        ))
     process_summary.short_description = _('Proposal')
 
     def proposal_link(self, process):
@@ -647,12 +648,17 @@ class MichelinProcessListView(ProcessListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        is_client = self.request.user.groups.filter(name='Клиенты').exists()
+
+        is_client = self.request.user.groups.filter(pk=settings.CLIENTS_GROUP_ID).exists()
+        is_acs = self.request.user.groups.filter(pk=settings.ACS_GROUP_ID).exists()
         if is_client:
             if queryset.model == ProposalProcess:
                 queryset = queryset.filter(client=self.request.user)
 
             if queryset.model == BibServeProcess:
                 queryset = queryset.filter(proposal__client=self.request.user)
+
+        if is_acs:
+            queryset = queryset.filter(acs=self.request.user)
 
         return queryset

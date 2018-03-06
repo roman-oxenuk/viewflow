@@ -236,6 +236,7 @@ DEFAULT_FROM_EMAIL = 'info@centrobit.ru'
 # id группы Клиентов
 CLIENTS_GROUP_ID = os.environ.get('CLIENTS_GROUP_ID', 1)
 RTC_GROUP_ID = os.environ.get('RTC_GROUP_ID', 4)
+ACS_GROUP_ID = os.environ.get('ACS_GROUP_ID', 9)
 
 # Ссылка на BibServe, которая отправляется по емейлу после регистрации нового аккаунта на BibServe
 BIBSERVE_LINK = 'https://www.bibserve.com/'

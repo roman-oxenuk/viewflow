@@ -28,8 +28,6 @@ urlpatterns = [
         {'template_name': 'main/registration/logged_out.html'}, name='logout'),
     url(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         EnterClientPasswordView.as_view(), name='client_set_password'),
-    url(r'^workflow/main/proposalconfirmation/show_proposal/(?P<proposal_pk>\d+)/$',
-        ProposalDetailView.as_view(), name='proposal_detail'),
 
     url(r'^admin/', admin_site.urls),
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),

@@ -36,9 +36,15 @@ def get_field_by_name(form, field_name):
 def get_prev_field_by_index(obj, key):
     return list(obj)[key-1]
 
+
 @register.assignment_tag
 def check_is_client(user):
     return user.groups.filter(pk=settings.CLIENTS_GROUP_ID).exists()
+
+
+@register.assignment_tag
+def check_is_acs(user):
+    return user.groups.filter(pk=settings.ACS_GROUP_ID).exists()
 
 
 @register.assignment_tag

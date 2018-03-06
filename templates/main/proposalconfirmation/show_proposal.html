@@ -1,99 +1,103 @@
-{% extends 'material/frontend/base.html' %}
-{% load i18n viewflow viewflow_frontend material_form material_frontend main %}
-{% load static %}
-
-{% comment %}
-{% extends 'main/base_module.html' %}
-{% endcomment %}
-
-{% block extrahead %}
-	<link href="{% static 'viewflow/css/viewflow.css' %}" rel="stylesheet">
-	<link href="{% static 'main/css/task_override.css' %}" rel="stylesheet">
-{% endblock %}
+{% extends 'main/proposalconfirmation/base_task.html' %}
+{% load i18n viewflow material_frontend viewflow_frontend main %}
 
 {% block breadcrumbs_items %}
-	<span>"{{ object.company_name }}" {{ object.city }}, {{ object.country }}</span>
 {% include 'viewflow/includes/breadcrumb_category.html' %}
-{% comment %}
-<a href="{% flowurl activation.flow_class 'index' %}?{{ request|query_back }}">{{ activation.flow_class.process_title }}</a>
-<a href="{% flowurl activation.process 'detail' %}?{{ request|query_back }}">#{{ activation.process.pk }}</a>
-<a class="active" href="{% flowurl activation.task 'detail' %}?{{ request|query_back }}">{{ activation.flow_task }} / #{{ activation.task.pk }}</a>
-{% endcomment %}
-{% endblock %}
-
-{% block page_title %}
-	Просмотр заявки
+<a href="{% flowurl view.flow_class 'index' %}?{{ request|query_back }}">{{ view.flow_class.process_title }}</a>
+<a class="active">#{{ process.pk }}</a>
 {% endblock %}
 
 {% block content %}
 {% block left-panel %}
 <div class="left-panel">
     <div class="card">
-        <form role="form" method="POST" enctype="multipart/form-data">
-
-            <div class="card-content">
-                <div class="card-title">
-                	{% comment %}
-                    {{ activation.task.summary|default:activation.task.flow_task }}
-                    {% endcomment %}
-
-                    {% comment %}
-                    <h6>{{ activation.process.summary }}</h6>
-                    {% endcomment %}
-                </div>
-
-                {% include 'main/proposalconfirmation/includes/show_proposal.html' %}
-
+        <div class="card-content">
+            <div class="card-title">
+                {% comment %}
+                {{ process.summary }}
+                {% endcomment %}
+                {{ object.summary }}
             </div>
 
-            <div class="card-action">
-                <div class="row">
-                    {% block task_actions %}
+            <table class="striped proposal-data">
+                <thead>
+                  <tr>
+                      <th></th>     <!-- Плейсхолдер для кнопки фолдинга полей -->
+                      <th>Поле</th>
+                      <th>Значение</th>
+                      <th></th>  <!-- Плейсхолдер для кнопки истории изменения полей -->
+                  </tr>
+                </thead>
 
-                    <div class="col s3">
-                        {% check_is_client user as is_client %}
-                        {% if not is_client %}
-                        	{% comment %}
-                            <a class="btn btn-flat black-text" href="{% flowurl activation.task 'detail' %}?{{ request|query_back }}">
-                                {% trans 'Detail' %}
-                            </a>
-                            {% endcomment %}
-                        {% endif %}
-                    </div>
+                <tbody>
+                    {{ form.current_version }}
+                    {% for field in form %}
+                        {% if object|has_attr:field.name %}
+                            <tr>
+                                <td></td>   <!-- Плейсхолдер для кнопки фолдинга полей -->
+                                <td>{{ field.label }}</td>
+                                <td>
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <ul>
+                                            {% for error in field.errors %}
+                                                <li class="red-text">{{error}}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </td>
+                                <td class="field-history-folding">
+                                    {% if field.name in fields_corrections %}
+                                        <a href="#">
+                                            <i class="fas fa-history"></i>
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
 
-                    <div id="michelin-actions" class="col s9 right-align">
+                            {% if field.name in fields_corrections %}
+                                {% for correction in fields_corrections|get_attr:field.name %}
+                                    <tr class="field-history-row"></tr>
+                                    <tr class="field-history-row">
+                                        <td></td>
+                                        <td></td>
+                                        <td>
+                                            <div class="field-history-data">
+                                                {% if correction.version_value %}
+                                                    {{ correction.version_value }}
+                                                {% endif %}
 
-                    	{% comment %}
-                        {% for corr_field in form %}
-                            {% if 'data-correction-field' in corr_field.field.widget.attrs %}
-                                <button type="submit" id="block-btn" name="{{ corr_field.field.widget.attrs.action_btn_name }}" class="btn primary {{ corr_field.field.widget.attrs.action_btn_class }}">
-                                    {{ corr_field.field.widget.attrs.action_btn_label }}
-                                </button>
+                                                {% if correction.is_active %}<span class="red-text text-lighten-1">{% endif %}
+                                                    <span class="correction-step">
+                                                    ({{ correction.msg }})
+                                                    </span>
+                                                {% if correction.is_active %}</span>{% endif %}
+                                            </div>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                {% endfor %}
                             {% endif %}
-                        {% endfor %}
 
-                        {% if done_btn_title %}
-                            <button type="submit" id="done-btn" name="_done" class="btn primary white-text green lighten-1">
-                                {% trans 'Done' as default_done_btn_title %}
-                                {{ done_btn_title|default:default_done_btn_title }}
-                            </button>
                         {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
 
-                        {% endcomment %}
-                    </div>
-                    {% endblock %}
-                </div>
-            </div>
+        </div>
 
-        </form>
     </div>
 </div>
 {% endblock %}
-{% comment %}
+
 {% block right-panel %}
+{% comment %}
 <div class="right-panel">
-    {% include_process_data activation.process %}
+    {% with hide_active_tasks=True %}
+    {% include_process_data process %}
+    {% endwith %}
 </div>
-{% endblock %}
 {% endcomment %}
+{% endblock %}
+
 {% endblock %}

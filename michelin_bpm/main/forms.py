@@ -545,3 +545,10 @@ class ActivateBibserveAccountForm(AddDataFormMixin, VersionFormMixin, ModelForm)
         fields = all_fields + ['bibserve_login', 'bibserve_password']
         can_edit = ['bibserve_login', 'bibserve_password']
         required = ['bibserve_login', 'bibserve_password']
+
+
+class ShowProposalForm(AddDataFormMixin, ModelForm):
+
+    class Meta:
+        model = ProposalProcess
+        fields = all_fields
