@@ -470,7 +470,7 @@ class ClientAddDataView(AddDataView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_show_approving_data_checkbox'] = True
-        DeliveryFormset = inlineformset_factory(ProposalProcess, DeliveryAddress, form=DeliveryAddressForm, extra=0)
+        DeliveryFormset = inlineformset_factory(ProposalProcess, DeliveryAddress, form=DeliveryAddressForm, extra=0, can_delete=False)
         context['formset'] = DeliveryFormset(instance=self.get_object())
         return context
 
