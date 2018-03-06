@@ -115,6 +115,9 @@
 </table>
 {% endblock %}
 
+{# -- delivery formset -- #}
+{% include 'main/proposalconfirmation/includes/delivery_formset.html' %}
+
 {% for corr_field in form %}
     {% if 'data-correction-field' in corr_field.field.widget.attrs %}
         <div class="row">

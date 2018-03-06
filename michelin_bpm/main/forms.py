@@ -151,8 +151,21 @@ class DeliveryAddressGroupedFieldsMixin:
             self.field_groups[group_settings['goes_after']] = group_settings['fields']
             self.grouped_fields += group_settings['fields']
             for grouped_field_name in group_settings['fields']:
-                self.fields[grouped_field_name].widget.attrs['placeholder'] = self.fields[grouped_field_name].label
-                self.fields[grouped_field_name].widget.attrs['class'] = 'inline-field'
+                if grouped_field_name in self.fields:
+                    self.fields[grouped_field_name].widget.attrs['placeholder'] = self.fields[grouped_field_name].label
+                    self.fields[grouped_field_name].widget.attrs['class'] = 'inline-field'
+
+
+class DeliveryAddressReadonlyForm(DeliveryAddressGroupedFieldsMixin, ModelForm):
+
+    readonly = True
+
+    class Meta:
+        model = DeliveryAddress
+        fields = [
+            'delivery_client_name',
+            'delivery_address',
+        ]
 
 
 class DeliveryAddressForm(DeliveryAddressGroupedFieldsMixin, ModelForm):

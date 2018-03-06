@@ -23,8 +23,26 @@ from viewflow.flow.views import CreateProcessView
 from viewflow.fields import get_task_ref
 from viewflow.frontend.views import ProcessListView
 from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess, DeliveryAddress
-from michelin_bpm.main.forms import ClientSetPasswordForm, DeliveryAddressForm
+from michelin_bpm.main.forms import ClientSetPasswordForm, DeliveryAddressForm, all_fields, DeliveryAddressReadonlyForm
 from michelin_bpm.main.utils import render_excel_template
+
+
+class DeliveryFormsetMixin(object):
+    delivery_form = DeliveryAddressReadonlyForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        DeliveryFormset = inlineformset_factory(
+            ProposalProcess, DeliveryAddress, form=self.delivery_form, extra=0, can_delete=False)
+        context['delivery_formset'] = DeliveryFormset(instance=self.get_object())
+        if getattr(self.delivery_form, 'readonly', None):
+            context['delivery_formset_readonly'] = True
+        return context
+
+    def get_delivery_formset(self, data):
+        DeliveryFormset = inlineformset_factory(
+            ProposalProcess, DeliveryAddress, form=self.delivery_form, extra=0, can_delete=False)
+        return DeliveryFormset(data, instance=self.get_object())
 
 
 class EnterClientPasswordView(PasswordResetConfirmView):
@@ -462,7 +480,9 @@ class AddDataView(SeeDataView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class ClientAddDataView(AddDataView):
+class ClientAddDataView(DeliveryFormsetMixin, AddDataView):
+    delivery_form = DeliveryAddressForm
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         return kwargs
@@ -470,19 +490,15 @@ class ClientAddDataView(AddDataView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_show_approving_data_checkbox'] = True
-        DeliveryFormset = inlineformset_factory(ProposalProcess, DeliveryAddress, form=DeliveryAddressForm, extra=0, can_delete=False)
-        context['formset'] = DeliveryFormset(instance=self.get_object())
         return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form = self.get_form()
+        delivery_formset = self.get_delivery_formset(request.POST)
 
-        DeliveryFormset = inlineformset_factory(ProposalProcess, DeliveryAddress, form=DeliveryAddressForm)
-        formset = DeliveryFormset(request.POST, instance=self.get_object())
-
-        if form.is_valid() and formset.is_valid():
-            formset.save()
+        if form.is_valid() and delivery_formset.is_valid():
+            delivery_formset.save()
             return self.form_valid(form)
         return self.form_invalid(form)
 
@@ -534,8 +550,7 @@ class ActivateBibServeAccountView(BibServerAccountMixin, AddDataView):
     pass
 
 
-from michelin_bpm.main.forms import all_fields
-class ProposalDetailView(UpdateView):
+class ProposalDetailView(DeliveryFormsetMixin, UpdateView):
 
     model = ProposalProcess
     pk_url_kwarg = 'proposal_pk'
