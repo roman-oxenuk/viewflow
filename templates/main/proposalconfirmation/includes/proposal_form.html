@@ -153,22 +153,35 @@
 
 
 {% if formset %}
-
     {{ formset.management_form }}
+
     <div class="row">
         <div class="col s12 delivery_addresses_title">Доставочные адреса</div>
     </div>
-    <div id="delivery_addresses_formset" >
-    {% for address_form in formset.forms %}
-        <table class="striped proposal-data formset-table">
 
+    <div id="delivery_addresses_formset" >
+        <ul id="delivery__formset" class="collapsible" data-collapsible="expandable">
+
+    {% for address_form in formset.forms %}
+            <li>
+                <div class="collapsible-header">
+                    <i class="material-icons">subtitles</i>
+                    {% trans 'Доставочный адрес' %}
+                    <a class="waves-effect waves-light btn"><i class="material-icons left">delete</i>button</a>
+                </div>
+                <div class="collapsible-body">
+
+        <table class="striped proposal-data formset-table">
+            {% comment %}
             <thead>
               <tr>
                   <th></th>     <!-- Плейсхолдер для кнопки фолдинга полей -->
-                  <th colspan="2">Доставочный адрес</th>
+                  <th colspan="2"><strong>Доставочный адрес</strong></th>
                   <th></th>  <!-- Плейсхолдер для кнопки истории изменения полей -->
               </tr>
             </thead>
+            {% endcomment %}
+
 
             <tbody>
                 {% comment %}
@@ -189,7 +202,7 @@
                                     {% if grouped_field.errors %}
                                         <ul>
                                             {% for error in field.errors %}
-                                                <li class="red-text">{{error}}</li>
+                                                <li class="red-text">{{ error }}</li>
                                             {% endfor %}
                                         </ul>
                                     {% endif %}
@@ -216,7 +229,7 @@
                                 {% if field.errors %}
                                     <ul>
                                         {% for error in field.errors %}
-                                            <li class="red-text">{{error}}</li>
+                                            <li class="red-text">{{ error }}</li>
                                         {% endfor %}
                                     </ul>
                                 {% endif %}
@@ -259,17 +272,36 @@
                 {% endfor %}
             </tbody>
         </table>
+                <a class="waves-effect waves-light btn right red delivery__button-del"
+                   style="position:relative; top: -1.2rem;">
+                    <i class="material-icons">delete</i>
+                </a>
+                </div> {# end collapsible #}
+            </li>
     {% endfor %}
     </div>
 
     <div class="row">
         <div class="col s12">
-            <input type="button" value="{% trans 'Add delivery address' %}" id="add_more">
+            <a class="btn-floating waves-effect waves-light green tooltipped" id="delivery__button-add"
+               data-delay="10" data-tooltip="{% trans 'Add delivery address' %}" data-position="right">
+                <i class="material-icons">add</i>
+            </a>
+            <!-- <input type="button" value="{% trans 'Add delivery address' %}" id="add_more"> -->
         </div>
     </div>
+
     <div id="empty_form" style="display:none">
+        <li class="delivery__formset-item" >
+            <div class="collapsible-header">
+                <i class="material-icons">subtitles</i>
+                    {% trans 'Доставочный адрес' %}
+                </div>
+                <div class="collapsible-body">
+
         <table class="striped proposal-data formset-table">
 
+            {% comment %}
             <thead>
               <tr>
                 <th></th>     <!-- Плейсхолдер для кнопки фолдинга полей -->
@@ -279,6 +311,7 @@
                 </th>
               </tr>
             </thead>
+            {% endcomment %}
 
             <tbody>
                 {% comment %}
@@ -363,34 +396,40 @@
                                 </tr>
                             {% endfor %}
                         {% endif %}
-
                     {% endif %}
-
-
                 {% endfor %}
             </tbody>
         </table>
+
+                <a class="waves-effect waves-light btn right red delivery__button-del"
+                   style="position:relative; top: -1.2rem;">
+                    <i class="material-icons">delete</i>
+                </a>
+            </div>  {# collapsible #}
+        </li>
     </div>
 
     <script>
-        $('#add_more').click(function(e) {
+        $('#delivery__button-add').click(function(e) {
             e.preventDefault()
-            let form_idx = $('#id_form-TOTAL_FORMS').val();
-            $('#delivery_addresses_formset').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
-            $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+            let form_idx = parseInt($('#id_deliveryaddress_set-TOTAL_FORMS').val());
+            $('#id_deliveryaddress_set-TOTAL_FORMS').val(form_idx + 1);
+            let form = $($('#empty_form').html().replace(/__prefix__/g, form_idx)).appendTo('#delivery__formset');
+            $('#delivery__formset').collapsible('open', form_idx);
         });
 
-        $(document).on('click', '.formset-del', function(e){
+        $(document).on('click', '.delivery__button-del', function(e){
             e.preventDefault()
             e.stopPropagation()
-            $(this).closest('.formset-table').remove()
-            let form_idx = $('#id_form-TOTAL_FORMS').val();
+            $(this).closest('.delivery__formset-item').remove()
+            let form_idx = $('#id_deliveryaddress_set-TOTAL_FORMS').val();
             let forms = $('.formset-table');
             for (let i=0; i<form_idx - 1; i++) {
                 $(forms.get(i)).html(
                     $(forms.get(i)).html().replace(/form-\d+/g, 'form-' + i)
                 )
             }
+            $('#id_deliveryaddress_set-TOTAL_FORMS').val(form_idx - 1);
         })
     </script>
 {% endif %}

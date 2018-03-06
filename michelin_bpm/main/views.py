@@ -2,12 +2,12 @@
 import os
 import json
 
+from django.forms import inlineformset_factory
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetConfirmView
-# from django.contrib.staticfiles.storage import staticfiles_storage
 from django.utils.translation import ugettext_lazy as _
 from django.utils.html import mark_safe
 from django.urls import reverse
@@ -22,8 +22,8 @@ from viewflow.flow.views.task import UpdateProcessView
 from viewflow.flow.views import CreateProcessView
 from viewflow.fields import get_task_ref
 from viewflow.frontend.views import ProcessListView
-from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
-from michelin_bpm.main.forms import ClientSetPasswordForm
+from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess, DeliveryAddress
+from michelin_bpm.main.forms import ClientSetPasswordForm, DeliveryAddressForm
 from michelin_bpm.main.utils import render_excel_template
 
 
@@ -462,19 +462,29 @@ class AddDataView(SeeDataView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-from django.forms import formset_factory
-from michelin_bpm.main.forms import DeliveryAddressForm
 class ClientAddDataView(AddDataView):
-
-    # get_context_data
-    # post
-    # is_valid
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_show_approving_data_checkbox'] = True
-        context['formset'] = formset_factory(DeliveryAddressForm, extra=2)
+        DeliveryFormset = inlineformset_factory(ProposalProcess, DeliveryAddress, form=DeliveryAddressForm, extra=0)
+        context['formset'] = DeliveryFormset(instance=self.get_object())
         return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+
+        DeliveryFormset = inlineformset_factory(ProposalProcess, DeliveryAddress, form=DeliveryAddressForm)
+        formset = DeliveryFormset(request.POST, instance=self.get_object())
+
+        if form.is_valid() and formset.is_valid():
+            formset.save()
+            return self.form_valid(form)
+        return self.form_invalid(form)
 
 
 class ClientPrintProposalView(AddDataView):
