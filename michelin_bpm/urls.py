@@ -20,7 +20,7 @@ from django.contrib.auth import views as auth_views
 
 from material.frontend import urls as frontend_urls
 from michelin_bpm.main.admin import admin_site
-from michelin_bpm.main.views import EnterClientPasswordView, ProposalDetailView
+from michelin_bpm.main.views import EnterClientPasswordView
 
 
 urlpatterns = [
