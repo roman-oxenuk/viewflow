@@ -18,7 +18,7 @@ from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from reversion.models import Version
 from viewflow.fields import get_task_ref
 
-from michelin_bpm.main.models import ProposalProcess
+from michelin_bpm.main.models import ProposalProcess, DeliveryAddress
 from michelin_bpm.main.utils import AgoraMailerClient
 
 
@@ -62,20 +62,20 @@ all_fields = [
     # Тут фиг знает, что должно происходить с этими полями???
     # 'bibserve_login', 'bibserve_password', 'bibserve_email', 'bibserve_tel',
 
-    # Данные по доставке
-    # 'delivery_address', фиг знает, поле ли это?
-    'delivery_client_name',
-    'delivery_address',
-    'delivery_zip_code', 'delivery_country', 'delivery_region',
-    'delivery_city', 'delivery_street', 'delivery_building', 'delivery_block',
-    'delivery_contact_name', 'delivery_tel', 'delivery_email', 'delivery_fax',
+    # # Данные по доставке
+    # # 'delivery_address', фиг знает, поле ли это?
+    # 'delivery_client_name',
+    # 'delivery_address',
+    # 'delivery_zip_code', 'delivery_country', 'delivery_region',
+    # 'delivery_city', 'delivery_street', 'delivery_building', 'delivery_block',
+    # 'delivery_contact_name', 'delivery_tel', 'delivery_email', 'delivery_fax',
 
-    # Данные о работе склада
-    'warehouse_working_days', 'warehouse_working_hours_from', 'warehouse_working_hours_to',
-    'warehouse_break_from', 'warehouse_break_to', 'warehouse_comment',
-    'warehouse_consignee_code', 'warehouse_station_code',
+    # # Данные о работе склада
+    # 'warehouse_working_days', 'warehouse_working_hours_from', 'warehouse_working_hours_to',
+    # 'warehouse_break_from', 'warehouse_break_to', 'warehouse_comment',
+    # 'warehouse_consignee_code', 'warehouse_station_code',
 
-    'warehouse_tc', 'warehouse_pl', 'warehouse_gc', 'warehouse_ag', 'warehouse_2r',
+    # 'warehouse_tc', 'warehouse_pl', 'warehouse_gc', 'warehouse_ag', 'warehouse_2r',
 ]
 
 
@@ -94,13 +94,13 @@ class GroupedFieldsMixin:
                 'zip_code', 'country', 'region', 'city', 'street', 'building', 'block',
             ]
         },
-        'delivery_address_group': {
-            'goes_after': 'delivery_address',
-            'fields': [
-                'delivery_zip_code', 'delivery_country', 'delivery_region',
-                'delivery_city', 'delivery_street', 'delivery_building', 'delivery_block',
-            ]
-        }
+        # 'delivery_address_group': {
+            # 'goes_after': 'delivery_address',
+            # 'fields': [
+            #     'delivery_zip_code', 'delivery_country', 'delivery_region',
+            #     'delivery_city', 'delivery_street', 'delivery_building', 'delivery_block',
+            # ]
+        # }
     }
 
     def __init__(self, *args, **kwargs):
@@ -115,6 +115,87 @@ class GroupedFieldsMixin:
             for grouped_field_name in group_settings['fields']:
                 self.fields[grouped_field_name].widget.attrs['placeholder'] = self.fields[grouped_field_name].label
                 self.fields[grouped_field_name].widget.attrs['class'] = 'inline-field'
+
+
+class DeliveryAddressGroupedFieldsMixin:
+
+    field_groups_settings = {
+        'address_group': {
+            'goes_after': 'delivery_address',
+            'fields': [
+                'delivery_zip_code', 'delivery_country', 'delivery_region',
+                'delivery_city', 'delivery_street', 'delivery_building', 'delivery_block',
+            ]
+        },
+        'working_hours_group': {
+            'goes_after': 'warehouse_working_days',
+            'fields': [
+                'warehouse_working_hours_from', 'warehouse_working_hours_to',
+                'warehouse_break_from', 'warehouse_break_to',
+            ]
+        },
+        'warehouse_parameters': {
+            'goes_after': 'warehouse_station_code',
+            'fields': [
+                'warehouse_tc', 'warehouse_pl', 'warehouse_gc', 'warehouse_ag', 'warehouse_2r',
+            ]
+        }
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if getattr(self, 'readonly', None):
+            for field in self.fields.values():
+                if isinstance(field.widget, (CheckboxInput, Select, RadioSelect)):
+                    field.widget.attrs['disabled'] = 'disabled'
+                else:
+                    field.widget.attrs['readonly'] = True
+
+        if not hasattr(self, 'field_groups_settings'):
+            self.field_groups_settings = {}
+        self.field_groups = {}
+        self.grouped_fields = []
+        for group_settings in self.field_groups_settings.values():
+            self.field_groups[group_settings['goes_after']] = group_settings['fields']
+            self.grouped_fields += group_settings['fields']
+            for grouped_field_name in group_settings['fields']:
+                if grouped_field_name in self.fields:
+                    self.fields[grouped_field_name].widget.attrs['placeholder'] = self.fields[grouped_field_name].label
+                    self.fields[grouped_field_name].widget.attrs['class'] = 'inline-field'
+
+
+delivery_address_all_fields = [
+    'delivery_client_name',
+    'delivery_address',
+    'delivery_zip_code', 'delivery_country', 'delivery_region',
+    'delivery_city', 'delivery_street', 'delivery_building', 'delivery_block',
+    'delivery_address_comment',
+    'delivery_contact_name', 'delivery_tel', 'delivery_email', 'delivery_fax',
+
+    # Данные о работе склада
+    'warehouse_working_days', 'warehouse_working_hours_from', 'warehouse_working_hours_to',
+    'warehouse_break_from', 'warehouse_break_to', 'warehouse_comment',
+    'warehouse_consignee_code', 'warehouse_station_code',
+
+    'warehouse_tc', 'warehouse_pl', 'warehouse_gc', 'warehouse_ag', 'warehouse_2r',
+]
+
+
+class DeliveryAddressReadonlyForm(DeliveryAddressGroupedFieldsMixin, ModelForm):
+
+    readonly = True
+
+    class Meta:
+        model = DeliveryAddress
+        fields = delivery_address_all_fields
+
+
+class DeliveryAddressForm(DeliveryAddressGroupedFieldsMixin, ModelForm):
+
+    class Meta:
+        model = DeliveryAddress
+        fields = delivery_address_all_fields
 
 
 class SendLinkForm(PasswordResetForm):
@@ -358,12 +439,10 @@ class CreateProposalProcessForm(AddDataFormMixin, ModelForm):
                 new_fields['search'] = forms.CharField(
                     max_length=255,
                     label=_('Search for organization'),
-                    # Поиск огранизации
                     required=False,
                     widget=forms.TextInput(
                         attrs={
                             'placeholder': _('Enter organization name, address, INN or OGRN')
-                            # Введите название, адрес, ИНН или ОГРН
                         }
                     )
                 )
@@ -373,14 +452,12 @@ class CreateProposalProcessForm(AddDataFormMixin, ModelForm):
         client_login = self.cleaned_data['client_login']
         if User._default_manager.filter(username=client_login).exists():
             raise forms.ValidationError(_('User with this login already exists. Enter another login.'))
-            # Пользователь с таким логином уже существует. Введите другой логин.
         return client_login
 
     def clean_client_email(self):
         client_email = self.cleaned_data['client_email']
         if User._default_manager.filter(email=client_email).exists():
             raise forms.ValidationError(_('User with this email already exists. Enter another email.'))
-            # Пользователь с таким емейлом уже существует. Введите другой емейл.
         return client_email
 
     class Meta:

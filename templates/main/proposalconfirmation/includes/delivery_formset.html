@@ -1,0 +1,334 @@
+{% load i18n viewflow viewflow_frontend material_form material_frontend main %}
+
+
+{% if delivery_formset %}
+
+    {{ delivery_formset.management_form }}
+
+    <div class="row">
+        <div class="col s12 delivery_addresses_title">Доставочные адреса</div>
+    </div>
+
+    <div id="delivery_addresses_formset" >
+        <ul id="delivery__formset" class="collapsible" data-collapsible="expandable">
+
+    {% for address_form in delivery_formset.forms %}
+            <li>
+                <div class="collapsible-header active">
+                    <i class="material-icons">subtitles</i>
+                    {% trans 'Delivery address' %}
+                </div>
+                <div class="collapsible-body">
+
+        <table class="striped proposal-data formset-table">
+            {% comment %}
+            <thead>
+              <tr>
+                  <th></th>     <!-- Плейсхолдер для кнопки фолдинга полей -->
+                  <th colspan="2"><strong>Доставочный адрес</strong></th>
+                  <th></th>  <!-- Плейсхолдер для кнопки истории изменения полей -->
+              </tr>
+            </thead>
+            {% endcomment %}
+
+
+            <tbody>
+                {% comment %}
+                {{ form.current_version }}
+                {% endcomment %}
+                {% for field in address_form.visible_fields %}
+
+                    {% get_prev_field_by_index address_form.fields.keys forloop.counter0 as prev_field_name %}
+
+                    {% if prev_field_name in address_form.field_groups.keys %}
+                        <tr>
+                            <td></td>   <!-- Плейсхолдер для кнопки фолдинга полей -->
+                            <td colspan="3">
+                                {% for grouped_field_name in address_form.field_groups|get_item:prev_field_name %}
+                                    {% get_field_by_name address_form grouped_field_name as grouped_field %}
+                                    {{ grouped_field }}
+
+                                    {% if grouped_field.errors %}
+                                        <ul>
+                                            {% for error in field.errors %}
+                                                <li class="red-text">{{ error }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <!--
+                            <td class="field-history-folding">
+                                {% if field.name in fields_corrections %}
+                                    <a href="#">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                {% endif %}
+                            </td>
+                            -->
+                        </tr>
+                    {% endif %}
+
+                    {% if field.name not in address_form.grouped_fields %}
+                        <tr>
+                            <td></td>   <!-- Плейсхолдер для кнопки фолдинга полей -->
+                            <td>{{ field.label }}</td>
+                            <td>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <ul>
+                                        {% for error in field.errors %}
+                                            <li class="red-text">{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </td>
+                            <td class="field-history-folding">
+                                {% if field.name in fields_corrections %}
+                                    <a href="#">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        {% if field.name in fields_corrections %}
+                            {% for correction in fields_corrections|get_attr:field.name %}
+                                <tr class="field-history-row"></tr>
+                                <tr class="field-history-row">
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        <div class="field-history-data">
+                                            {% if correction.version_value %}
+                                                {{ correction.version_value }}
+                                            {% endif %}
+
+                                            {% if correction.is_active %}<span class="red-text text-lighten-1">{% endif %}
+                                                <span class="correction-step">
+                                                ({{ correction.msg }})
+                                                </span>
+                                            {% if correction.is_active %}</span>{% endif %}
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+
+                    {% endif %}
+
+                {% endfor %}
+            </tbody>
+        </table>
+                {% if not delivery_formset_readonly %}
+                    <div style="margin-top: 1.7rem;">
+                        <a class="waves-effect waves-light btn right red delivery__button-del"
+                           style="position:relative; top: -1.2rem;">
+                            <i class="material-icons">delete</i>
+                        </a>
+                    </div>
+                {% endif %}
+                </div> {# end collapsible #}
+            </li>
+    {% endfor %}
+    </div>
+
+    {% if not delivery_formset_readonly %}
+        <div class="row">
+            <div class="col s12">
+                <a class="btn-floating waves-effect waves-light green tooltipped" id="delivery__button-add"
+                   data-delay="10" data-tooltip="{% trans 'Add delivery address' %}" data-position="right">
+                    <i class="material-icons">add</i>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <div id="empty_form" style="display:none">
+        <li class="delivery__formset-item" >
+            <div class="collapsible-header">
+                <i class="material-icons">subtitles</i>
+                    {% trans 'Delivery address' %}
+                </div>
+                <div class="collapsible-body">
+
+        <table class="striped proposal-data formset-table">
+
+            {% comment %}
+            <thead>
+              <tr>
+                <th></th>     <!-- Плейсхолдер для кнопки фолдинга полей -->
+                <th colspan="2">Доставочный адрес</th>
+                <th>
+                    <input type="button" class="formset-del" value="X">
+                </th>
+              </tr>
+            </thead>
+            {% endcomment %}
+
+            <tbody>
+                {% comment %}
+                {{ form.current_version }}
+                {% endcomment %}
+                {% for field in delivery_formset.empty_form.visible_fields %}
+
+                    {% get_prev_field_by_index delivery_formset.empty_form.fields.keys forloop.counter0 as prev_field_name %}
+
+                    {% if prev_field_name in delivery_formset.empty_form.field_groups.keys %}
+                        <tr>
+                            <td></td>   <!-- Плейсхолдер для кнопки фолдинга полей -->
+                            <td colspan="3">
+                                {% for grouped_field_name in delivery_formset.empty_form.field_groups|get_item:prev_field_name %}
+                                    {% get_field_by_name delivery_formset.empty_form grouped_field_name as grouped_field %}
+                                    {{ grouped_field }}
+
+                                    {% if grouped_field.errors %}
+                                        <ul>
+                                            {% for error in field.errors %}
+                                                <li class="red-text">{{error}}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <!--
+                            <td class="field-history-folding">
+                                {% if field.name in fields_corrections %}
+                                    <a href="#">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                {% endif %}
+                            </td>
+                            -->
+                        </tr>
+                    {% endif %}
+
+                    {% if field.name not in delivery_formset.empty_form.grouped_fields %}
+                        <tr>
+                            <td></td>   <!-- Плейсхолдер для кнопки фолдинга полей -->
+                            <td>{{ field.label }}</td>
+                            <td>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <ul>
+                                        {% for error in field.errors %}
+                                            <li class="red-text">{{error}}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </td>
+                            <td class="field-history-folding">
+                                {% if field.name in fields_corrections %}
+                                    <a href="#">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        {% if field.name in fields_corrections %}
+                            {% for correction in fields_corrections|get_attr:field.name %}
+                                <tr class="field-history-row"></tr>
+                                <tr class="field-history-row">
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        <div class="field-history-data">
+                                            {% if correction.version_value %}
+                                                {{ correction.version_value }}
+                                            {% endif %}
+
+                                            {% if correction.is_active %}<span class="red-text text-lighten-1">{% endif %}
+                                                <span class="correction-step">
+                                                ({{ correction.msg }})
+                                                </span>
+                                            {% if correction.is_active %}</span>{% endif %}
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+                {% if not delivery_formset_readonly %}
+                    <div style="margin-top: 1.7rem;">
+                        <a class="waves-effect waves-light btn right red delivery__button-del"
+                           style="position:relative; top: -1.2rem;">
+                            <i class="material-icons">delete</i>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>  {# collapsible #}
+        </li>
+    </div>
+
+    <script>
+        $('#delivery__button-add').click(function(e) {
+            e.preventDefault()
+            let form_idx = parseInt($('#id_deliveryaddress_set-TOTAL_FORMS').val());
+            $('#id_deliveryaddress_set-TOTAL_FORMS').val(form_idx + 1);
+            let form = $($('#empty_form').html().replace(/__prefix__/g, form_idx)).appendTo('#delivery__formset');
+            $('#delivery__formset').collapsible('open', form_idx);
+
+            {# Автозаполнение адреса по названию организации #}
+            $('#id_deliveryaddress_set-' + form_idx + '-delivery_address').suggestions({
+                token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
+                type: "ADDRESS",
+                count: 20,
+                geoLocation: false,
+                /* Вызывается, когда пользователь выбирает одну из подсказок */
+                onSelect: function(suggestion) {
+                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_country"]').val(null).trigger('change')
+                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_city"]').val(null).trigger('change')
+                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_zip_code"]').val(null).trigger('change')
+                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_region"]').val(null).trigger('change')
+                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_street"]').val(null).trigger('change')
+                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_building"]').val(null).trigger('change')
+                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_block"]').val(null).trigger('change')
+
+                    if(suggestion.data) {
+                        let adr = suggestion.data
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_country"]').val(adr.country).trigger('change')
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_city"]').val(adr.city).trigger('change')
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_zip_code"]').val(adr.postal_code).trigger('change')
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_region"]').val(adr.region_with_type).trigger('change')
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_street"]').val(adr.street_with_type).trigger('change')
+
+                        let building = adr.house_type_full ? adr.house_type_full + ' ' : '';
+                        building += adr.house ? adr.house : '';
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_building"]').val(building).trigger('change')
+
+                        let block = adr.block_type_full ? adr.block_type_full + ' ' : ''
+                        block += adr.block ? adr.block : ''
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_block"]').val(block).trigger('change')
+                    }
+                }
+            });
+        });
+
+        $(document).on('click', '.delivery__button-del', function(e){
+            e.preventDefault()
+            e.stopPropagation()
+            $(this).closest('.delivery__formset-item').remove()
+            let form_idx = $('#id_deliveryaddress_set-TOTAL_FORMS').val();
+            let forms = $('.formset-table');
+            for (let i=0; i<form_idx - 1; i++) {
+                $(forms.get(i)).find('input').each(
+                    function(){
+                        let name = $(this).attr('name')
+                        name = name.replace(/deliveryaddress_set-\d+/g, 'deliveryaddress_set-' + i)
+                        $(this).attr('name', name)
+
+                        let id = $(this).attr('id')
+                        id = id.replace(/deliveryaddress_set-\d+/g, 'deliveryaddress_set-' + i)
+                        $(this).attr('id', id)
+                    })
+            }
+            $('#id_deliveryaddress_set-TOTAL_FORMS').val(form_idx - 1);
+        })
+    </script>
+{% endif %}

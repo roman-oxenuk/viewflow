@@ -33,8 +33,11 @@ class TranslatedNodeMixin:
         super().__init__(*args, **kwargs)
 
     def __str__(self):
-        name = super().__str__()
-        return str(l_(name.lower().capitalize()))
+        name = self.task_title
+        if not name:
+            name = super().__str__()
+            name = l_(name.lower().capitalize())
+        return str(name)
 
 
 class StartNodeView(LinkedNodeMixin, TranslatedNodeMixin, nodes.Start):

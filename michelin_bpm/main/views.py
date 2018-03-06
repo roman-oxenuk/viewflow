@@ -4,14 +4,15 @@ import locale
 import calendar
 import logging
 import json
+from templated_docs import fill_template
 
+from django.forms import inlineformset_factory
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetConfirmView
-# from django.contrib.staticfiles.storage import staticfiles_storage
 from django.utils.translation import ugettext_lazy as _
 from django.utils.html import mark_safe
 from django.urls import reverse
@@ -28,12 +29,33 @@ from viewflow.flow.views import CreateProcessView
 from viewflow.flow.views.detail import DetailProcessView
 from viewflow.fields import get_task_ref
 from viewflow.frontend.views import ProcessListView
-from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess
-from michelin_bpm.main.forms import ClientSetPasswordForm, ShowProposalForm
+
+from michelin_bpm.main.models import ProposalProcess, Correction, BibServeProcess, DeliveryAddress
+from michelin_bpm.main.forms import (
+    ClientSetPasswordForm, ShowProposalForm, DeliveryAddressForm, all_fields, DeliveryAddressReadonlyForm
+)
 from michelin_bpm.main.utils import render_excel_template
-from templated_docs import fill_template
+
 
 logger = logging.getLogger(__name__)
+
+
+class DeliveryFormsetMixin(object):
+    delivery_form = DeliveryAddressReadonlyForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        DeliveryFormset = inlineformset_factory(
+            ProposalProcess, DeliveryAddress, form=self.delivery_form, extra=0, can_delete=False)
+        context['delivery_formset'] = DeliveryFormset(instance=self.get_object())
+        if getattr(self.delivery_form, 'readonly', None):
+            context['delivery_formset_readonly'] = True
+        return context
+
+    def get_delivery_formset(self, data):
+        DeliveryFormset = inlineformset_factory(
+            ProposalProcess, DeliveryAddress, form=self.delivery_form, extra=0, can_delete=False)
+        return DeliveryFormset(data, instance=self.get_object())
 
 
 class EnterClientPasswordView(PasswordResetConfirmView):
@@ -421,7 +443,7 @@ class ShowCorrectionsMixin:
         return kwargs
 
 
-class ApproveView(StopProposalMixin, BaseView, ShowCorrectionsMixin, UpdateProcessView):
+class ApproveView(StopProposalMixin, DeliveryFormsetMixin, BaseView, ShowCorrectionsMixin, UpdateProcessView):
     """
     Вью для согласования заявки.
     Аттрибуты вью:
@@ -533,15 +555,30 @@ class AddDataView(SeeDataView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class ClientAddDataView(AddDataView):
+class ClientAddDataView(DeliveryFormsetMixin, AddDataView):
+    delivery_form = DeliveryAddressForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_show_approving_data_checkbox'] = True
         return context
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        delivery_formset = self.get_delivery_formset(request.POST)
 
-class DownloadClientsContractView(AddDataView):
+        if form.is_valid() and delivery_formset.is_valid():
+            delivery_formset.save()
+            return self.form_valid(form)
+        return self.form_invalid(form)
+
+
+class DownloadClientsContractView(DeliveryFormsetMixin, AddDataView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -596,12 +633,12 @@ class ActivateBibServeAccountView(BibServerAccountMixin, AddDataView):
     pass
 
 
-class ShowProposalView(DetailProcessView):
+class ShowProposalView(DeliveryFormsetMixin, DetailProcessView):
 
     template_name = 'main/proposalconfirmation/show_proposal.html'
 
     def get_context_data(self, **kwargs):
-        context = super(DetailProcessView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['form'] = ShowProposalForm(instance=self.object)
         return context
 

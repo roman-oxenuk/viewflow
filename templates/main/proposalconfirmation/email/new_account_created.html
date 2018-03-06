@@ -1,20 +1,18 @@
 {% load i18n %}{% autoescape off %}
 
+{% trans 'Ваша заявка согласована, Вы можете начать работу.' %}<br>
+
 {% blocktrans %}
-Ваша заявка согласована, Вы можете начать работу.<br>
+Your personal manager: {{ acs_first_name }} {{ acs_last_name }}.<br>
+Your personal manager's email: {{ acs_email }}<br>
 {% endblocktrans %}
 
 {% blocktrans %}
-Ваш менеджер {{ acs_first_name }} {{ acs_last_name }}.<br>
-Email менеджера: {{ acs_email }}<br>
+Proposal confirmed at: {{ process_finished }}<br>
 {% endblocktrans %}
 
 {% blocktrans %}
-Время завершения процесса согласования и регистрации: {{ process_finished }}<br>
-{% endblocktrans %}
-
-{% blocktrans %}
-Перейти к заявке: <a href="{{ protocol }}://{{ domain }}{{ task_link }}">{{ protocol }}://{{ domain }}{{ task_link }}</a><br>
+Go to the proposal: <a href="{{ protocol }}://{{ domain }}{{ task_link }}">{{ protocol }}://{{ domain }}{{ task_link }}</a><br>
 {% endblocktrans %}
 
 {% endautoescape %}

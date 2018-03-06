@@ -3,7 +3,7 @@ import json
 from django.db import models
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField
-from django.utils.translation import ugettext_lazy as l_
+from django.utils.translation import ugettext_lazy as l_, ugettext as _
 from django.dispatch import receiver
 
 import reversion
@@ -91,42 +91,11 @@ class ProposalProcess(Process):
     d_code = models.CharField(l_('D-код'), max_length=255, null=True, blank=True)
     mdm_id = models.CharField(l_('MDM ID'), max_length=255)
 
-    is_needs_bibserve_account = models.BooleanField(l_('Is client needs to have a BibServe account?'), default=False)
+    is_needs_bibserve_account = models.BooleanField(_('Is client needs to have a BibServe account?'), default=False)
     bibserve_login = models.CharField(l_('BibServe Login'), max_length=255, null=True, blank=True)
     bibserve_password = models.CharField(l_('BibServe Password'), max_length=255, null=True, blank=True)
     bibserve_email = models.EmailField(l_('BibServe email'), max_length=255, null=True, blank=True)
     bibserve_tel = models.CharField(l_('BibServe tel'), max_length=255, null=True, blank=True)
-
-    delivery_client_name = models.CharField(l_('Доставка, Название клиента'), max_length=255, null=True, blank=True)
-    # TODO MBPM-26: кажется, этого поля нету в Карточке ОИЗ?
-    delivery_address = models.CharField(l_('Доставка, Адрес'), max_length=255, null=True, blank=True)
-    delivery_zip_code = models.CharField(l_('Доставка, Индекс'), max_length=50, null=True, blank=True)
-    delivery_country = models.CharField(l_('Доставка, Страна'), max_length=255, null=True, blank=True)
-    delivery_region = models.CharField(l_('Доставка, Регион'), max_length=255, null=True, blank=True)
-    delivery_city = models.CharField(l_('Доставка, Город'), max_length=255, null=True, blank=True)
-    delivery_street = models.CharField(l_('Доставка, Улица'), max_length=255, null=True, blank=True)
-    delivery_building = models.CharField(l_('Доставка, Строение'), max_length=255, null=True, blank=True)
-    delivery_block = models.CharField(l_('Доставка, Корпус'), max_length=255, null=True, blank=True)
-    delivery_address_comment = models.CharField(l_('Доставка, Комментарии к адресу'), max_length=255, null=True, blank=True)
-
-    delivery_contact_name = models.CharField(l_('Доставка, Контактное лицо'), max_length=255, null=True, blank=True)
-    delivery_tel = models.CharField(l_('Доставка, телефон'), max_length=255, null=True, blank=True)
-    delivery_email = models.EmailField(l_('Доставка, e-mail'), max_length=255, null=True, blank=True)
-    delivery_fax = models.CharField(l_('Доставка, fax'), max_length=255, null=True, blank=True)
-
-    warehouse_working_days = models.CharField(l_('Дни работы склада'), max_length=255, null=True, blank=True)
-    warehouse_working_hours_from = models.CharField(l_('Часы работы склада с'), max_length=255, null=True, blank=True)
-    warehouse_working_hours_to = models.CharField(l_('Часы работы склада до'), max_length=255, null=True, blank=True)
-    warehouse_break_from = models.CharField(l_('Перерыв c'), max_length=255, null=True, blank=True)
-    warehouse_break_to = models.CharField(l_('Перерыв до'), max_length=255, null=True, blank=True)
-    warehouse_comment = models.CharField(l_('Комментарии к работе склада'), max_length=255, null=True, blank=True)
-    warehouse_consignee_code = models.CharField(l_('Код грузополучателя'), max_length=255, null=True, blank=True)
-    warehouse_station_code = models.CharField(l_('Код станции'), max_length=255, null=True, blank=True)
-    warehouse_tc = models.IntegerField(l_('TC'), null=True, blank=True)
-    warehouse_pl = models.IntegerField(l_('PL'), null=True, blank=True)
-    warehouse_gc = models.IntegerField(l_('GC'), null=True, blank=True)
-    warehouse_ag = models.IntegerField(l_('GC'), null=True, blank=True)
-    warehouse_2r = models.IntegerField(l_('2R'), null=True, blank=True)
 
     acs = models.ForeignKey(
         settings.AUTH_USER_MODEL, blank=True, null=True,
@@ -253,6 +222,46 @@ class ProposalProcess(Process):
                     'new_value': current_state[field]
                 }
         return diff_fields
+
+
+class DeliveryAddress(models.Model):
+
+    class Meta:
+        verbose_name = l_('Доставочный адрес')
+        verbose_name_plural = l_('Доставочные адреса')
+
+    proposal = models.ForeignKey(ProposalProcess)
+
+    delivery_client_name = models.CharField(l_('Доставка, Название клиента'), max_length=255, null=True, blank=True)
+    # TODO MBPM-26: кажется, этого поля нету в Карточке ОИЗ?
+    delivery_address = models.CharField(l_('Доставка, Адрес'), max_length=255, null=True, blank=True)
+    delivery_zip_code = models.CharField(l_('Доставка, Индекс'), max_length=50, null=True, blank=True)
+    delivery_country = models.CharField(l_('Доставка, Страна'), max_length=255, null=True, blank=True)
+    delivery_region = models.CharField(l_('Доставка, Регион'), max_length=255, null=True, blank=True)
+    delivery_city = models.CharField(l_('Доставка, Город'), max_length=255, null=True, blank=True)
+    delivery_street = models.CharField(l_('Доставка, Улица'), max_length=255, null=True, blank=True)
+    delivery_building = models.CharField(l_('Доставка, Строение'), max_length=255, null=True, blank=True)
+    delivery_block = models.CharField(l_('Доставка, Корпус'), max_length=255, null=True, blank=True)
+    delivery_address_comment = models.CharField(l_('Доставка, Комментарии к адресу'), max_length=255, null=True, blank=True)
+
+    delivery_contact_name = models.CharField(l_('Доставка, Контактное лицо'), max_length=255, null=True, blank=True)
+    delivery_tel = models.CharField(l_('Доставка, телефон'), max_length=255, null=True, blank=True)
+    delivery_email = models.EmailField(l_('Доставка, e-mail'), max_length=255, null=True, blank=True)
+    delivery_fax = models.CharField(l_('Доставка, fax'), max_length=255, null=True, blank=True)
+
+    warehouse_working_days = models.CharField(l_('Дни работы склада'), max_length=255, null=True, blank=True)
+    warehouse_working_hours_from = models.CharField(l_('Часы работы с'), max_length=255, null=True, blank=True)
+    warehouse_working_hours_to = models.CharField(l_('Часы работы до'), max_length=255, null=True, blank=True)
+    warehouse_break_from = models.CharField(l_('Перерыв c'), max_length=255, null=True, blank=True)
+    warehouse_break_to = models.CharField(l_('Перерыв до'), max_length=255, null=True, blank=True)
+    warehouse_comment = models.CharField(l_('Комментарии к работе склада'), max_length=255, null=True, blank=True)
+    warehouse_consignee_code = models.CharField(l_('Код грузополучателя'), max_length=255, null=True, blank=True)
+    warehouse_station_code = models.CharField(l_('Код станции'), max_length=255, null=True, blank=True)
+    warehouse_tc = models.IntegerField(l_('TC'), null=True, blank=True)
+    warehouse_pl = models.IntegerField(l_('PL'), null=True, blank=True)
+    warehouse_gc = models.IntegerField(l_('GC'), null=True, blank=True)
+    warehouse_ag = models.IntegerField(l_('GC'), null=True, blank=True)
+    warehouse_2r = models.IntegerField(l_('2R'), null=True, blank=True)
 
 
 @reversion.register()

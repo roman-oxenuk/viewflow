@@ -148,7 +148,10 @@ class ProposalConfirmationFlow(Flow):
     )
 
     split_to_sales_admin = (
-        SplitNode(task_description=_('Split to Sales Admin'))
+        SplitNode(
+            task_description=_('Split to sales admin'),
+            task_title=_('Split to sales admin'),
+        )
         .Next(this.approve_paper_docs)
         .Next(this.split_for_credit_and_account_manager)
     )

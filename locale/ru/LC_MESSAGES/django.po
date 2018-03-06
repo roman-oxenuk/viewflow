@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-02-09 11:15+0000\n"
+"POT-Creation-Date: 2018-03-06 19:40+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,96 +20,619 @@ msgstr ""
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: main/flows.py:83
-msgid "Start of proposal approval process"
-msgstr "Начало согласования заявки"
+#: michelin_bpm/main/flows.py:91 michelin_bpm/main/flows.py:92
+#: michelin_bpm/main/flows.py:93
+msgid "Send the invitation"
+msgstr "Отправить приглашение"
 
-#: main/flows.py:90
-msgid "Split to Sales Admin"
+#: michelin_bpm/main/flows.py:126 michelin_bpm/main/flows.py:127
+msgid "Client adds data"
+msgstr "Клиент добавляет данные в заявку"
+
+#: michelin_bpm/main/flows.py:140 michelin_bpm/main/flows.py:141
+msgid "Client prints the contract"
+msgstr "Клиент распечатывает договор"
+
+#: michelin_bpm/main/flows.py:151
+msgid "Split to sales admin"
 msgstr "Разделение на проверку бумажных документов и согласования"
 
-#: main/flows.py:96
+#: michelin_bpm/main/flows.py:157
 msgid "Split for credit and Account Manager"
 msgstr "Разделение на проверку кредитным инспектором и аккаунт-менеджером"
 
-#: main/flows.py:105
+#: michelin_bpm/main/flows.py:166 michelin_bpm/main/flows.py:167
 msgid "Approve by account manager"
 msgstr "Проверка аккаунт-менеджером"
 
-#: main/flows.py:121
-msgid "Approve by region chief"
-msgstr "Проверка региональным шефом"
+#: michelin_bpm/main/flows.py:195
+msgid "Choose the path"
+msgstr "Выбор пути"
 
-#: main/flows.py:143
-msgid "Check approve by region chief"
-msgstr "Завершение проверки региональным шефом"
-
-#: main/flows.py:155
-msgid "Get comments from logist"
-msgstr "Получение комментариев от логиста"
-
-#: main/flows.py:180
+#: michelin_bpm/main/flows.py:210 michelin_bpm/main/flows.py:211
 msgid "Approve by credit manager"
 msgstr "Проверка кредитным инспектором"
 
-#: main/flows.py:190
+#: michelin_bpm/main/flows.py:230
 msgid "Join credit and account manager"
 msgstr "Соединение проверки кредитным инспектором и аккаунт-менеджером"
 
-#: main/flows.py:197
+#: michelin_bpm/main/flows.py:234
+msgid "Check approve by credit and account manager"
+msgstr "Завершение проверки аккаунт-менеджером"
+
+#: michelin_bpm/main/flows.py:254 michelin_bpm/main/flows.py:255
+msgid "Fix mistakes after account manager"
+msgstr "Правка корректировок после проверки аккаунт-менеджером"
+
+#: michelin_bpm/main/flows.py:268 michelin_bpm/main/flows.py:269
+msgid "Approve by region chief"
+msgstr "Проверка региональным шефом"
+
+#: michelin_bpm/main/flows.py:303
+msgid "Check approve by region chief"
+msgstr "Завершение проверки региональным шефом"
+
+#: michelin_bpm/main/flows.py:319 michelin_bpm/main/flows.py:320
+msgid "Get comments from logist"
+msgstr "Получение комментариев от логиста"
+
+#: michelin_bpm/main/flows.py:346 michelin_bpm/main/flows.py:347
 msgid "Approve by ADV"
 msgstr "Проверка ADV"
 
-#: main/flows.py:211
+#: michelin_bpm/main/flows.py:370 michelin_bpm/main/flows.py:371
+msgid "Create user in inner systems"
+msgstr "Создание клента во внутренних системах"
+
+#: michelin_bpm/main/flows.py:382 michelin_bpm/main/flows.py:383
 msgid "Add J-code by ADV"
 msgstr "Добавление J-кода ADV"
 
-#: main/flows.py:222
+#: michelin_bpm/main/flows.py:394 michelin_bpm/main/flows.py:395
 msgid "Add D-code by Logist"
 msgstr "Добавление D-кода логистом"
 
-#: main/flows.py:233
+#: michelin_bpm/main/flows.py:406 michelin_bpm/main/flows.py:407
 msgid "Set credit limit"
 msgstr "Установление кредитного лимита"
 
-#: main/flows.py:244
+#: michelin_bpm/main/flows.py:418 michelin_bpm/main/flows.py:419
 msgid "Approve paper docs"
 msgstr "Проверка бумажных документов"
 
-#: main/flows.py:256
+#: michelin_bpm/main/flows.py:431
 msgid "Join from sales admin"
 msgstr "Соединение проверки документов и согласований"
 
-#: main/flows.py:264
+#: michelin_bpm/main/flows.py:439 michelin_bpm/main/flows.py:440
 msgid "Unblock client by ADV"
 msgstr "Разблокировка клиента во внутренних системах"
 
-#: main/flows.py:275
+#: michelin_bpm/main/flows.py:451 michelin_bpm/main/flows.py:452
 msgid "Adding ACS"
-msgstr "Добавление ACS"
+msgstr "Назначение менеджера поддержки (ACS)"
 
-#: main/flows.py:283
+#: michelin_bpm/main/flows.py:460
 msgid "End of proposal confirmation process"
 msgstr "Завершение согласования заявки"
 
-#: main/flows.py:301
+#: michelin_bpm/main/flows.py:476
 msgid "Start of BibServe account creation proccess"
 msgstr "Начало создания BibServe-аккаунта"
 
-#: main/flows.py:310
+#: michelin_bpm/main/flows.py:485
 msgid "Create BibServe account"
 msgstr "Создание BibServe-аккаунта"
 
-#: main/flows.py:336
+#: michelin_bpm/main/flows.py:495
+msgid "Check is allowed to activate"
+msgstr "Проверка на возможность активации"
+
+#: michelin_bpm/main/flows.py:514
 msgid "Activating BibServe account"
 msgstr "Активация аккаунта на BibServe"
 
+#: michelin_bpm/main/flows.py:522
+#, fuzzy
+#| msgid "Start of BibServe account creation proccess"
+msgid "End of BibServe account creation process"
+msgstr "Начало создания BibServe-аккаунта"
+
+#: michelin_bpm/main/forms.py:260
+msgid "Password"
+msgstr "Пароль"
+
+#: michelin_bpm/main/forms.py:261
+msgid "Password confirmation"
+msgstr "Подтверждение пароля"
+
+#: michelin_bpm/main/forms.py:433
+msgid "Search for organization"
+msgstr "Поиск огранизации"
+
+#: michelin_bpm/main/forms.py:437
+msgid "Enter organization name, address, INN or OGRN"
+msgstr "Введите название, адрес, ИНН или ОГРН"
+
+#: michelin_bpm/main/forms.py:446
+msgid "User with this login already exists. Enter another login."
+msgstr "Пользователь с таким логином уже существует. Введите другой логин."
+
+#: michelin_bpm/main/forms.py:452
+msgid "User with this email already exists. Enter another email."
+msgstr "Пользователь с таким емейлом уже существует. Введите другой емейл."
+
+#: michelin_bpm/main/nodes.py:75
+msgid "You have to set \"download_view_class\" on DownloadableViewNode"
+msgstr ""
+
+#: michelin_bpm/main/signals.py:55
+msgid "New task: "
+msgstr "Новая задача: "
+
+#: michelin_bpm/main/signals.py:98
+msgid "New account created for proposal: "
+msgstr "Новый аккаунт создан для заявки: "
+
+#: michelin_bpm/main/signals.py:145
+msgid "BibServe account created for proposal: "
+msgstr "BibServe-аккаунт создан для заявки: "
+
+#: michelin_bpm/main/views.py:64
+msgid "Enter password"
+msgstr "Ввести пароль"
+
+#: michelin_bpm/main/views.py:585
+msgid "Download contract"
+msgstr "Скачать договор"
+
+#: michelin_bpm/main/views.py:601
+msgid "Download OIZ Card"
+msgstr "Скачать карточку ОИЗ"
+
+#: michelin_bpm/main/views.py:677
+msgid "Proposal"
+msgstr "Заявка"
+
+#: michelin_bpm/main/views.py:682 michelin_bpm/main/views.py:684
+msgid "Process"
+msgstr "Процесс"
+
+#: templates/main/bibserve/base_task.html:45
+#: templates/main/paperdocsapproval/base_task.html:45
+#: templates/main/proposalconfirmation/base_task.html:45
+msgid "Company name"
+msgstr "Название компании"
+
+#: templates/main/bibserve/base_task.html:53
+#: templates/main/paperdocsapproval/base_task.html:53
+msgid "City"
+msgstr "Город"
+
+#: templates/main/bibserve/base_task.html:61
+#: templates/main/paperdocsapproval/base_task.html:61
+msgid "Country"
+msgstr "Страна"
+
+#: templates/main/bibserve/base_task.html:98
+#: templates/main/paperdocsapproval/base_task.html:98
+#: templates/main/proposalconfirmation/base_task.html:100
+msgid "Created"
+msgstr "Создан"
+
+#: templates/main/bibserve/base_task.html:102
+#: templates/main/bibserve/process_cancel.html:24
+#: templates/main/bibserve/process_detail.html:27
+#: templates/main/paperdocsapproval/base_task.html:102
+#: templates/main/paperdocsapproval/process_cancel.html:24
+#: templates/main/paperdocsapproval/process_detail.html:27
+#: templates/main/proposalconfirmation/base_task.html:104
+#: templates/main/proposalconfirmation/process_cancel.html:24
+#: templates/main/proposalconfirmation/process_detail.html:27
+msgid "Started"
+msgstr "Начат"
+
+#: templates/main/bibserve/base_task.html:106
+#: templates/main/bibserve/process_detail.html:28
+#: templates/main/paperdocsapproval/base_task.html:106
+#: templates/main/paperdocsapproval/process_detail.html:28
+#: templates/main/proposalconfirmation/base_task.html:108
+#: templates/main/proposalconfirmation/process_detail.html:28
+msgid "Finished"
+msgstr "Завершён"
+
+#: templates/main/bibserve/base_task.html:114
+#: templates/main/paperdocsapproval/base_task.html:114
+#: templates/main/proposalconfirmation/base_task.html:116
+msgid "Previous tasks"
+msgstr "Предыдущая задача"
+
+#: templates/main/bibserve/base_task.html:123
+#: templates/main/paperdocsapproval/base_task.html:123
+#: templates/main/proposalconfirmation/base_task.html:125
+msgid "Next tasks"
+msgstr "Следующая задача: "
+
+#: templates/main/bibserve/process_cancel.html:17
+#: templates/main/bibserve/process_detail.html:65
+#: templates/main/paperdocsapproval/process_cancel.html:17
+#: templates/main/paperdocsapproval/process_detail.html:65
+#: templates/main/proposalconfirmation/process_cancel.html:17
+#: templates/main/proposalconfirmation/process_detail.html:65
+msgid "Cancel"
+msgstr "Отмена"
+
+#: templates/main/bibserve/process_cancel.html:21
+#: templates/main/bibserve/process_detail.html:24
+#: templates/main/paperdocsapproval/process_cancel.html:21
+#: templates/main/paperdocsapproval/process_detail.html:24
+#: templates/main/proposalconfirmation/process_cancel.html:21
+#: templates/main/proposalconfirmation/process_detail.html:24
+msgid "#"
+msgstr "№"
+
+#: templates/main/bibserve/process_cancel.html:22
+#: templates/main/paperdocsapproval/process_cancel.html:22
+#: templates/main/proposalconfirmation/process_cancel.html:22
+msgid "Name"
+msgstr "Имя"
+
+#: templates/main/bibserve/process_cancel.html:23
+#: templates/main/bibserve/process_detail.html:25
+#: templates/main/paperdocsapproval/process_cancel.html:23
+#: templates/main/paperdocsapproval/process_detail.html:25
+#: templates/main/proposalconfirmation/process_cancel.html:23
+#: templates/main/proposalconfirmation/process_detail.html:25
+msgid "Description"
+msgstr "Описание"
+
+#: templates/main/bibserve/process_cancel.html:25
+#: templates/main/bibserve/process_detail.html:29
+#: templates/main/paperdocsapproval/process_cancel.html:25
+#: templates/main/paperdocsapproval/process_detail.html:29
+#: templates/main/proposalconfirmation/process_cancel.html:25
+#: templates/main/proposalconfirmation/process_detail.html:29
+msgid "Status"
+msgstr "Статус"
+
+#: templates/main/bibserve/process_cancel.html:47
+#: templates/main/paperdocsapproval/process_cancel.html:47
+#: templates/main/proposalconfirmation/process_cancel.html:47
+msgid "UNCANCELABLE"
+msgstr "НЕОТМЕНЯЕМАЯ"
+
+#: templates/main/bibserve/process_data.html:8
+#: templates/main/paperdocsapproval/process_data.html:8
+#: templates/main/proposalconfirmation/process_data.html:8
+msgid "edit"
+msgstr "править"
+
+#: templates/main/bibserve/process_data.html:14
+#: templates/main/paperdocsapproval/process_data.html:14
+#: templates/main/proposalconfirmation/process_data.html:14
+msgid "Yes"
+msgstr "Да"
+
+#: templates/main/bibserve/process_data.html:15
+#: templates/main/paperdocsapproval/process_data.html:15
+#: templates/main/proposalconfirmation/process_data.html:15
+msgid "No"
+msgstr "Нет"
+
+#: templates/main/bibserve/process_data.html:27
+#: templates/main/paperdocsapproval/process_data.html:27
+#: templates/main/proposalconfirmation/process_data.html:27
+msgid "Active tasks"
+msgstr "Текущая задача"
+
+#: templates/main/bibserve/process_data.html:31
+#: templates/main/paperdocsapproval/process_data.html:31
+#: templates/main/proposalconfirmation/process_data.html:31
+msgid "Task"
+msgstr "Задача"
+
+#: templates/main/bibserve/process_data.html:32
+#: templates/main/bibserve/process_detail.html:26
+#: templates/main/paperdocsapproval/process_data.html:32
+#: templates/main/paperdocsapproval/process_detail.html:26
+#: templates/main/proposalconfirmation/process_data.html:32
+#: templates/main/proposalconfirmation/process_detail.html:26
+msgid "Owner"
+msgstr "Создатель"
+
+#: templates/main/bibserve/process_detail.html:20
+#: templates/main/paperdocsapproval/process_detail.html:20
+#: templates/main/proposalconfirmation/process_detail.html:20
+msgid "Proposal statuses"
+msgstr "Этапы обработки заявки"
+
+#: templates/main/bibserve/start.html:7 templates/main/bibserve/start.html:27
+#: templates/main/paperdocsapproval/start.html:7
+#: templates/main/paperdocsapproval/start.html:27
+#: templates/main/proposalconfirmation/start.html:25
+msgid "Start"
+msgstr "Начало"
+
+#: templates/main/bibserve/task.html:39
+#: templates/main/bibserve/task_unassign.html:13
+#: templates/main/paperdocsapproval/task.html:62
+#: templates/main/paperdocsapproval/task_unassign.html:13
+#: templates/main/proposalconfirmation/task.html:171
+#: templates/main/proposalconfirmation/task_unassign.html:13
+msgid "Detail"
+msgstr "Детали задачи"
+
+#: templates/main/bibserve/task.html:56
+#: templates/main/paperdocsapproval/task.html:68
+#: templates/main/proposalconfirmation/start.html:137
+#: templates/main/proposalconfirmation/task.html:194
+msgid "Done"
+msgstr "Согласовано"
+
+#: templates/main/bibserve/task_assign.html:5
+#: templates/main/bibserve/task_detail.html:25
+#: templates/main/paperdocsapproval/task_assign.html:5
+#: templates/main/paperdocsapproval/task_detail.html:25
+#: templates/main/proposalconfirmation/task_assign.html:5
+#: templates/main/proposalconfirmation/task_detail.html:25
+msgid "Assign"
+msgstr "Назначить"
+
+#: templates/main/bibserve/task_assign.html:26
+#: templates/main/paperdocsapproval/task_assign.html:26
+#: templates/main/proposalconfirmation/task_assign.html:26
+msgid "Assign to me and continue on this process"
+msgstr "Взять себе и открыть заявку"
+
+#: templates/main/bibserve/task_assign.html:27
+#: templates/main/paperdocsapproval/task_assign.html:27
+#: templates/main/proposalconfirmation/task_assign.html:27
+msgid "Assign to me"
+msgstr "Взять себе"
+
+#: templates/main/bibserve/task_detail.html:30
+#: templates/main/bibserve/task_unassign.html:5
+#: templates/main/bibserve/task_unassign.html:8
+#: templates/main/paperdocsapproval/task_detail.html:30
+#: templates/main/paperdocsapproval/task_unassign.html:5
+#: templates/main/paperdocsapproval/task_unassign.html:8
+#: templates/main/proposalconfirmation/task_detail.html:30
+#: templates/main/proposalconfirmation/task_unassign.html:5
+#: templates/main/proposalconfirmation/task_unassign.html:8
+msgid "Unassign"
+msgstr "Вернуть задачу в общую очередь"
+
+#: templates/main/bibserve/task_detail.html:35
+#: templates/main/paperdocsapproval/task_detail.html:35
+#: templates/main/proposalconfirmation/task_detail.html:35
+msgid "Execute"
+msgstr "Продолжить"
+
+#: templates/main/bibserve/task_unassign.html:18
+#: templates/main/paperdocsapproval/task_unassign.html:18
+#: templates/main/proposalconfirmation/task_unassign.html:18
+msgid "Confirm"
+msgstr "Подтвердить"
+
+#: templates/main/menu.html:10
+#: templates/viewflow/includes/breadcrumb_category.html:3
+#: templates/viewflow/site_queue.html:6
+msgid "Unassigned"
+msgstr "В общей очереди"
+
+#: templates/main/menu.html:12
+#: templates/viewflow/includes/breadcrumb_category.html:2
+#: templates/viewflow/site_tasks.html:6
+msgid "Inbox"
+msgstr "Мои задачи"
+
+#: templates/main/menu.html:14
+#: templates/viewflow/includes/breadcrumb_category.html:4
+msgid "Participated"
+msgstr "Исходящие"
+
+#: templates/main/menu.html:34
+msgid "My Clients"
+msgstr "Мои клиенты"
+
+#: templates/main/proposalconfirmation/base_task.html:50
+msgid "Assigned to"
+msgstr "Взять себе"
+
+#: templates/main/proposalconfirmation/email/new_account_created.html:3
+msgid "Ваша заявка согласована, Вы можете начать работу."
+msgstr ""
+
+#: templates/main/proposalconfirmation/email/new_account_created.html:5
+#, python-format
+msgid ""
+"\n"
+"Your personal manager: %(acs_first_name)s %(acs_last_name)s.<br>\n"
+"Your personal manager's email: %(acs_email)s<br>\n"
+msgstr ""
+"\n"
+"Ваш менеджер: %(acs_first_name)s %(acs_last_name)s.<br>\n"
+"Email менеджера: %(acs_email)s<br>\n"
+
+#: templates/main/proposalconfirmation/email/new_account_created.html:10
+#, python-format
+msgid ""
+"\n"
+"Proposal confirmed at: %(process_finished)s<br>\n"
+msgstr ""
+"\n"
+"Время завершения процесса согласования и регистрации: "
+"%(process_finished)s<br>\n"
+
+#: templates/main/proposalconfirmation/email/new_account_created.html:14
+#, python-format
+msgid ""
+"\n"
+"Go to the proposal: <a href=\"%(protocol)s://%(domain)s%(task_link)s\">"
+"%(protocol)s://%(domain)s%(task_link)s</a><br>\n"
+msgstr ""
+"\n"
+"Перейти к заявке: <a href=\"%(protocol)s://%(domain)s%(task_link)s\">"
+"%(protocol)s://%(domain)s%(task_link)s</a><br>\n"
+
+#: templates/main/proposalconfirmation/email/new_bibserve_account_created.html:3
+#, python-format
+msgid ""
+"\n"
+"Создан BibServe-аккаунт для заявки: %(proposal_name)s<br>\n"
+msgstr ""
+
+#: templates/main/proposalconfirmation/email/new_bibserve_account_created.html:7
+#, python-format
+msgid ""
+"\n"
+"Ссылка на BibServe: %(bibserve_link)s<br>\n"
+"Логин: %(bibserve_login)s<br>\n"
+"Пароль: %(bibserve_password)s<br>\n"
+msgstr ""
+
+#: templates/main/proposalconfirmation/email/new_bibserve_account_created.html:13
+#, python-format
+msgid ""
+"\n"
+"Время завершения процесса создания BibServe-аккаунта: "
+"%(process_finished)s<br>\n"
+msgstr ""
+
+#: templates/main/proposalconfirmation/email/new_bibserve_account_created.html:17
+#, fuzzy, python-format
+#| msgid ""
+#| "\n"
+#| "Go to the proposal: <a href=\"%(protocol)s://%(domain)s%(task_link)s\">"
+#| "%(protocol)s://%(domain)s%(task_link)s</a><br>\n"
+msgid ""
+"\n"
+"Перейти к заявке: <a href=\"%(protocol)s://%(domain)s%(task_link)s\">"
+"%(protocol)s://%(domain)s%(task_link)s</a><br>\n"
+msgstr ""
+"\n"
+"Перейти к заявке: <a href=\"%(protocol)s://%(domain)s%(task_link)s\">"
+"%(protocol)s://%(domain)s%(task_link)s</a><br>\n"
+
+#: templates/main/proposalconfirmation/email/new_task_created.html:3
+#, python-format
+msgid ""
+"\n"
+"Для заявки: %(proposal_name)s<br>\n"
+msgstr ""
+
+#: templates/main/proposalconfirmation/email/new_task_created.html:7
+#, python-format
+msgid ""
+"\n"
+"Создана новая задача: %(task_title)s<br>\n"
+msgstr ""
+
+#: templates/main/proposalconfirmation/email/new_task_created.html:11
+#, python-format
+msgid ""
+"\n"
+"Время создания: %(task_created)s<br>\n"
+msgstr ""
+
+#: templates/main/proposalconfirmation/includes/delivery_formset.html:18
+#: templates/main/proposalconfirmation/includes/delivery_formset.html:153
+#: templates/main/proposalconfirmation/includes/proposal_form.html:169
+#: templates/main/proposalconfirmation/includes/proposal_form.html:300
+msgid "Delivery address"
+msgstr "Доставочный адрес"
+
+#: templates/main/proposalconfirmation/includes/delivery_formset.html:142
+#: templates/main/proposalconfirmation/includes/proposal_form.html:289
+#: templates/main/proposalconfirmation/includes/proposal_form.html:292
+msgid "Add delivery address"
+msgstr "Добавить доставочный адрес"
+
+#: templates/main/proposalconfirmation/task.html:150
+msgid "I confirm entered data"
+msgstr "Я подтверждаю введённые данные"
+
+#: templates/main/registration/logged_out.html:9
+msgid "Log in again"
+msgstr "Войти снова"
+
+#: templates/main/registration/password_reset_confirm.html:31
+msgid "Set password"
+msgstr "Установить пароль"
+
+#: templates/main/registration/password_reset_email.html:2
+msgid ""
+"\n"
+"Для Вас создан аккаунт в системе регистрации новых дистрибьюторов Michelin."
+"<br>\n"
+msgstr ""
+
+#: templates/main/registration/password_reset_email.html:6
+#, python-format
+msgid ""
+"\n"
+"Ваш логин в систему: %(username)s<br>\n"
+msgstr ""
+
+#: templates/main/registration/password_reset_email.html:10
+msgid ""
+"\n"
+"Пожалуйста, перейдите на эту страницу и введите пароль для вашего аккаунта:"
+"<br>\n"
+msgstr ""
+
+#: templates/main/registration/password_reset_email.html:18
+msgid ""
+"\n"
+"После этого Вы сможете заполнить вашу заявку на регистрацию в системе "
+"дистрибьюторов Michelin.<br>\n"
+msgstr ""
+
+#: templates/material/form.html:33 templates/material/form.html:52
+msgid "Owner: "
+msgstr "Создатель: "
+
+#: templates/material/form.html:44
+msgid "Field history: "
+msgstr "История изменений: "
+
+#: templates/material/form.html:56
+msgid "Value was: "
+msgstr "Прошлое значение: "
+
+#: templates/material/frontend/base.html:84
+msgid "Log out"
+msgstr "Выйти"
+
+#: templates/material/frontend/base.html:86
+msgid "Log in"
+msgstr "Войти"
+
+#: templates/material/frontend/base_site.html:5
+#: templates/material/frontend/base_site.html:6
+msgid "Michelin Proposal Registration"
+msgstr "Регистрация заявки Michelin"
+
+#: templates/viewflow/includes/flows_start_actions.html:13
+msgid "New process"
+msgstr "Новый процесс"
+
+#: templates/viewflow/includes/task_management_menu.html:6
+msgid "No actions available"
+msgstr "Нет доступных действий"
+
+msgid "Is client needs to have a BibServe account?"
+msgstr "Нужна ли регистрация в BibServe?"
+
+#~ msgid "Your proposal has been confirmed. You may start to work."
+#~ msgstr "Ваша заявка согласована, Вы можете начать работу."
+
+#~ msgid "Start of proposal approval process"
+#~ msgstr "Начало согласования заявки"
 
 #~ msgid "End"
 #~ msgstr "Заявка согласована"
-
-msgid "Start"
-msgstr "Отправить заявку на согласование"
 
 #~ msgid "Check if BibServe account creation needed"
 #~ msgstr "Проверка, нужно ли создание BibServe-аккаунта"
@@ -120,17 +643,17 @@ msgstr "Отправить заявку на согласование"
 #~ msgid "Join Credit And Account Manager"
 #~ msgstr "Соединение проверки кредитным инспектором и аккаунт-менеджером"
 
-msgid "Add j-code by adv"
-msgstr "Добавление J-кода ADV"
+#~ msgid "Add j-code by adv"
+#~ msgstr "Добавление J-кода ADV"
 
-msgid "Add j code by adv"
-msgstr "Добавление J-кода ADV"
+#~ msgid "Add j code by adv"
+#~ msgstr "Добавление J-кода ADV"
 
-msgid "Add d-code by logist"
-msgstr "Добавление D-кода логистом"
+#~ msgid "Add d-code by logist"
+#~ msgstr "Добавление D-кода логистом"
 
-msgid "Add d code by logist"
-msgstr "Добавление D-кода логистом"
+#~ msgid "Add d code by logist"
+#~ msgstr "Добавление D-кода логистом"
 
 #~ msgid "Unblock client by adv"
 #~ msgstr "Разблокировка клиента во внутренних системах"
@@ -144,12 +667,6 @@ msgstr "Добавление D-кода логистом"
 #~ msgid "Join credit manager and region chief"
 #~ msgstr ""
 #~ "Соединение процесса после проверки Кредитным инспектором и Шефом региона"
-
-#~ msgid "Check approve by account manager"
-#~ msgstr "Завершение проверки аккаунт-менеджером"
-
-#~ msgid "Fix mistakes after account manager"
-#~ msgstr "Правка корректировок после проверки аккаунт-менеджером"
 
 #~ msgid "Split flow for ADV and BibServe Admin"
 #~ msgstr "Разделение процесса для ADV и администратора BibServe"
@@ -174,166 +691,45 @@ msgstr "Добавление D-кода логистом"
 #~ msgstr ""
 #~ "Соединение процесса после добавления ACS и активации аккаунта на BibServe"
 
-msgid "File"
-msgstr "Файл"
+#~ msgid "File"
+#~ msgstr "Файл"
 
-msgid "Choose your option"
-msgstr "Выберите значение"
+#~ msgid "Permission"
+#~ msgstr "Права"
 
-msgid "New process"
-msgstr "Новый процесс"
+#~ msgid "Queue"
+#~ msgstr "Очередь"
 
-msgid "Unassigned"
-msgstr "В общей очереди"
+#~ msgid "Done and continue on this process"
+#~ msgstr "Сохранить и продолжить"
 
-msgid "Inbox"
-msgstr "Мои задачи"
+#~ msgid "Home"
+#~ msgstr "Домой"
 
-msgid "Participated"
-msgstr "Исходящие"
+#~ msgid "Your password was changed."
+#~ msgstr "Ваш пароль был изменён."
 
-msgid "Description"
-msgstr "Описание"
+#~ msgid ""
+#~ "Please enter your old password, for security's sake, and then enter your "
+#~ "new password twice so we can verify you typed it in correctly."
+#~ msgstr "Введите свой старый пароль, а затем введите новый пароль дважды."
 
-msgid "Owner"
-msgstr "Создатель: "
+#~ msgid "Summary"
+#~ msgstr "Название"
 
-msgid "Permission"
-msgstr "Права"
+#~ msgid "No task selected"
+#~ msgstr "Ни одной задачи не выделенно"
 
-msgid "Created"
-msgstr "Создан"
+#~ msgid "Processes"
+#~ msgstr "Процессы"
 
-msgid "Started"
-msgstr "Начало"
+#~ msgid "Start and continue on this process"
+#~ msgstr "Сохранить и продолжить !!"
 
-msgid "Finished"
-msgstr "Завершён"
+#~ msgid "Item prepared"
+#~ msgstr "Заявка проверена"
 
-msgid "Previous tasks"
-msgstr "Предыдущий шаг"
+#~ msgid "Fix mistakes after logist"
+#~ msgstr "Правка корректировок после проверки логистом"
 
-msgid "Next tasks"
-msgstr "Следующий шаг"
 
-msgid "Cancel"
-msgstr "Отмена"
-
-msgid "#"
-msgstr "№"
-
-msgid "Name"
-msgstr "Имя"
-
-msgid "Status"
-msgstr "Статус"
-
-msgid "UNCANCELABLE"
-msgstr "НЕОТМЕНЯЕМАЯ"
-
-msgid "edit"
-msgstr "править"
-
-msgid "Yes"
-msgstr "Да"
-
-msgid "No"
-msgstr "Нет"
-
-msgid "Active tasks"
-msgstr "Текущий шаг"
-
-msgid "Task"
-msgstr "Шаг"
-
-msgid "Queue"
-msgstr "Очередь"
-
-msgid "Process"
-msgstr "Процесс"
-
-msgid "Detail"
-msgstr "Детали задачи"
-
-msgid "Done and continue on this process"
-msgstr "Сохранить и продолжить"
-
-msgid "Done"
-msgstr "Согласовано"
-
-msgid "Confirm"
-msgstr "Подтвердить"
-
-msgid "Assign"
-msgstr "Назначить"
-
-msgid "Assign to me and continue on this process"
-msgstr "Взять себе и открыть заявку"
-
-msgid "Assign to me"
-msgstr "Взять себе"
-
-msgid "Unassign"
-msgstr "Вернуть задачу в общую очередь"
-
-msgid "Execute"
-msgstr "Продолжить"
-
-msgid "Log in again"
-msgstr "Войти снова"
-
-msgid "Home"
-msgstr "Домой"
-
-msgid "Password change"
-msgstr "Изменить пароль"
-
-msgid "Your password was changed."
-msgstr "Ваш пароль был изменён."
-
-msgid ""
-"Please enter your old password, for security's sake, and then enter your "
-"new password twice so we can verify you typed it in correctly."
-msgstr "Введите свой старый пароль, а затем введите новый пароль дважды."
-
-msgid "Change my password"
-msgstr "Изменить мой пароль"
-
-msgid "Summary"
-msgstr "Название"
-
-msgid "No task selected"
-msgstr "Ни одной задачи не выделенно"
-
-msgid "Owner: "
-msgstr "Создатель: "
-
-msgid "Field history: "
-msgstr "История изменений: "
-
-msgid "Value was: "
-msgstr "Прошлое значение: "
-
-msgid "Log out"
-msgstr "Выйти"
-
-msgid "Log in"
-msgstr "Войти"
-
-msgid "Michelin Proposal Registration"
-msgstr "Регистрация заявки Michelin"
-
-msgid "Processes"
-msgstr "Процессы"
-
-msgid "Start and continue on this process"
-msgstr "Сохранить и продолжить !!"
-
-msgid "Item prepared"
-msgstr "Заявка проверена"
-
-msgid "Fix mistakes after logist"
-msgstr "Правка корректировок после проверки логистом"
-
-msgid "Is client needs to have a BibServe account?"
-msgstr "Нужна ли регистрация в BibServe?"

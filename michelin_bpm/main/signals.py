@@ -53,7 +53,6 @@ def task_created(sender, instance, created, **kwargs):
         perm = Permission.objects.filter(codename=perm_name).first()
         if perm:
             subject = _('New task: ')
-            # Новая задача
             subject += instance.flow_task.task_title
 
             if not settings.DEBUG:
@@ -97,7 +96,6 @@ def new_account_created(sender, process, task, **kwargs):
     from michelin_bpm.main.flows import ProposalConfirmationFlow
     if sender == ProposalConfirmationFlow:
         subject = _('New account created for proposal: ')
-        # Новый аккаунт создан для заявки:
         subject += process.summary()
 
         if not settings.DEBUG:
@@ -108,7 +106,10 @@ def new_account_created(sender, process, task, **kwargs):
             domain = 'localhost:8000'
             protocol = 'http'
 
-        task_link = reverse('proposal_detail', kwargs={'proposal_pk': process.id})
+        task_link = reverse(
+            'viewflow:main:proposalconfirmation:show_proposal',
+            kwargs={'process_pk': process.id}
+        )
 
         context = {
             'proposal_name': process.summary(),
@@ -145,7 +146,6 @@ def new_bibserve_account_created(sender, process, task, **kwargs):
     from michelin_bpm.main.flows import BibServeFlow
     if sender == BibServeFlow:
         subject = _('BibServe account created for proposal: ')
-        # BibServe-аккаунт создан для заявки:
         subject += process.summary()
 
         if not settings.DEBUG:
@@ -156,7 +156,10 @@ def new_bibserve_account_created(sender, process, task, **kwargs):
             domain = 'localhost:8000'
             protocol = 'http'
 
-        task_link = reverse('proposal_detail', kwargs={'proposal_pk': process.proposal.id})
+        task_link = reverse(
+            'viewflow:main:proposalconfirmation:show_proposal',
+            kwargs={'process_pk': process.proposal.id}
+        )
         context = {
             'proposal_name': process.proposal.summary(),
             'process_finished': process.finished,
