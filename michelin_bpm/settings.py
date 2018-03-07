@@ -240,4 +240,3 @@ ACS_GROUP_ID = os.environ.get('ACS_GROUP_ID', 9)
 
 # Ссылка на BibServe, которая отправляется по емейлу после регистрации нового аккаунта на BibServe
 BIBSERVE_LINK = 'https://www.bibserve.com/'
-

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import os
 import locale
 import calendar
@@ -152,6 +153,7 @@ class ProposalPdfContractView(View):
 
         # p = ProposalProcess.objects.get(pk=proposal_id) if proposal_id else ProposalProcess.objects.first()  # for testing
         p = self.activation.process
+        da = p.deliveryaddress_set.first()
 
         try:
             locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
@@ -172,9 +174,9 @@ class ProposalPdfContractView(View):
             'full_address': get_full_address([p.zip_code, p.country, p.region, p.city, p.street, p.building, p.block]),
             'jur_full_address': get_full_address([p.jur_zip_code, p.jur_country, p.jur_region, p.jur_city,
                                                   p.jur_street, p.jur_building, p.jur_block]),
-            'delivery_full_address': get_full_address([p.delivery_zip_code, p.delivery_country, p.delivery_region,
-                                                       p.delivery_city, p.delivery_street, p.delivery_building,
-                                                       p.delivery_block]),
+            'delivery_full_address': get_full_address([da.delivery_zip_code, da.delivery_country, da.delivery_region,
+                                                       da.delivery_city, da.delivery_street, da.delivery_building,
+                                                       da.delivery_block]) if da else '',
         }
         context = {**context, **more}
         filename = fill_template('main/contract.odt', context, output_format='pdf')
@@ -199,14 +201,13 @@ class ProposalPdfContractView(View):
 class ProposalExcelDocumentView(View):
     """Заявка в формате excel."""
     def get(self, request):
-        # if not proposal_id:
-        #     return HttpResponseBadRequest()
-
         # TODO MBPM-3:
         # Добавить тут валидацию на существующую Заявку и на то, что задача по ней пренадлежит этому пользователю.
         # И вообще заявка должна браться из activation
+        # proposal_id = 3
         # p = ProposalProcess.objects.get(pk=proposal_id) if proposal_id else ProposalProcess.objects.first()  # for testing
         p = self.activation.process
+
         template_path = '{}/static/main/proposal-info.xls'.format(os.path.abspath(os.path.dirname(__file__)))
         context = {
             (1, 0): p.company_name,
@@ -263,34 +264,38 @@ class ProposalExcelDocumentView(View):
             (41, 1): p.bibserve_email,
             (41, 7): p.bibserve_tel,
 
-            (43, 5): p.delivery_client_name,
-            (44, 4): p.delivery_zip_code,
-            (44, 7): p.delivery_country,
-            (45, 3): p.delivery_region,
-            (45, 7): p.delivery_city,
-            (46, 1): p.delivery_street,
-            (46, 5): p.delivery_building,
-            (46, 7): p.delivery_block,
-            (47, 3): p.delivery_contact_name,
-            (47, 7): p.delivery_tel,
-            (48, 7): p.delivery_fax,
-            (49, 5): p.delivery_email,
-
-            (53, 4): p.warehouse_working_hours_from,
-            (53, 6): p.warehouse_working_hours_to,
-            (54, 4): p.warehouse_break_from,
-            (54, 6): p.warehouse_break_to,
-            (56, 2): p.warehouse_comment,
-            (59, 2): p.warehouse_consignee_code,
-            (60, 2): p.warehouse_station_code,
-            (58, 7): p.warehouse_tc,
-            (59, 7): p.warehouse_pl,
-            (60, 7): p.warehouse_gc,
-            (61, 7): p.warehouse_ag,
-            (62, 7): p.warehouse_2r,
-
             (65, 0): p.company_name,
         }
+
+        offset = [43, 108, 132, 156, 180]
+        for i, da in enumerate(p.deliveryaddress_set.order_by('pk').all()[:5]):
+            context.update({
+                (offset[i], 5): da.delivery_client_name,
+                (offset[i] + 1, 4): da.delivery_zip_code,
+                (offset[i] + 1, 7): da.delivery_country,
+                (offset[i] + 2, 3): da.delivery_region,
+                (offset[i] + 2, 7): da.delivery_city,
+                (offset[i] + 3, 1): da.delivery_street,
+                (offset[i] + 3, 5): da.delivery_building,
+                (offset[i] + 3, 7): da.delivery_block,
+                (offset[i] + 4, 3): da.delivery_contact_name,
+                (offset[i] + 4, 7): da.delivery_tel,
+                (offset[i] + 5, 7): da.delivery_fax,
+                (offset[i] + 6, 5): da.delivery_email,
+
+                (offset[i] + 10, 4): da.warehouse_working_hours_from,
+                (offset[i] + 10, 6): da.warehouse_working_hours_to,
+                (offset[i] + 11, 4): da.warehouse_break_from,
+                (offset[i] + 11, 6): da.warehouse_break_to,
+                (offset[i] + 13, 2): da.warehouse_comment,
+                (offset[i] + 16, 2): da.warehouse_consignee_code,
+                (offset[i] + 17, 2): da.warehouse_station_code,
+                (offset[i] + 15, 7): da.warehouse_tc,
+                (offset[i] + 16, 7): da.warehouse_pl,
+                (offset[i] + 17, 7): da.warehouse_gc,
+                (offset[i] + 18, 7): da.warehouse_ag,
+                (offset[i] + 19, 7): da.warehouse_2r,
+            })
 
         path = '{}proposal-info/'.format(settings.MEDIA_ROOT)
         os.makedirs(path, exist_ok=True)
@@ -576,6 +581,26 @@ class ClientAddDataView(DeliveryFormsetMixin, AddDataView):
             delivery_formset.save()
             return self.form_valid(form)
         return self.form_invalid(form)
+
+    def form_valid(self, form, *args, **kwargs):
+        current_year = datetime.datetime.now().year
+        contract_number = 1
+
+        p = self.get_object()
+        # last proposal, ordering = ['-created']
+        lp = ProposalProcess.objects.filter(contract_date__year=current_year).first()
+        if lp and lp.contract_number:
+            try:
+                contract_number = int(lp.contract_number.split('/')[0]) + 1
+            except ValueError:
+                pass
+
+        p.contract_number = '{}/{}'.format(contract_number, current_year)
+        p.contract_date = datetime.datetime.now()
+        p.save()
+
+        super().form_valid(form, **kwargs)
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class DownloadClientsContractView(DeliveryFormsetMixin, AddDataView):

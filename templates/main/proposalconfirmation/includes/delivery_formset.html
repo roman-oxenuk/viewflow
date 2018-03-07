@@ -274,7 +274,7 @@
             let form = $($('#empty_form').html().replace(/__prefix__/g, form_idx)).appendTo('#delivery__formset');
             $('#delivery__formset').collapsible('open', form_idx);
 
-            {# Автозаполнение адреса по названию организации #}
+            {# Автозаполнение адреса #}
             $('#id_deliveryaddress_set-' + form_idx + '-delivery_address').suggestions({
                 token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
                 type: "ADDRESS",
