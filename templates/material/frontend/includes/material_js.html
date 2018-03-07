@@ -1,7 +1,9 @@
 {% load static %}
+{% comment %}
 {% if not debug %}
 <script src="{% static 'material/js/materialize.frontend.min.js' %}"></script>
 {% else %}
+{% endcomment %}
 
 {% comment %}
 <!-- Отключаем turbolink.js так как с ним не всегда срабатывает навешивание событий в js -->
@@ -19,4 +21,7 @@
 <script src="{% static 'material/js/materialize.js' %}"></script>
 <script src="{% static 'material/js/materialize.forms.js' %}"></script>
 <script src="{% static 'material/js/materialize.frontend.js' %}"></script>
+
+{% comment %}
 {% endif %}
+{% endcomment %}
