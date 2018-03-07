@@ -536,12 +536,18 @@ class FixMistakesView(BaseView, ShowCorrectionsMixin, UpdateProcessView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class SeeDataView(StopProposalMixin, BaseView, UpdateProcessView):
+class SeeDataView(DeliveryFormsetMixin, StopProposalMixin, BaseView, UpdateProcessView):
     """
     Вью, просто показывающее данные в Заявке.
     Применяется, например, для случая, когда пользователь должен перенести данные из Заявки в другие системы.
     """
     pass
+
+
+class ClientSeeDataView(ShowCorrectionsMixin, SeeDataView):
+
+    can_create_corrections = []
+    show_corrections = []
 
 
 class AddDataView(SeeDataView):
@@ -555,7 +561,7 @@ class AddDataView(SeeDataView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class ClientAddDataView(DeliveryFormsetMixin, AddDataView):
+class ClientAddDataView(AddDataView):
     delivery_form = DeliveryAddressForm
 
     def get_form_kwargs(self):
@@ -578,7 +584,7 @@ class ClientAddDataView(DeliveryFormsetMixin, AddDataView):
         return self.form_invalid(form)
 
 
-class DownloadClientsContractView(DeliveryFormsetMixin, AddDataView):
+class DownloadClientsContractView(AddDataView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
