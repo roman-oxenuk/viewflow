@@ -130,20 +130,6 @@ class ProposalConfirmationFlow(Flow):
             auto_create=True
         ).Assign(
             lambda activation: activation.process.client
-        ).Next(this.download_clients_contract)
-    )
-
-    download_clients_contract = (
-        DownloadableContractViewNode(
-            DownloadClientsContractView,
-            form_class=DownloadClientsContractForm,
-            task_description=_('Client prints the contract'),
-            task_title=_('Client prints the contract'),
-            done_btn_title='Договор распечатан и отправлен',
-        ).Permission(
-            auto_create=True
-        ).Assign(
-            lambda activation: activation.process.client
         ).Next(this.split_to_sales_admin)
     )
 
@@ -226,6 +212,20 @@ class ProposalConfirmationFlow(Flow):
             show_corrections=[],
         ).Permission(
             auto_create=True
+        ).Next(this.download_clients_contract)
+    )
+
+    download_clients_contract = (
+        DownloadableContractViewNode(
+            DownloadClientsContractView,
+            form_class=DownloadClientsContractForm,
+            task_description=_('Client prints the contract'),
+            task_title=_('Client prints the contract'),
+            done_btn_title='Договор распечатан и отправлен',
+        ).Permission(
+            auto_create=True
+        ).Assign(
+            lambda activation: activation.process.client
         ).Next(this.join_credit_and_account_manager)
     )
 
