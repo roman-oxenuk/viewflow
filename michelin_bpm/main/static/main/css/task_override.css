@@ -99,6 +99,9 @@ table.proposal-data input[type="checkbox"]{
 .all-corrections-title {
     font-weight: bolder;
 }
+ul.all-corrections{
+    margin-top: 0px;
+}
 ul.all-corrections>li {
     margin-top: 0px;
     list-style-type: initial;

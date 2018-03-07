@@ -543,7 +543,13 @@ class DownloadClientsContractForm(GroupedFieldsMixin, AddDataFormMixin, VersionF
         fields = all_fields
 
 
-class ClientAcceptMistakesForm(AddDataFormMixin, VersionFormMixin, ModelForm):
+class ClientAcceptMistakesForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        # TODO MBPM-3: fields_corrections не используется на этой форме, в отличие от ApproveForm
+        kwargs.pop('fields_corrections')
+        self.linked_node = kwargs.pop('linked_node')
+        super().__init__(*args, **kwargs)
 
     class Meta:
         model = ProposalProcess

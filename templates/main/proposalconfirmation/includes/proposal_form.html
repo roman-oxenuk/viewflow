@@ -8,6 +8,7 @@
 {% endif %}
 
 {% if '__all__' in fields_corrections %}
+    <br><br>
     <span class="all-corrections-title">Корректировки для заявки:</span>
     <ul class="all-corrections">
     {% for non_field_correction in fields_corrections|get_item:'__all__' %}

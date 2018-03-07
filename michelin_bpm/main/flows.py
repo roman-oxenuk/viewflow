@@ -18,7 +18,7 @@ from michelin_bpm.main.nodes import (
 from michelin_bpm.main.views import (
     CreateProposalProcessView, ApproveView, UnblockClientView, CreateBibServerAccountView,
     ActivateBibServeAccountView, AddJCodeView, SeeDataView, AddDataView, ClientAddDataView,
-    DownloadCardView, DownloadClientsContractView
+    DownloadCardView, DownloadClientsContractView, ClientSeeDataView
 )
 from michelin_bpm.main.forms import (
     ApproveForm, LogistForm, CreateBibServerAccountForm, ActivateBibserveAccountForm,
@@ -130,20 +130,6 @@ class ProposalConfirmationFlow(Flow):
             auto_create=True
         ).Assign(
             lambda activation: activation.process.client
-        ).Next(this.download_clients_contract)
-    )
-
-    download_clients_contract = (
-        DownloadableContractViewNode(
-            DownloadClientsContractView,
-            form_class=DownloadClientsContractForm,
-            task_description=_('Client prints the contract'),
-            task_title=_('Client prints the contract'),
-            done_btn_title='Договор распечатан и отправлен',
-        ).Permission(
-            auto_create=True
-        ).Assign(
-            lambda activation: activation.process.client
         ).Next(this.split_to_sales_admin)
     )
 
@@ -226,6 +212,29 @@ class ProposalConfirmationFlow(Flow):
             show_corrections=[],
         ).Permission(
             auto_create=True
+        ).Next(this.check_is_able_to_download_contract)
+    )
+
+    check_is_able_to_download_contract = (
+        SwitchNode(task_description=_('Check is able to download contract'))
+        .Case(
+            this.join_credit_and_account_manager,
+            lambda a: has_active_correction(a, for_step=this.approve_by_account_manager)
+        )
+        .Default(this.download_clients_contract)
+    )
+
+    download_clients_contract = (
+        DownloadableContractViewNode(
+            DownloadClientsContractView,
+            form_class=DownloadClientsContractForm,
+            task_description=_('Client prints the contract'),
+            task_title=_('Client prints the contract'),
+            done_btn_title='Договор распечатан и отправлен',
+        ).Permission(
+            auto_create=True
+        ).Assign(
+            lambda activation: activation.process.client
         ).Next(this.join_credit_and_account_manager)
     )
 
@@ -251,12 +260,15 @@ class ProposalConfirmationFlow(Flow):
         # ApproveViewNode(
             # FixMistakesView,
             # form_class=FixMistakesForm,
-        ViewNode(
-            SeeDataView,
+        # ViewNode(
+        ApproveViewNode(
+            ClientSeeDataView,
             form_class=ClientAcceptMistakesForm,
             task_description=_('Fix mistakes after account manager'),
             task_title=_('Fix mistakes after account manager'),
             done_btn_title='ОК',
+            can_create_corrections=[],
+            show_corrections=[],
         ).Permission(
             auto_create=True
         ).Assign(
