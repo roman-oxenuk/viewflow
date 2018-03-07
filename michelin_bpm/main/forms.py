@@ -405,7 +405,7 @@ class LogistForm(ApproveForm):
 
     class Meta:
         model = ProposalProcess
-        fields = ['country', 'city', 'company_name']
+        fields = all_fields
 
 
 class AddDataFormMixin:
