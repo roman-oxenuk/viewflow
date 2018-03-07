@@ -267,68 +267,70 @@
     </div>
 
     <script>
-        $('#delivery__button-add').click(function(e) {
-            e.preventDefault()
-            let form_idx = parseInt($('#id_deliveryaddress_set-TOTAL_FORMS').val());
-            $('#id_deliveryaddress_set-TOTAL_FORMS').val(form_idx + 1);
-            let form = $($('#empty_form').html().replace(/__prefix__/g, form_idx)).appendTo('#delivery__formset');
-            $('#delivery__formset').collapsible('open', form_idx);
+        $(document).ready(function(){
+            $('#delivery__button-add').click(function(e) {
+                e.preventDefault()
+                let form_idx = parseInt($('#id_deliveryaddress_set-TOTAL_FORMS').val());
+                $('#id_deliveryaddress_set-TOTAL_FORMS').val(form_idx + 1);
+                let form = $($('#empty_form').html().replace(/__prefix__/g, form_idx)).appendTo('#delivery__formset');
+                $('#delivery__formset').collapsible('open', form_idx);
 
-            {# Автозаполнение адреса #}
-            $('#id_deliveryaddress_set-' + form_idx + '-delivery_address').suggestions({
-                token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
-                type: "ADDRESS",
-                count: 20,
-                geoLocation: false,
-                /* Вызывается, когда пользователь выбирает одну из подсказок */
-                onSelect: function(suggestion) {
-                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_country"]').val(null).trigger('change')
-                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_city"]').val(null).trigger('change')
-                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_zip_code"]').val(null).trigger('change')
-                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_region"]').val(null).trigger('change')
-                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_street"]').val(null).trigger('change')
-                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_building"]').val(null).trigger('change')
-                    $('input[name="deliveryaddress_set-' + form_idx + '-delivery_block"]').val(null).trigger('change')
+                {# Автозаполнение адреса #}
+                $('#id_deliveryaddress_set-' + form_idx + '-delivery_address').suggestions({
+                    token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
+                    type: "ADDRESS",
+                    count: 20,
+                    geoLocation: false,
+                    /* Вызывается, когда пользователь выбирает одну из подсказок */
+                    onSelect: function(suggestion) {
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_country"]').val(null).trigger('change')
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_city"]').val(null).trigger('change')
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_zip_code"]').val(null).trigger('change')
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_region"]').val(null).trigger('change')
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_street"]').val(null).trigger('change')
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_building"]').val(null).trigger('change')
+                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_block"]').val(null).trigger('change')
 
-                    if(suggestion.data) {
-                        let adr = suggestion.data
-                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_country"]').val(adr.country).trigger('change')
-                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_city"]').val(adr.city).trigger('change')
-                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_zip_code"]').val(adr.postal_code).trigger('change')
-                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_region"]').val(adr.region_with_type).trigger('change')
-                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_street"]').val(adr.street_with_type).trigger('change')
+                        if(suggestion.data) {
+                            let adr = suggestion.data
+                            $('input[name="deliveryaddress_set-' + form_idx + '-delivery_country"]').val(adr.country).trigger('change')
+                            $('input[name="deliveryaddress_set-' + form_idx + '-delivery_city"]').val(adr.city).trigger('change')
+                            $('input[name="deliveryaddress_set-' + form_idx + '-delivery_zip_code"]').val(adr.postal_code).trigger('change')
+                            $('input[name="deliveryaddress_set-' + form_idx + '-delivery_region"]').val(adr.region_with_type).trigger('change')
+                            $('input[name="deliveryaddress_set-' + form_idx + '-delivery_street"]').val(adr.street_with_type).trigger('change')
 
-                        let building = adr.house_type_full ? adr.house_type_full + ' ' : '';
-                        building += adr.house ? adr.house : '';
-                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_building"]').val(building).trigger('change')
+                            let building = adr.house_type_full ? adr.house_type_full + ' ' : '';
+                            building += adr.house ? adr.house : '';
+                            $('input[name="deliveryaddress_set-' + form_idx + '-delivery_building"]').val(building).trigger('change')
 
-                        let block = adr.block_type_full ? adr.block_type_full + ' ' : ''
-                        block += adr.block ? adr.block : ''
-                        $('input[name="deliveryaddress_set-' + form_idx + '-delivery_block"]').val(block).trigger('change')
+                            let block = adr.block_type_full ? adr.block_type_full + ' ' : ''
+                            block += adr.block ? adr.block : ''
+                            $('input[name="deliveryaddress_set-' + form_idx + '-delivery_block"]').val(block).trigger('change')
+                        }
                     }
-                }
+                });
             });
-        });
 
-        $(document).on('click', '.delivery__button-del', function(e){
-            e.preventDefault()
-            e.stopPropagation()
-            $(this).closest('.delivery__formset-item').remove()
-            let form_idx = $('#id_deliveryaddress_set-TOTAL_FORMS').val();
-            let forms = $('.formset-table');
-            for (let i=0; i<form_idx - 1; i++) {
-                $(forms.get(i)).find('input').each(
-                    function(){
-                        let name = $(this).attr('name')
-                        name = name.replace(/deliveryaddress_set-\d+/g, 'deliveryaddress_set-' + i)
-                        $(this).attr('name', name)
+            $(document).on('click', '.delivery__button-del', function(e){
+                e.preventDefault()
+                e.stopPropagation()
+                $(this).closest('.delivery__formset-item').remove()
+                let form_idx = $('#id_deliveryaddress_set-TOTAL_FORMS').val();
+                let forms = $('.formset-table');
+                for (let i=0; i<form_idx - 1; i++) {
+                    $(forms.get(i)).find('input').each(
+                        function(){
+                            let name = $(this).attr('name')
+                            name = name.replace(/deliveryaddress_set-\d+/g, 'deliveryaddress_set-' + i)
+                            $(this).attr('name', name)
 
-                        let id = $(this).attr('id')
-                        id = id.replace(/deliveryaddress_set-\d+/g, 'deliveryaddress_set-' + i)
-                        $(this).attr('id', id)
-                    })
-            }
-            $('#id_deliveryaddress_set-TOTAL_FORMS').val(form_idx - 1);
+                            let id = $(this).attr('id')
+                            id = id.replace(/deliveryaddress_set-\d+/g, 'deliveryaddress_set-' + i)
+                            $(this).attr('id', id)
+                        })
+                }
+                $('#id_deliveryaddress_set-TOTAL_FORMS').val(form_idx - 1);
+            })
         })
     </script>
 {% endif %}

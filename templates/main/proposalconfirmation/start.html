@@ -82,47 +82,49 @@
 
 
             <script type="text/javascript">
-                $('input[name="search"]').suggestions({
-                    token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
-                    type: "PARTY",
-                    count: 20,
-                    geoLocation: false,
-                    /* Вызывается, когда пользователь выбирает одну из подсказок */
-                    onSelect: function(suggestion) {
-                        $('input[name="inn"]').val(suggestion.data.inn).trigger('change')
-                        $('input[name="company_name"]').val(suggestion.value).trigger('change')
-                        $('input[name="jur_address"]').val(suggestion.data.address.value).trigger('change')
+                $(document).ready(function(){
+                    $('input[name="search"]').suggestions({
+                        token: "e9dcea72f7007707ae2f073cf73e1555445c2a4c",
+                        type: "PARTY",
+                        count: 20,
+                        geoLocation: false,
+                        /* Вызывается, когда пользователь выбирает одну из подсказок */
+                        onSelect: function(suggestion) {
+                            $('input[name="inn"]').val(suggestion.data.inn).trigger('change')
+                            $('input[name="company_name"]').val(suggestion.value).trigger('change')
+                            $('input[name="jur_address"]').val(suggestion.data.address.value).trigger('change')
 
-                        $('input[name="kpp"]').val(suggestion.data.kpp).trigger('change')
-                        $('input[name="okpo"]').val(suggestion.data.okpo).trigger('change')
-                        $('input[name="ogrn"]').val(suggestion.data.ogrn).trigger('change')
+                            $('input[name="kpp"]').val(suggestion.data.kpp).trigger('change')
+                            $('input[name="okpo"]').val(suggestion.data.okpo).trigger('change')
+                            $('input[name="ogrn"]').val(suggestion.data.ogrn).trigger('change')
 
-                        $('input[name="jur_country"]').val(null).trigger('change')
-                        $('input[name="jur_city"]').val(null).trigger('change')
-                        $('input[name="jur_zip_code"]').val(null).trigger('change')
-                        $('input[name="jur_region"]').val(null).trigger('change')
-                        $('input[name="jur_street"]').val(null).trigger('change')
-                        $('input[name="jur_building"]').val(null).trigger('change')
-                        $('input[name="jur_block"]').val(null).trigger('change')
+                            $('input[name="jur_country"]').val(null).trigger('change')
+                            $('input[name="jur_city"]').val(null).trigger('change')
+                            $('input[name="jur_zip_code"]').val(null).trigger('change')
+                            $('input[name="jur_region"]').val(null).trigger('change')
+                            $('input[name="jur_street"]').val(null).trigger('change')
+                            $('input[name="jur_building"]').val(null).trigger('change')
+                            $('input[name="jur_block"]').val(null).trigger('change')
 
-                        if(suggestion.data.address.data) {
-                            let adr = suggestion.data.address.data
-                            $('input[name="jur_country"]').val(adr.country).trigger('change')
-                            $('input[name="jur_city"]').val(adr.city).trigger('change')
-                            $('input[name="jur_zip_code"]').val(adr.postal_code).trigger('change')
-                            $('input[name="jur_region"]').val(adr.region_with_type).trigger('change')
-                            $('input[name="jur_street"]').val(adr.street_with_type).trigger('change')
+                            if(suggestion.data.address.data) {
+                                let adr = suggestion.data.address.data
+                                $('input[name="jur_country"]').val(adr.country).trigger('change')
+                                $('input[name="jur_city"]').val(adr.city).trigger('change')
+                                $('input[name="jur_zip_code"]').val(adr.postal_code).trigger('change')
+                                $('input[name="jur_region"]').val(adr.region_with_type).trigger('change')
+                                $('input[name="jur_street"]').val(adr.street_with_type).trigger('change')
 
-                            jur_building = adr.house_type_full ? adr.house_type_full + ' ' : ''
-                            jur_building += adr.house ? adr.house : ''
-                            $('input[name="jur_building"]').val(jur_building).trigger('change')
+                                jur_building = adr.house_type_full ? adr.house_type_full + ' ' : ''
+                                jur_building += adr.house ? adr.house : ''
+                                $('input[name="jur_building"]').val(jur_building).trigger('change')
 
-                            jur_block = adr.block_type_full ? adr.block_type_full + ' ' : ''
-                            jur_block += adr.block ? adr.block : ''
-                            $('input[name="jur_block"]').val(jur_block).trigger('change')
+                                jur_block = adr.block_type_full ? adr.block_type_full + ' ' : ''
+                                jur_block += adr.block ? adr.block : ''
+                                $('input[name="jur_block"]').val(jur_block).trigger('change')
+                            }
                         }
-                    }
-                });
+                    })
+                })
             </script>
 
             <div class="card-action row">
