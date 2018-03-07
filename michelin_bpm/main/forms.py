@@ -511,7 +511,7 @@ class ClientAddDataForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, 
             'contact_name', 'contact_tel', 'contact_email', 'contact_fax',
 
             # Поля специфичные для Мишлена
-            'j_code', 'd_code', 'mdm_id',
+            # 'j_code', 'd_code', 'mdm_id',
 
             # BibServe
             'is_needs_bibserve_account',
