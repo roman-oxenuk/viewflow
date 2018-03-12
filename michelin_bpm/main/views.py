@@ -20,6 +20,7 @@ from django.urls import reverse
 from django.views.generic.edit import UpdateView
 from django.views import View
 from django.utils.translation import ugettext_lazy as l_
+from django.template.response import TemplateResponse
 
 import reversion
 from reversion.models import Version
@@ -70,7 +71,15 @@ class EnterClientPasswordView(PasswordResetConfirmView):
     def dispatch(self, *args, **kwargs):
         if self.request.user.is_authenticated:
             return HttpResponseRedirect('/')
-        return super().dispatch(*args, **kwargs)
+
+        response = super().dispatch(*args, **kwargs)
+
+        if (not self.validlink and
+                hasattr(response, 'context_data') and
+                response.context_data['form'] is None):
+            return HttpResponseRedirect('/')
+
+        return response
 
 
 class ActionTitleMixin:
