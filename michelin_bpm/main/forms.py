@@ -620,6 +620,7 @@ class AddACSForm(GroupedFieldsMixin, AddDataFormMixin, VersionFormMixin, ModelFo
         super().__init__(*args, **kwargs)
         User = get_user_model()
         self.fields['acs'].queryset = User.objects.filter(groups__name='ACS')
+        self.fields['acs'].widget.attrs.update({'class': 'browser-default'})
 
 
 class ActivateBibserveAccountForm(AddDataFormMixin, VersionFormMixin, ModelForm):

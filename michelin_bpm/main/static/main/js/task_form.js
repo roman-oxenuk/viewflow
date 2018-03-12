@@ -1,11 +1,6 @@
 $(document).ready(function(){
     let $doneBtn = $('#done-btn')
 
-    console.log('\n')
-    console.log('ready!')
-    console.log('selected: ', $('[data-correction-field="true"]'))
-    console.log('\n')
-
     $('[data-correction-field="true"]').on('keyup', function(){
         let this_button = $('button[name="' +  $(this).attr('action_btn_name') + '"]')
         if($(this).val().length > 0) {
